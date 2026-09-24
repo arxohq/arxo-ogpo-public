@@ -1,0 +1,49 @@
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// DECISION-0186: named numeric rows; complete given and explicit expectations.
+
+test "Порог: не превышен" variants (cost: Money) {
+    "urn:query:vred-numeric:below" (799999 KZT);
+    "urn:query:vred-numeric:exact" (800000 KZT);
+} {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "vred-t01-a0": ozhidaemye_raskhody_na_vosstanovlenie(v: entity_ref("urn:case:vred:ts-1"), amount: cost) { origin case_input; }
+        assert "vred-t01-a1": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:case:vred:ts-1"), amount: 1000000 KZT) { origin case_input; }
+    }
+
+    evaluate truth(vosstanovlenie_ekonomicheski_netselesoobrazno(entity_ref("urn:case:vred:ts-1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "Порог: превышен" variants (cost: Money) {
+    "urn:query:vred-numeric:above" (800001 KZT);
+    "urn:query:vred-numeric:far-above" (1200000 KZT);
+} {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "vred-t02-a0": ozhidaemye_raskhody_na_vosstanovlenie(v: entity_ref("urn:case:vred:ts-1"), amount: cost) { origin case_input; }
+        assert "vred-t02-a1": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:case:vred:ts-1"), amount: 1000000 KZT) { origin case_input; }
+    }
+
+    evaluate truth(vosstanovlenie_ekonomicheski_netselesoobrazno(entity_ref("urn:case:vred:ts-1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

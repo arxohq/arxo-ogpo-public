@@ -1,0 +1,351 @@
+{
+ "retrieved": "2026-09-19",
+ "endpoint": "GET https://adilet.zan.kz/api/documents/<uuid> and …/versions",
+ "group_number": "Z030000446_",
+ "current_state": {
+  "document_id": "aff37be9-e827-441d-b4fe-5e5e7408ead0",
+  "is_actual": true,
+  "start_date": "2003-06-30T18:00:00.000Z",
+  "end_date": "2026-07-22T18:00:00.000Z",
+  "note": "the portal stores a state's date as 18:00Z of the previous day; end_date of the actual state is its revision date: 2026-07-22T18:00Z = 23 July 2026"
+ },
+ "article_sha256": "08996b1e7915806eb861f99f98a8fc965ef018a63d12bc4fb40e5c145fce0452",
+ "article_equals_pinned_adilet_html": true,
+ "states": [
+  {
+   "revision_date": "2003-06-30T18:00:00.000Z",
+   "document_id": "b2c4b1e1-ecd5-4b24-b779-390ba2ac9729",
+   "is_current": false
+  },
+  {
+   "revision_date": "2006-01-30T18:00:00.000Z",
+   "document_id": "ea9a3526-3fa3-46e5-b5ab-4cf5a2a42123",
+   "is_current": false
+  },
+  {
+   "revision_date": "2006-02-19T18:00:00.000Z",
+   "document_id": "57c88a26-e790-43dd-9a07-9086e9878c80",
+   "is_current": false
+  },
+  {
+   "revision_date": "2007-05-06T18:00:00.000Z",
+   "document_id": "2ce526df-fe3e-45b9-b0a8-496c5f6d6e7e",
+   "is_current": false
+  },
+  {
+   "revision_date": "2008-05-25T18:00:00.000Z",
+   "document_id": "5ba29d14-c3e7-428a-b18c-74f49a715411",
+   "is_current": false
+  },
+  {
+   "revision_date": "2009-07-10T18:00:00.000Z",
+   "document_id": "f4618604-44e8-4b41-b269-855b30fa03de",
+   "is_current": false
+  },
+  {
+   "revision_date": "2009-08-29T18:00:00.000Z",
+   "document_id": "f6e9584f-1ae9-4fd0-a960-78232bd0ca4f",
+   "is_current": false
+  },
+  {
+   "revision_date": "2009-12-29T18:00:00.000Z",
+   "document_id": "7075896d-333e-4283-b32a-e6200d138681",
+   "is_current": false
+  },
+  {
+   "revision_date": "2010-01-05T18:00:00.000Z",
+   "document_id": "1a5ef9f8-d14e-4582-993f-0754591ac51b",
+   "is_current": false
+  },
+  {
+   "revision_date": "2010-06-29T18:00:00.000Z",
+   "document_id": "f3de9305-24a7-4629-9914-653ec0eee9b6",
+   "is_current": false
+  },
+  {
+   "revision_date": "2010-07-14T18:00:00.000Z",
+   "document_id": "bc65a982-5c71-4ea2-a933-710db6dd63b5",
+   "is_current": false
+  },
+  {
+   "revision_date": "2010-08-08T18:00:00.000Z",
+   "document_id": "32e1361a-3fe1-4636-92d6-71706d301c57",
+   "is_current": false
+  },
+  {
+   "revision_date": "2010-12-31T18:00:00.000Z",
+   "document_id": "3cbcbc5d-f57e-43b2-b261-160f561c8edd",
+   "is_current": false
+  },
+  {
+   "revision_date": "2011-01-23T18:00:00.000Z",
+   "document_id": "e99315a8-645b-4bb9-be91-a3f8942e4376",
+   "is_current": false
+  },
+  {
+   "revision_date": "2011-06-30T18:00:00.000Z",
+   "document_id": "b9e94433-d801-4f98-bd29-5d6386342812",
+   "is_current": false
+  },
+  {
+   "revision_date": "2011-12-31T18:00:00.000Z",
+   "document_id": "1254fc43-fa7c-4329-a2e9-cf7b39ad05e2",
+   "is_current": false
+  },
+  {
+   "revision_date": "2012-07-04T18:00:00.000Z",
+   "document_id": "1d90fb4e-3a05-44d8-9211-e0c49d3a9001",
+   "is_current": false
+  },
+  {
+   "revision_date": "2012-12-23T18:00:00.000Z",
+   "document_id": "dffe7789-edae-46c4-99b8-d1c3c0a384c6",
+   "is_current": false
+  },
+  {
+   "revision_date": "2014-04-16T18:00:00.000Z",
+   "document_id": "26fcc907-056b-455f-b36e-9686ae84245f",
+   "is_current": false
+  },
+  {
+   "revision_date": "2014-05-15T18:00:00.000Z",
+   "document_id": "f1902321-b5f3-42f0-9979-95c72fec3eba",
+   "is_current": false
+  },
+  {
+   "revision_date": "2014-07-02T18:00:00.000Z",
+   "document_id": "b528b72d-5424-4c03-929f-a61348cd1543",
+   "is_current": false
+  },
+  {
+   "revision_date": "2014-10-19T18:00:00.000Z",
+   "document_id": "857d5157-5d35-46f9-a531-2d1f2c6dc815",
+   "is_current": false
+  },
+  {
+   "revision_date": "2014-11-06T18:00:00.000Z",
+   "document_id": "c38f0e9d-292b-4b4d-848d-390b71666fe1",
+   "is_current": false
+  },
+  {
+   "revision_date": "2014-11-20T18:00:00.000Z",
+   "document_id": "d6c96eed-a559-4773-bb63-750dc40ead4c",
+   "is_current": false
+  },
+  {
+   "revision_date": "2014-12-28T18:00:00.000Z",
+   "document_id": "cff87c18-cade-468b-a073-73981762f031",
+   "is_current": false
+  },
+  {
+   "revision_date": "2014-12-31T18:00:00.000Z",
+   "document_id": "b73d4eda-7144-4389-9e48-05eb352385dc",
+   "is_current": false
+  },
+  {
+   "revision_date": "2015-04-26T18:00:00.000Z",
+   "document_id": "56011a3a-461d-4273-a266-1b4a94309185",
+   "is_current": false
+  },
+  {
+   "revision_date": "2015-11-23T18:00:00.000Z",
+   "document_id": "c80e249b-eaee-4e73-bb91-4adb3b6b840e",
+   "is_current": false
+  },
+  {
+   "revision_date": "2015-12-31T18:00:00.000Z",
+   "document_id": "7074e148-0b0c-428d-8d41-892b6391380d",
+   "is_current": false
+  },
+  {
+   "revision_date": "2016-04-08T18:00:00.000Z",
+   "document_id": "9fc408aa-c441-42f8-9408-260b083ccef7",
+   "is_current": false
+  },
+  {
+   "revision_date": "2017-12-25T18:00:00.000Z",
+   "document_id": "95847187-0e99-49de-800a-8964636f45a7",
+   "is_current": false
+  },
+  {
+   "revision_date": "2017-12-31T18:00:00.000Z",
+   "document_id": "1ff27efb-2e53-400a-8ec4-7741bc3d5308",
+   "is_current": false
+  },
+  {
+   "revision_date": "2018-01-09T18:00:00.000Z",
+   "document_id": "062b7aa6-a552-4f0c-8b83-dc39b38e1d8d",
+   "is_current": false
+  },
+  {
+   "revision_date": "2018-05-23T18:00:00.000Z",
+   "document_id": "14382a34-1364-450f-9719-42ac7f8dde31",
+   "is_current": false
+  },
+  {
+   "revision_date": "2018-07-01T18:00:00.000Z",
+   "document_id": "2e75558c-3eb7-46a8-93d9-e68426e3f4ff",
+   "is_current": false
+  },
+  {
+   "revision_date": "2018-07-12T18:00:00.000Z",
+   "document_id": "adecebf7-cf12-4721-802f-182873210c13",
+   "is_current": false
+  },
+  {
+   "revision_date": "2018-12-27T18:00:00.000Z",
+   "document_id": "8d485a00-d06e-4157-b4e4-84648bf913ba",
+   "is_current": false
+  },
+  {
+   "revision_date": "2018-12-31T18:00:00.000Z",
+   "document_id": "f9805354-b057-4e2b-8618-716319334c3c",
+   "is_current": false
+  },
+  {
+   "revision_date": "2019-04-01T18:00:00.000Z",
+   "document_id": "226de87e-2d6b-49a2-b895-80da92c42ce4",
+   "is_current": false
+  },
+  {
+   "revision_date": "2019-07-02T18:00:00.000Z",
+   "document_id": "9ae0818a-523a-4453-b74b-fdc5333a1960",
+   "is_current": false
+  },
+  {
+   "revision_date": "2019-11-24T18:00:00.000Z",
+   "document_id": "1e7afb97-618d-479a-a0c5-db73380b82fd",
+   "is_current": false
+  },
+  {
+   "revision_date": "2019-12-26T18:00:00.000Z",
+   "document_id": "ab4209b8-5b71-4bfb-aef5-0181ca62ad5e",
+   "is_current": false
+  },
+  {
+   "revision_date": "2019-12-31T18:00:00.000Z",
+   "document_id": "6adc0005-f6e0-43d6-b27c-194a9110e37e",
+   "is_current": false
+  },
+  {
+   "revision_date": "2020-01-01T18:00:00.000Z",
+   "document_id": "513c0f67-22ed-4798-8fdd-dfbcbac54af4",
+   "is_current": false
+  },
+  {
+   "revision_date": "2020-01-09T18:00:00.000Z",
+   "document_id": "e57cdc49-df88-4778-a56b-8344fe7166ee",
+   "is_current": false
+  },
+  {
+   "revision_date": "2020-05-05T18:00:00.000Z",
+   "document_id": "a9171bfc-1e23-46e9-916b-46481e305351",
+   "is_current": false
+  },
+  {
+   "revision_date": "2021-01-01T18:00:00.000Z",
+   "document_id": "36f2259a-92ff-4ec3-b7d8-5ad9489bf3ed",
+   "is_current": false
+  },
+  {
+   "revision_date": "2022-06-26T18:00:00.000Z",
+   "document_id": "69c95322-367d-42ea-9d6d-30a4c7579152",
+   "is_current": false
+  },
+  {
+   "revision_date": "2022-07-11T18:00:00.000Z",
+   "document_id": "61920a5c-ded3-439b-afde-114b1b3f7408",
+   "is_current": false
+  },
+  {
+   "revision_date": "2022-07-13T18:00:00.000Z",
+   "document_id": "38cc33de-9fca-45a1-8a2d-c31340fb4b62",
+   "is_current": false
+  },
+  {
+   "revision_date": "2022-09-11T18:00:00.000Z",
+   "document_id": "562c9127-8ce7-41c5-8e08-105bfdb35d37",
+   "is_current": false
+  },
+  {
+   "revision_date": "2022-11-04T18:00:00.000Z",
+   "document_id": "a9eff856-c99c-456b-a4e4-c0c9dd06df54",
+   "is_current": false
+  },
+  {
+   "revision_date": "2022-12-29T18:00:00.000Z",
+   "document_id": "5731b417-b338-4474-9804-219541d74fa7",
+   "is_current": false
+  },
+  {
+   "revision_date": "2023-12-31T18:00:00.000Z",
+   "document_id": "bb61dec5-d3a1-4558-a953-603edbe7478f",
+   "is_current": false
+  },
+  {
+   "revision_date": "2025-06-29T18:00:00.000Z",
+   "document_id": "d6c22153-6b39-4448-8e72-4386c5d813d7",
+   "is_current": false
+  },
+  {
+   "revision_date": "2025-08-30T18:00:00.000Z",
+   "document_id": "c718759a-629d-4deb-ae1e-71c7c7587e0c",
+   "is_current": false
+  },
+  {
+   "revision_date": "2025-12-29T18:00:00.000Z",
+   "document_id": "23bc9560-ee32-4706-b6c3-c133722f129a",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-01-08T18:00:00.000Z",
+   "document_id": "edcbf307-ec9f-4ca3-8f05-c60635361cf9",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-01-15T18:00:00.000Z",
+   "document_id": "5ac3b02b-910a-4dd0-8912-2383be0041f8",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-07-01T18:00:00.000Z",
+   "document_id": "296d8918-89c3-4d8f-bc28-7535e0ef05f5",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-07-11T18:00:00.000Z",
+   "document_id": "82fd3314-b4ab-4fd6-a1cf-1c918074c207",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-07-22T18:00:00.000Z",
+   "document_id": "55911bf5-cc74-496d-bedf-934d2b7589a7",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-07-22T18:00:00.000Z",
+   "document_id": "769524f6-b24a-423f-9e6e-370cf4bc6a7e",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-07-22T18:00:00.000Z",
+   "document_id": "77de2176-dc4d-4ab6-9e18-d278fb587056",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-07-22T18:00:00.000Z",
+   "document_id": "9c36a1f4-ac1e-4e96-b6d5-af6ab288eb51",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-07-22T18:00:00.000Z",
+   "document_id": "ac94dfc3-5393-4f21-baa4-948cdd5977b4",
+   "is_current": false
+  },
+  {
+   "revision_date": "2026-07-22T18:00:00.000Z",
+   "document_id": "aff37be9-e827-441d-b4fe-5e5e7408ead0",
+   "is_current": true
+  }
+ ]
+}

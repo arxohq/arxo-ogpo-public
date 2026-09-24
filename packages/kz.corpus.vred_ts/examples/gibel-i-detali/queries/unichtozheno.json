@@ -1,0 +1,15 @@
+{
+  "queryId": "unichtozheno",
+  "kind": "truth",
+  "literal": {
+    "kind": "literal",
+    "polarity": "positive",
+    "predicate": "urn:kz:corpus:clir:vred-ts#ts_schitaetsya_unichtozhennym",
+    "args": [
+      {
+        "kind": "entity_ref",
+        "id": "urn:example:vred:ts"
+      }
+    ]
+  }
+}

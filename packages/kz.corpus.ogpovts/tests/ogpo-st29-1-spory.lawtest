@@ -1,0 +1,151 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 29-1: три пути пункта 1, пятидневный срок ответа (п. 2) и трёхдневный
+// срок представления документов омбудсману (п. 3). Плюс пункт 10 статьи 22-2,
+// который направляет несогласного с упрощённым порядком в эту статью.
+//
+// РАСЧЁТ СРОКОВ ВРУЧНУЮ по снимку официального календаря 2026 года (сентябрь
+// 2026: праздников и перенесённых дней отдыха нет, выходные — суббота и
+// воскресенье; порядок исчисления §86 — ГК РК ст. 173, 176):
+//   заявление получено во вторник 1 сентября;
+//   пять рабочих дней: ср 2 (1), чт 3 (2), пт 4 (3), пн 7 (4), вт 8 (5) → 8 сентября;
+//   три рабочих дня: ср 2 (1), чт 3 (2), пт 4 (3) → 4 сентября.
+
+context profile KZ_OGPO_SPORY_DEADLINES {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-st29-1-tri-puti" {
+    given {
+        context extends KZ_OGPO_SPORY_DEADLINES {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st291-a-a0": dispute_from_contract(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:contract:k1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+    }
+
+    // Три пути открываются ОДНИМ фактом спора и не исключают друг друга:
+    // текст перечисляет их через «либо» и «или», и выбор остаётся за
+    // страхователем (потерпевшим, выгодоприобретателем).
+    evaluate positions();
+    expect position(NapravitZayavlenieStrakhovshchiku, ACTIVE);
+    expect position(NapravitZayavlenieOmbudsmanu, ACTIVE);
+    expect position(ObratitsyaVSud, ACTIVE);
+}
+
+test "urn:query:ogpo-st29-1-pyat-rabochikh-dney-na-otvet" {
+    given {
+        context extends KZ_OGPO_SPORY_DEADLINES {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st291-b-a0": dispute_from_contract(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:contract:k1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+        assert "st291-b-a1": dispute_insurer(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st291-b-a2": written_application_sent_to_insurer(entity_ref("urn:kz:ogpo:dispute:s1")) { origin case_input; }
+        assert "st291-b-a3": dispute_application_received_by_insurer_on(entity_ref("urn:kz:ogpo:dispute:s1"), @2026-09-01) { origin case_input; }
+    }
+
+    evaluate truth(dispute_reply_due_day(entity_ref("urn:kz:ogpo:dispute:s1"), @2026-09-08));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(dispute_reply_due_day(entity_ref("urn:kz:ogpo:dispute:s1"), @2026-09-07));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+
+    // Окно обязанности ЗАКРЫТО (со дня получения по пятый рабочий день), но
+    // день решения — первый день окна, и нарушения по сроку ещё нет.
+    evaluate positions();
+    expect position(RassmotretZayavlenieIOtvetitVSrok, ACTIVE);
+    expect not position(RassmotretZayavlenieIOtvetitVSrok, VIOLATED);
+}
+
+test "urn:query:ogpo-st29-1-otvet-prosrochen" {
+    given {
+        context extends KZ_OGPO_SPORY_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st291-c-a0": dispute_from_contract(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:contract:k1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+        assert "st291-c-a1": dispute_insurer(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st291-c-a2": written_application_sent_to_insurer(entity_ref("urn:kz:ogpo:dispute:s1")) { origin case_input; }
+        assert "st291-c-a3": dispute_application_received_by_insurer_on(entity_ref("urn:kz:ogpo:dispute:s1"), @2026-09-01) { origin case_input; }
+        // VIOLATED требует УСТАНОВЛЕННОГО неисполнения: молчание дела об
+        // ответе оставило бы обязанность просто действующей.
+        assert "st291-c-a4": not dispute_written_reply_provided(entity_ref("urn:kz:ogpo:dispute:s1")) { origin case_input; }
+    }
+
+    // Тот же вход, но день решения — 30 сентября: срок истёк 8 сентября, а
+    // ответ, как установлено делом, не предоставлен. Окно ЗАКРЫТО, и потому
+    // обязанность нарушается — в отличие от обязанностей с открытым окном.
+    evaluate positions();
+    expect position(RassmotretZayavlenieIOtvetitVSrok, VIOLATED);
+    expect not position(RassmotretZayavlenieIOtvetitVSrok, SATISFIED);
+}
+
+test "urn:query:ogpo-st29-1-tri-rabochikh-dnya-na-dokumenty" {
+    given {
+        context extends KZ_OGPO_SPORY_DEADLINES {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st291-d-a0": dispute_from_contract(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:contract:k1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+        assert "st291-d-a1": dispute_insurer(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st291-d-a2": written_application_sent_to_ombudsman(entity_ref("urn:kz:ogpo:dispute:s1")) { origin case_input; }
+        assert "st291-d-a3": ombudsman_of_dispute(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:ombudsman:o1")) { origin case_input; }
+        assert "st291-d-a4": dispute_documents_request_received_on(entity_ref("urn:kz:ogpo:dispute:s1"), @2026-09-01) { origin case_input; }
+        assert "st291-d-a5": dispute_documents_submitted(entity_ref("urn:kz:ogpo:dispute:s1")) { origin case_input; }
+    }
+
+    evaluate truth(dispute_documents_due_day(entity_ref("urn:kz:ogpo:dispute:s1"), @2026-09-04));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(dispute_documents_due_day(entity_ref("urn:kz:ogpo:dispute:s1"), @2026-09-03));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+
+    evaluate positions();
+    expect position(PredstavitDokumentyPoSporu, SATISFIED);
+}
+
+test "urn:query:ogpo-st22-2-punkt-10-nesoglasie-vedet-v-spor" {
+    given {
+        context extends KZ_OGPO_SPORY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st291-e-a0": dispute_from_contract(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:contract:k1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+        assert "st291-e-a1": dispute_of_accident(entity_ref("urn:kz:ogpo:dispute:s1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st291-e-a2": disagreement_with_simplified_procedure_or_effects(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+        assert "st291-e-a3": dispute_from_contract(entity_ref("urn:kz:ogpo:dispute:s2"), entity_ref("urn:kz:ogpo:contract:k1"), entity_ref("urn:kz:ogpo:beneficiary:b2")) { origin case_input; }
+        assert "st291-e-a4": dispute_of_accident(entity_ref("urn:kz:ogpo:dispute:s2"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+
+    evaluate truth(dispute_may_be_settled_under_article_29_1(entity_ref("urn:kz:ogpo:dispute:s1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    // Второй спор заявлен другим лицом, которое несогласия не выразило:
+    // пункт 10 открывает путь ТОМУ, кто не согласен.
+    evaluate truth(dispute_may_be_settled_under_article_29_1(entity_ref("urn:kz:ogpo:dispute:s2")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

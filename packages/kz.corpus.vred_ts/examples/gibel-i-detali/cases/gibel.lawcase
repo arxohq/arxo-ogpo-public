@@ -1,0 +1,25 @@
+language "law.core" version "0.2";
+package examples.vred_ts.gibel_i_detali version "0.1.0";
+namespace "urn:law:examples:vred-ts:gibel-i-detali";
+
+// Пункт 9. Расходы на восстановление — 90 % рыночной стоимости: восстановление
+// экономически нецелесообразно, транспортное средство считается уничтоженным.
+// Остатки страховщику НЕ переданы, и это установлено отрицательным фактом:
+// молчание дела о передаче отказом от неё не считается (§113).
+case Gibel {
+    context {
+        legal_time @2026-09-01;
+        knowledge_time @2026-09-01T12:00:00+05:00;
+        decision_time @2026-09-01T12:00:00+05:00;
+        timezone "Asia/Almaty";
+    }
+
+    const ts: kz.corpus.vred_ts::TransportnoeSredstvo = entity_ref("urn:example:vred:ts");
+    const raschet: kz.corpus.vred_ts::RaschetVreda = entity_ref("urn:example:vred:raschet");
+
+    assert "raschet-po-ts": kz.corpus.vred_ts::raschet_po_ts(raschet, ts) { origin case_input; }
+    assert "raskhody": kz.corpus.vred_ts::ozhidaemye_raskhody_na_vosstanovlenie(ts, 900000 KZT) { origin case_input; }
+    assert "rynochnaya-stoimost": kz.corpus.vred_ts::rynochnaya_stoimost_na_datu_otcheta(ts, 1000000 KZT) { origin case_input; }
+    assert "godnye-ostatki": kz.corpus.vred_ts::stoimost_godnykh_k_realizatsii_ostatkov(ts, 150000 KZT) { origin case_input; }
+    assert "ostatki-ne-peredany": not kz.corpus.vred_ts::ostatki_peredany_v_sobstvennost_strakhovshchika(raschet) { origin case_input; }
+}

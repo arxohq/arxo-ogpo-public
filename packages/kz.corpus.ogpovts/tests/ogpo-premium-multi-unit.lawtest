@@ -1,0 +1,97 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 19 пп. 15 и 16 — наибольшая из премий по нескольким единицам.
+//
+// Общий вход обоих дел: МРП 2026 года 4 325 ₸, базовая премия
+// 4 325 × 1,9 = 8 217,5 ₸; Жамбылская область 1,00; поправочный
+// коэффициент 1,74 — размер на 2026 год из постановления Правления АРРФР
+// № 72, ВЫВОДИМЫЙ пакетом `kz.corpus.popravochnye_koeffitsienty`
+// (13.09.2026; прежде входил делом величиной 1,0).
+// Территориальный коэффициент с поправочным = 1,00 × 1,74 = 1,74.
+
+// OGPO-P15 — КОМПЛЕКСНЫЙ ДОГОВОР: два транспортных средства в полисе.
+//   мототранспорт, срок эксплуатации 3 года:
+//       8 217,5 × 1,74 × 1,00 (мото) × 1,00 (30 лет/стаж 5) × 1,00 × 1,00
+//       = 14 298,45 ₸;
+//   грузовой автомобиль, срок эксплуатации 10 лет:
+//       8 217,5 × 1,74 × 3,98 × 1,00 × 1,10 × 1,00
+//       = 56 907,831 × 1,10 = 62 598,6141 ₸.
+// Наибольшая величина — 62 598,6141 ₸, она и есть премия по договору.
+test "urn:query:ogpo-p15-complex-contract" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p15-0": complex_contract(entity_ref("urn:kz:ogpo:contract:complex-1")) { origin case_input; }
+        assert "p15-1": territory_basis(entity_ref("urn:kz:ogpo:contract:complex-1"), CityOfOblastSignificance) { origin case_input; }
+        assert "p15-2": registration_territory(entity_ref("urn:kz:ogpo:contract:complex-1"), ZhambylOblast) { origin case_input; }
+        assert "p15-4": insured_kind_of(entity_ref("urn:kz:ogpo:contract:complex-1"), NaturalPerson) { origin case_input; }
+        assert "p15-5": insured_age_years(entity_ref("urn:kz:ogpo:contract:complex-1"), 30) { origin case_input; }
+        assert "p15-6": driving_experience_years(entity_ref("urn:kz:ogpo:contract:complex-1"), 5) { origin case_input; }
+        assert "p15-7": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(30, 5) { origin case_input; }
+        assert "p15-8": policy_vehicle(entity_ref("urn:kz:ogpo:contract:complex-1"), entity_ref("urn:kz:ogpo:vehicle:moto")) { origin case_input; }
+        assert "p15-9": policy_vehicle_type(entity_ref("urn:kz:ogpo:contract:complex-1"), entity_ref("urn:kz:ogpo:vehicle:moto"), MotorVehicle) { origin case_input; }
+        assert "p15-10": policy_vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:complex-1"), entity_ref("urn:kz:ogpo:vehicle:moto"), 3) { origin case_input; }
+        assert "p15-11": raschet_bonus_malus_edinitsy(entity_ref("urn:kz:ogpo:contract:complex-1"), entity_ref("urn:kz:ogpo:vehicle:moto"), entity_ref("urn:kz:bm:ogpo:moto")) { origin case_input; }
+        assert "p15-11-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:moto"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "p15-11-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:moto"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "p15-11-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:moto"), 269) { origin case_input; }
+        assert "p15-12": policy_vehicle(entity_ref("urn:kz:ogpo:contract:complex-1"), entity_ref("urn:kz:ogpo:vehicle:truck")) { origin case_input; }
+        assert "p15-13": policy_vehicle_type(entity_ref("urn:kz:ogpo:contract:complex-1"), entity_ref("urn:kz:ogpo:vehicle:truck"), FreightVehicle) { origin case_input; }
+        assert "p15-14": policy_vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:complex-1"), entity_ref("urn:kz:ogpo:vehicle:truck"), 10) { origin case_input; }
+        assert "p15-15": raschet_bonus_malus_edinitsy(entity_ref("urn:kz:ogpo:contract:complex-1"), entity_ref("urn:kz:ogpo:vehicle:truck"), entity_ref("urn:kz:bm:ogpo:truck")) { origin case_input; }
+        assert "p15-15-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:truck"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "p15-15-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:truck"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "p15-15-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:truck"), 269) { origin case_input; }
+        assert "p15-16": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(3) { origin case_input; }
+        assert "p15-17": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(10) { origin case_input; }
+    }
+    evaluate truth(complex_contract_premium(entity_ref("urn:kz:ogpo:contract:complex-1"), 62598.6141 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P16 — СТАНДАРТНЫЙ ДОГОВОР: два застрахованных на одном
+// транспортном средстве. Расходится одна ось — возраст и стаж (пункт 7):
+//   30 лет / стаж 5 лет — коэффициент 1,00: премия 14 298,45 ₸;
+//   20 лет / стаж 1 год — коэффициент 1,10: премия 14 298,45 × 1,10
+//       = 15 728,295 ₸.
+// Наибольшая величина — 15 728,295 ₸.
+test "urn:query:ogpo-p16-standard-contract" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p16-0": standard_contract(entity_ref("urn:kz:ogpo:contract:standard-1")) { origin case_input; }
+        assert "p16-1": territory_basis(entity_ref("urn:kz:ogpo:contract:standard-1"), CityOfOblastSignificance) { origin case_input; }
+        assert "p16-2": registration_territory(entity_ref("urn:kz:ogpo:contract:standard-1"), ZhambylOblast) { origin case_input; }
+        assert "p16-4": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:standard-1"), MotorVehicle) { origin case_input; }
+        assert "p16-5": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:standard-1"), 3) { origin case_input; }
+        assert "p16-6": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:standard-1"), entity_ref("urn:kz:bm:ogpo:standard-1")) { origin case_input; }
+        assert "p16-6-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:standard-1"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "p16-6-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:standard-1"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "p16-6-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:standard-1"), 269) { origin case_input; }
+        assert "p16-7": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(3) { origin case_input; }
+        assert "p16-8": contract_insured_person(entity_ref("urn:kz:ogpo:contract:standard-1"), entity_ref("urn:kz:ogpo:person:senior")) { origin case_input; }
+        assert "p16-9": insured_person_age_years(entity_ref("urn:kz:ogpo:contract:standard-1"), entity_ref("urn:kz:ogpo:person:senior"), 30) { origin case_input; }
+        assert "p16-10": insured_person_driving_experience_years(entity_ref("urn:kz:ogpo:contract:standard-1"), entity_ref("urn:kz:ogpo:person:senior"), 5) { origin case_input; }
+        assert "p16-11": contract_insured_person(entity_ref("urn:kz:ogpo:contract:standard-1"), entity_ref("urn:kz:ogpo:person:junior")) { origin case_input; }
+        assert "p16-12": insured_person_age_years(entity_ref("urn:kz:ogpo:contract:standard-1"), entity_ref("urn:kz:ogpo:person:junior"), 20) { origin case_input; }
+        assert "p16-13": insured_person_driving_experience_years(entity_ref("urn:kz:ogpo:contract:standard-1"), entity_ref("urn:kz:ogpo:person:junior"), 1) { origin case_input; }
+        assert "p16-14": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(30, 5) { origin case_input; }
+        assert "p16-15": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(20, 1) { origin case_input; }
+    }
+    evaluate truth(standard_contract_premium(entity_ref("urn:kz:ogpo:contract:standard-1"), 15728.295 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "vocab.maintenance/0.1",
+  "entities": [
+    ["Measurement", "Измерение предъявленного объекта"],
+    ["Evidence", "Доказательство измерения или события"],
+    ["ObservedEvent", "Наблюдаемое событие"],
+    ["Condition", "Условие (ворота) перехода"],
+    ["Deviation", "Согласованное отступление" ]
+  ],
+  "enums": [
+    ["ReadinessOutcome", ["Ready", "Blocked", "InsufficientEvidence", "Conflict"]]
+  ],
+  "relations": [
+    "measurement_subject(m: Measurement, subject: Text)",
+    "measurement_value(m: Measurement, value: Quantity)",
+    "evidence_measurement(e: Evidence, m: Measurement)",
+    "evidence_event(e: Evidence, occurrence: ObservedEvent)",
+    "evidence_method(e: Evidence, method: Text)",
+    "evidence_instrument(e: Evidence, instrument: Text)",
+    "evidence_date(e: Evidence, date: Date)",
+    "evidence_performer(e: Evidence, performer: Text)",
+    "evidence_reference(e: Evidence, document_ref: Text)",
+    "evidence_lot(e: Evidence, lot: Text)",
+    "evidence_technical_card_edition(e: Evidence, card_edition: Text)",
+    "condition_subject(c: Condition, subject: Text)",
+    "deviation_subject(d: Deviation, subject: Text)",
+    "deviation_approved_by(d: Deviation, person: Text)"
+  ]
+}

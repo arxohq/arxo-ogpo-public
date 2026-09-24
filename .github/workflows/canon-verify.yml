@@ -1,0 +1,47 @@
+# Copy to the PUBLIC canon repository as .github/workflows/canon-verify.yml.
+# toolchain.lock.json must point at a publicly downloadable, SHA-256-pinned
+# release; this workflow intentionally has no secret and no private checkout.
+name: canon-public-verify
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python3 -m pip install --disable-pip-version-check jsonschema fastjsonschema referencing
+      - name: Verify public artifact inventory and hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          snapshot="$RUNNER_TEMP/canon-public-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir "$snapshot"
+          git archive --format=tar HEAD | tar -x -C "$snapshot"
+          python3 tools/canon_publication.py verify --artifact "$snapshot"
+      - name: Require a public pinned toolchain release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          repository=$(python3 -c 'import json; print(json.load(open("toolchain.lock.json"))["repository"])')
+          test "$(gh api "repos/$repository" --jq .private)" = false
+      - name: Download the publicly available pinned toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/toolchain.py download --lock toolchain.lock.json --out "$RUNNER_TEMP/law-tools-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+      - name: Independently build and run exported package scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools="$RUNNER_TEMP/law-tools-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          snapshot="$RUNNER_TEMP/canon-public-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          python3 tools/canon_release.py build --artifact "$snapshot" --tools "$tools" --out "$RUNNER_TEMP/canon-public-package-releases-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"

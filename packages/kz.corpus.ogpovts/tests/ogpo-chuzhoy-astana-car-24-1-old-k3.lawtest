@@ -1,0 +1,39 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// ПОРОЖДЁН tools/foreign_premium.py --emit из tools/foreign-premium-cases.json —
+// не править руками. Ожидание выведено НЕЗАВИСИМОЙ моделью инструмента по
+// закреплённым текстам (ст. 19 Закона № 446-II, Правила № 140, постановление
+// АРРФР № 72), а не снято с ответа движка; чужие ответы и их квалификация —
+// tests/foreign/REPORT.md.
+//
+// Дело astana-car-24-1-old-k3: г. Астана, легковой, 24 года / стаж 1 (оба признака пункта 7), выпуск 2015 — срок эксплуатации 11 лет
+
+test "urn:query:ogpo-chuzhoy-astana-car-24-1-old-k3" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "f0": territory_basis(entity_ref("urn:kz:ogpo:contract:foreign-astana-car-24-1-old-k3"), CityOfOblastSignificance) { origin case_input; }
+        assert "f1": registration_territory(entity_ref("urn:kz:ogpo:contract:foreign-astana-car-24-1-old-k3"), Astana) { origin case_input; }
+        assert "f2": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:foreign-astana-car-24-1-old-k3"), PassengerCar) { origin case_input; }
+        assert "f3": insured_kind_of(entity_ref("urn:kz:ogpo:contract:foreign-astana-car-24-1-old-k3"), NaturalPerson) { origin case_input; }
+        assert "f4": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:foreign-astana-car-24-1-old-k3"), 11) { origin case_input; }
+        assert "f5": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(11) { origin case_input; }
+        assert "f6": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:foreign-astana-car-24-1-old-k3"), entity_ref("urn:kz:bm:ogpo:foreign-astana-car-24-1-old-k3")) { origin case_input; }
+        assert "f7": insured_age_years(entity_ref("urn:kz:ogpo:contract:foreign-astana-car-24-1-old-k3"), 24) { origin case_input; }
+        assert "f8": driving_experience_years(entity_ref("urn:kz:ogpo:contract:foreign-astana-car-24-1-old-k3"), 1) { origin case_input; }
+        assert "f9": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(24, 1) { origin case_input; }
+        assert "f10": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:foreign-astana-car-24-1-old-k3"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "f11": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:foreign-astana-car-24-1-old-k3"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "f12": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:foreign-astana-car-24-1-old-k3"), 269) { origin case_input; }
+    }
+    evaluate truth(annual_premium_calculated(entity_ref("urn:kz:ogpo:contract:foreign-astana-car-24-1-old-k3"), 65834.954856 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

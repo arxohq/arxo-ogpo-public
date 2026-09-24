@@ -1,0 +1,525 @@
+// РАЗДЕЛ 3. УПРАВЛЕНИЕ ГОСУДАРСТВЕННЫМИ ФИНАНСАМИ (главы 11–13, ст. 47–69).
+//
+// Выражено правилами: система бюджетных правил ст. 48 (правило о
+// гарантированном трансферте как ПРЕДЕЛ, допустимость отклонения как
+// дефитер по названным основаниям и трёхлетний срок возврата к пределам);
+// нормативы направления чистого дохода ст. 56 п. 2 (70 %, 50 %, 50 %) с
+// изъятиями подпунктов; полнота зачисления поступлений от приватизации
+// ст. 56 пп. 5–6; запрет ст. 58 п. 5 (акты о возмещении затрат организациям
+// нефтяного сектора).
+//
+// ГРАНИЦЫ РАЗДЕЛА:
+//   - ст. 47, 50–53, 55, 57 — программные и процедурные статьи, чей порядок
+//     определяется актами уполномоченных органов; условия и следствия в
+//     кодексе не названы;
+//   - ст. 58 пп. 1–4 (источники Национального фонда) — перечень видов
+//     налогов и поступлений, определённых НАЛОГОВЫМ кодексом; выражение их
+//     правилами перенесло бы чужие нормы через границу пакета (LDC-E2101),
+//     а величины ставок принадлежат kz.corpus.incometax и соседям;
+//   - ст. 59–64 (использование Национального фонда, гарантированный и
+//     целевые трансферты, целевые требования, годовой отчёт) — объёмы
+//     устанавливаются законом о республиканском бюджете (kz.corpus.budget),
+//     а порядок — актами Президента; в кодексе назван ПРЕДЕЛ, и он выражен
+//     правилом ст. 48;
+//   - ст. 65–69 (внебюджетные фонды) — отсылочные: каждый фонд ведётся своим
+//     законом (Государственный фонд социального страхования, Фонд
+//     социального медицинского страхования — kz.corpus.osms, Фонд
+//     компенсации потерпевшим, Специальный государственный фонд).
+
+
+// --- Ст. 48: правило о гарантированном трансферте ---------------------------
+// «Объём гарантированного трансферта планируется в размере, не превышающем
+// объём прогнозируемых поступлений в Национальный фонд от организаций
+// нефтяного сектора при цене отсечения». Предел — сравнение сумм; сама цена
+// отсечения определяется актом уполномоченного органа и приходит фактом.
+
+relation guaranteed_transfer_planned(t: Transfer, amount: Money) kind empirical {
+    key(t);
+    label ru-KZ official "объём планируемого гарантированного трансферта из Национального фонда составляет названную сумму";
+}
+
+relation forecast_oil_receipts_at_cutoff_price(t: Transfer, amount: Money) kind empirical {
+    key(t);
+    label ru-KZ official "объём прогнозируемых поступлений в Национальный фонд от организаций нефтяного сектора при цене отсечения составляет названную сумму";
+}
+
+relation fiscal_rule_limit_respected(t: Transfer) kind institutional {
+    label ru-KZ official "предел по бюджетному правилу о гарантированном трансферте соблюдён";
+}
+
+relation fiscal_rule_limit_exceeded(t: Transfer) kind institutional {
+    label ru-KZ official "предел по бюджетному правилу о гарантированном трансферте превышен";
+}
+
+relation deviation_ground_established(t: Transfer) kind empirical {
+    label ru-KZ official "установлено основание отклонения от бюджетных правил: кризисная ситуация, чрезвычайное или военное положение либо случай подпункта 2) пункта 1 статьи 59";
+}
+
+@source(BC_ART48) {
+    rule GuaranteedTransferWithinLimit(t: Transfer, planned: Money, forecast: Money) strict {
+        when guaranteed_transfer_planned(t, planned);
+        when forecast_oil_receipts_at_cutoff_price(t, forecast);
+        when planned <= forecast;
+        then fiscal_rule_limit_respected(t);
+        label ru-KZ official "Статья 48 пункт 2. Объём гарантированного трансферта планируется в размере, не превышающем объём прогнозируемых поступлений в Национальный фонд от организаций нефтяного сектора при цене отсечения";
+    }
+
+    // Превышение предела — поражаемый вывод: ст. 48 п. 5 прямо допускает
+    // отклонение по трём названным основаниям, и изъятие поставлено дефитером
+    // над поражаемой головой (дефитер над строгой головой мёртв и молчит).
+    rule GuaranteedTransferOverLimit(t: Transfer, planned: Money, forecast: Money) defeasible {
+        when guaranteed_transfer_planned(t, planned);
+        when forecast_oil_receipts_at_cutoff_price(t, forecast);
+        when planned > forecast;
+        then fiscal_rule_limit_exceeded(t);
+        label ru-KZ official "Статья 48 пункт 2. Объём гарантированного трансферта сверх прогнозируемых поступлений при цене отсечения предел бюджетного правила превышает";
+    }
+
+    rule DeviationAllowedOnNamedGround(t: Transfer) defeater {
+        when deviation_ground_established(t);
+        defeat fiscal_rule_limit_exceeded(t);
+        label ru-KZ official "Статья 48 пункт 5. Отклонение от бюджетных правил и целевых ориентиров допускается в кризисных ситуациях, в условиях чрезвычайного или военного положения и в случае подпункта 2) пункта 1 статьи 59";
+    }
+}
+
+// Возврат к изначальным пределам — срок В ГОДАХ, а не в днях: календарный
+// шаг §86 не спрашивает снимок календаря и истекает в соответствующее число.
+relation deviation_started(t: Transfer, d: Date) kind empirical {
+    key(t);
+    label ru-KZ official "отклонение от бюджетных правил началось названной датой";
+}
+
+relation return_to_limits_deadline(t: Transfer, d: Date) kind institutional {
+    label ru-KZ official "возврат к изначальным пределам бюджетных правил должен быть осуществлён не позднее названной даты";
+}
+
+@source(BC_ART48)
+rule ReturnToLimitsWithinThreeYears(t: Transfer, started: Date) strict {
+    when deviation_started(t, started);
+    when deviation_ground_established(t);
+    then return_to_limits_deadline(t, add_calendar_period(started, 3 calendar_year));
+    label ru-KZ official "Статья 48 пункт 5. Возврат к изначальным пределам бюджетных правил и целевым ориентирам осуществляется в течение последующих трёх лет";
+}
+
+// --- Ст. 56 п. 2: нормативы направления чистого дохода ----------------------
+// Три нормы, а не одна: у них разные адресаты (субъект квазигосударственного
+// сектора, государственное предприятие, Фонд национального благосостояния) и
+// разные изъятия. Доля выражена целочисленным масштабированием обеих сторон.
+
+relation net_income(q: QuasiEntity, amount: Money) kind empirical {
+    key(q);
+    label ru-KZ official "сумма чистого дохода субъекта за отчётный период составляет названную сумму";
+}
+
+relation directed_to_dividends(q: QuasiEntity, amount: Money) kind empirical {
+    key(q);
+    label ru-KZ official "на выплату дивидендов (дохода) направлена названная сумма";
+}
+
+relation wholly_state_owned(q: QuasiEntity) kind empirical {
+    label ru-KZ official "единственным акционером (участником) субъекта квазигосударственного сектора является государство";
+}
+
+relation state_enterprise(q: QuasiEntity) kind empirical {
+    label ru-KZ official "субъект является государственным предприятием";
+}
+
+relation exempt_state_enterprise(q: QuasiEntity) kind empirical {
+    label ru-KZ official "государственное предприятие создано Управлением Делами Президента либо Национальным Банком, действует в области, способствующей осуществлению их функций, либо действует в социальной сфере — норматив отчисления определяется ими самими";
+}
+
+relation dividend_standard_met(q: QuasiEntity) kind institutional {
+    label ru-KZ official "норматив направления чистого дохода, установленный настоящим Кодексом, соблюдён";
+}
+
+relation dividend_standard_breached(q: QuasiEntity) kind institutional {
+    label ru-KZ official "норматив направления чистого дохода, установленный настоящим Кодексом, не соблюдён";
+}
+
+@source(BC_ART56) {
+    rule QuasiEntityDividendStandardMet(q: QuasiEntity, income: Money, paid: Money) strict {
+        when wholly_state_owned(q);
+        when net_income(q, income);
+        when directed_to_dividends(q, paid);
+        when paid * 10 >= income * 7;
+        then dividend_standard_met(q);
+        label ru-KZ official "Статья 56 пункт 2 абзац первый. На выплату дивидендов направляется не менее семидесяти процентов суммы чистого дохода субъекта квазигосударственного сектора, единственным акционером которого является государство";
+    }
+
+    rule QuasiEntityDividendStandardBreached(
+        q: QuasiEntity,
+        income: Money,
+        paid: Money,
+    ) defeasible {
+        when wholly_state_owned(q);
+        when net_income(q, income);
+        when directed_to_dividends(q, paid);
+        when paid * 10 < income * 7;
+        then dividend_standard_breached(q);
+        label ru-KZ official "Статья 56 пункт 2 абзац первый. Направление менее семидесяти процентов чистого дохода нормативу настоящего Кодекса не отвечает";
+    }
+
+    rule StateEnterpriseNetIncomeStandardMet(q: QuasiEntity, income: Money, paid: Money) strict {
+        when state_enterprise(q);
+        when net_income(q, income);
+        when directed_to_dividends(q, paid);
+        when paid * 2 >= income;
+        then dividend_standard_met(q);
+        label ru-KZ official "Статья 56 пункт 2 абзац второй. Государственное предприятие перечисляет в бюджет часть чистого дохода в размере не менее пятидесяти процентов суммы чистого дохода";
+    }
+
+    rule StateEnterpriseNetIncomeStandardBreached(
+        q: QuasiEntity,
+        income: Money,
+        paid: Money,
+    ) defeasible {
+        when state_enterprise(q);
+        when net_income(q, income);
+        when directed_to_dividends(q, paid);
+        when paid * 2 < income;
+        then dividend_standard_breached(q);
+        label ru-KZ official "Статья 56 пункт 2 абзац второй. Перечисление менее пятидесяти процентов чистого дохода государственного предприятия нормативу настоящего Кодекса не отвечает";
+    }
+
+    // Изъятие абзацев третьего и четвёртого: у названных предприятий норматив
+    // определяют они сами либо уполномоченный орган, поэтому норматив Кодекса к
+    // ним не прикладывается вовсе. Дефитер, а не гард: изъятие снимает вывод о
+    // НАРУШЕНИИ, оставляя факты дела нетронутыми.
+    rule ExemptEnterpriseHasOwnStandard(q: QuasiEntity) defeater {
+        when exempt_state_enterprise(q);
+        defeat dividend_standard_breached(q);
+        label ru-KZ official "Статья 56 пункт 2 абзацы третий и четвёртый. Норматив отчисления части чистого дохода предприятий Управления Делами Президента, Национального Банка и предприятий социальной сферы устанавливается ими самими либо уполномоченным органом";
+    }
+}
+
+// --- Ст. 56 пп. 5–6: полнота зачисления поступлений от приватизации ---------
+
+entity PrivatisationReceipt {
+    label ru-KZ official "поступление от приватизации либо от передачи активов в конкурентную среду";
+}
+
+relation republican_property_privatisation(r: PrivatisationReceipt) kind empirical {
+    label ru-KZ official "поступление получено от приватизации республиканской собственности либо от передачи в конкурентную среду активов национальных холдингов и компаний";
+}
+
+relation communal_property_privatisation(r: PrivatisationReceipt) kind empirical {
+    label ru-KZ official "поступление получено от приватизации коммунальной собственности";
+}
+
+relation credited_to_national_fund_in_full(r: PrivatisationReceipt) kind institutional {
+    label ru-KZ official "поступление зачисляется в Национальный фонд Республики Казахстан в полном объёме в номинальном выражении";
+}
+
+relation credited_to_local_budget_in_full(r: PrivatisationReceipt) kind institutional {
+    label ru-KZ official "поступление зачисляется в местный бюджет в полном объёме в номинальном выражении";
+}
+
+@source(BC_ART56) {
+    rule RepublicanPrivatisationToNationalFund(r: PrivatisationReceipt) strict {
+        when republican_property_privatisation(r);
+        then credited_to_national_fund_in_full(r);
+        label ru-KZ official "Статья 56 пункт 5. Поступления от приватизации республиканской собственности и от передачи в конкурентную среду активов национальных холдингов зачисляются в Национальный фонд в полном объёме в номинальном выражении";
+    }
+
+    rule CommunalPrivatisationToLocalBudget(r: PrivatisationReceipt) strict {
+        when communal_property_privatisation(r);
+        then credited_to_local_budget_in_full(r);
+        label ru-KZ official "Статья 56 пункт 6. Поступления от приватизации коммунальной собственности зачисляются в местный бюджет в полном объёме в номинальном выражении";
+    }
+}
+
+// --- Ст. 58 п. 5: запрет актов о возмещении затрат нефтяному сектору --------
+
+relation cost_reimbursement_act_intended(b: Body, q: QuasiEntity) kind empirical {
+    label ru-KZ official "участник намерен принять правовой акт о финансировании мероприятий и проектов с условием возмещения затрат организации нефтяного сектора";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation adopt_cost_reimbursement_act(q: QuasiEntity) kind empirical {
+    label ru-KZ unofficial "действие нормы: adopt cost reimbursement act";
+}
+
+@source(BC_ART58)
+rule NoCostReimbursementForOilSector(b: Body, q: QuasiEntity) strict {
+    when cost_reimbursement_act_intended(b, q);
+    then prohibition AdoptCostReimbursementAct {
+        bearer b;
+        action adopt_cost_reimbursement_act(q);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 58 пункт 5. Принятие правовых актов в целях финансирования мероприятий и проектов с условием возмещения затрат организациям нефтяного сектора запрещается";
+}
+
+// --- Ст. 56 п. 3: уменьшение выплат решает бюджетная комиссия ---------------
+// Второй канал суждения §47.3 пакета. Кодекс не даёт условия, при котором
+// уменьшение допустимо: он говорит, что вопрос ПОДЛЕЖИТ рассмотрению
+// названным органом. Догадка о критериях была бы формализацией не права, а
+// мнения формализатора.
+
+external judgment relation payment_reduction_approved(q: QuasiEntity) {
+    authority BudgetCommission;
+    label ru-KZ official "уменьшение размера выплат либо освобождение от уплаты рассмотрено и одобрено соответствующей бюджетной комиссией";
+}
+
+relation payment_reduction_sought(q: QuasiEntity) kind empirical {
+    label ru-KZ official "заявлено уменьшение размера выплат либо освобождение от уплаты поступлений, указанных в пункте 2 статьи 56";
+}
+
+relation payment_reduction_lawful(q: QuasiEntity) kind institutional {
+    label ru-KZ official "уменьшение размера выплат допущено в порядке пункта 3 статьи 56 настоящего Кодекса";
+}
+
+@source(BC_ART56) {
+    rule PaymentReductionByCommission(q: QuasiEntity) strict {
+        when payment_reduction_sought(q);
+        when payment_reduction_approved(q);
+        then payment_reduction_lawful(q);
+        label ru-KZ official "Статья 56 пункт 3. Уменьшение размера выплат или освобождение от уплаты поступлений подлежит обязательному рассмотрению соответствующей бюджетной комиссией";
+    }
+
+    // Одобренное комиссией уменьшение снимает вывод о нарушении норматива —
+    // поэтому дефитер, а не гард: норматив остаётся нормой, а изъятие названо
+    // отдельно и видно в разборе.
+    rule ApprovedReductionDefeatsBreach(q: QuasiEntity) defeater {
+        when payment_reduction_lawful(q);
+        defeat dividend_standard_breached(q);
+        label ru-KZ official "Статья 56 пункт 3. Уменьшение размера выплат, рассмотренное бюджетной комиссией, нарушением норматива пункта 2 не является";
+    }
+}
+
+// --- Предметы публикации, названные статьями раздела 3 (второй проход) -----
+
+relation public_finance_state_information(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является сведениями о состоянии государственных финансов";
+}
+
+@source(BC_ART47)
+rule PublicFinanceInformationIsPublicationSubject(d: ProcessDocument) strict {
+    when public_finance_state_information(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 47 пункт 3. Сведения о состоянии государственных финансов являются открытыми и подлежат ежегодной публикации в форме статистической информации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation long_term_forecast(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является долгосрочным прогнозом развития Республики Казахстан";
+}
+
+@source(BC_ART50)
+rule LongTermForecastIsPublicationSubject(d: ProcessDocument) strict {
+    when long_term_forecast(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 50. Долгосрочный прогноз развития Республики Казахстан подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation socioeconomic_forecast(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является прогнозом социально-экономического развития";
+}
+
+@source(BC_ART51)
+rule SocioeconomicForecastIsPublicationSubject(d: ProcessDocument) strict {
+    when socioeconomic_forecast(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 51. Прогноз социально-экономического развития подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation budget_risks_report(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является аналитическим отчётом о бюджетных рисках";
+}
+
+@source(BC_ART53)
+rule BudgetRisksReportIsPublicationSubject(d: ProcessDocument) strict {
+    when budget_risks_report(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 53. Аналитический отчёт о бюджетных рисках подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation tax_expenditure_report(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является аналитическим отчётом о налоговых расходах";
+}
+
+@source(BC_ART54)
+rule TaxExpenditureReportIsPublicationSubject(d: ProcessDocument) strict {
+    when tax_expenditure_report(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 54. Аналитический отчёт о налоговых расходах подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation national_fund_trust_statements(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является годовой финансовой отчётностью по результатам доверительного управления Национальным фондом Республики Казахстан";
+}
+
+@source(BC_ART57)
+rule NationalFundStatementsArePublicationSubject(d: ProcessDocument) strict {
+    when national_fund_trust_statements(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 57. Годовая финансовая отчётность по результатам доверительного управления Национальным фондом подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation national_fund_audit_results(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является результатами проведения аудита Национального фонда Республики Казахстан";
+}
+
+@source(BC_ART64)
+rule NationalFundAuditIsPublicationSubject(d: ProcessDocument) strict {
+    when national_fund_audit_results(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 64. Результаты проведения аудита подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation social_insurance_fund_information(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является информацией о прогнозных и фактических поступлениях и расходах Государственного фонда социального страхования";
+}
+
+@source(BC_ART66)
+rule SocialInsuranceFundInformationIsPublicationSubject(d: ProcessDocument) strict {
+    when social_insurance_fund_information(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 66. Информация о поступлениях и расходах Государственного фонда социального страхования подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation medical_insurance_fund_information(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является информацией о прогнозных и фактических поступлениях и расходах фонда социального медицинского страхования";
+}
+
+@source(BC_ART67)
+rule MedicalInsuranceFundInformationIsPublicationSubject(d: ProcessDocument) strict {
+    when medical_insurance_fund_information(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 67. Информация о поступлениях и расходах фонда социального медицинского страхования подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation victims_fund_information(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является информацией о фактических поступлениях и расходах Фонда компенсации потерпевшим";
+}
+
+@source(BC_ART68)
+rule VictimsFundInformationIsPublicationSubject(d: ProcessDocument) strict {
+    when victims_fund_information(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 68. Информация о поступлениях и расходах Фонда компенсации потерпевшим подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation special_fund_information(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является информацией о фактических поступлениях и расходах Специального государственного фонда";
+}
+
+@source(BC_ART69)
+rule SpecialFundInformationIsPublicationSubject(d: ProcessDocument) strict {
+    when special_fund_information(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 69. Информация о поступлениях и расходах Специального государственного фонда подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+// --- Ст. 55: три обязанности при внебюджетных обязательствах ---------------
+// Второй проход. «В случаях, если законами предусмотрены обязательства …,
+// органы ОБЕСПЕЧИВАЮТ: мониторинг; включение результатов в годовой отчёт;
+// публикацию на официальном интернет-ресурсе» — три обязанности одного
+// носителя с разными условиями исполнения, поэтому три нормы, а не одна с
+// конъюнкцией целей.
+
+entity ExtrabudgetaryObligation {
+    label ru-KZ official "обязательство физического либо юридического лица о предоставлении благ государству или региону, предусмотренное законами Республики Казахстан";
+}
+
+relation obligation_supervised_by(o: ExtrabudgetaryObligation, b: Body) kind empirical {
+    label ru-KZ official "надзор за обязательством отнесён к названному уполномоченному отраслевому государственному органу либо местному исполнительному органу";
+}
+
+relation obligation_monitored(o: ExtrabudgetaryObligation) kind empirical {
+    label ru-KZ official "мониторинг реализации запланированных мероприятий с указанием сумм проведён и отчётность сформирована";
+}
+
+relation obligation_in_annual_report(o: ExtrabudgetaryObligation) kind empirical {
+    label ru-KZ official "результаты мониторинга и отчётность включены в годовой отчёт об исполнении соответствующего бюджета";
+}
+
+relation obligation_results_published(o: ExtrabudgetaryObligation) kind empirical {
+    label ru-KZ official "результаты мониторинга и отчётность опубликованы на официальном интернет-ресурсе";
+}
+
+@source(BC_ART55) {
+    rule MonitorExtrabudgetaryObligationDuty(o: ExtrabudgetaryObligation, b: Body) strict {
+        when obligation_supervised_by(o, b);
+        then duty MonitorObligation {
+            bearer b;
+            beneficiary b;
+            achieve obligation_monitored(o) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 55 пункт 1 абзац второй. Уполномоченные органы обеспечивают мониторинг посредством формирования отчётности реализации запланированных мероприятий с указанием сумм";
+    }
+
+    rule IncludeObligationInAnnualReportDuty(o: ExtrabudgetaryObligation, b: Body) strict {
+        when obligation_supervised_by(o, b);
+        then duty IncludeObligationInAnnualReport {
+            bearer b;
+            beneficiary b;
+            achieve obligation_in_annual_report(o) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 55 пункт 1 абзац третий. Уполномоченные органы обеспечивают включение результатов мониторинга и отчётности в годовой отчёт об исполнении соответствующего бюджета";
+    }
+
+    rule PublishObligationResultsDuty(o: ExtrabudgetaryObligation, b: Body) strict {
+        when obligation_supervised_by(o, b);
+        then duty PublishObligationResults {
+            bearer b;
+            beneficiary b;
+            achieve obligation_results_published(o) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 55 пункт 1 абзац четвёртый. Уполномоченные органы обеспечивают публикацию результатов мониторинга и отчётности на официальном интернет-ресурсе";
+    }
+}
+
+// --- Ст. 59: закрытый перечень направлений расходования Нацфонда -----------
+// Четыре направления — четыре правила §206 с одной головой: в одном факте
+// они неразличимы для разбора, а перечень закрыт самой статьёй.
+
+entity FundExpenditure {
+    label ru-KZ official "расходование средств Национального фонда Республики Казахстан";
+}
+
+relation guaranteed_transfer_expenditure(x: FundExpenditure) kind empirical {
+    label ru-KZ official "расходование производится в виде гарантированного трансферта из Национального фонда в республиканский бюджет";
+}
+
+relation targeted_transfer_expenditure(x: FundExpenditure) kind empirical {
+    label ru-KZ official "расходование производится в виде целевых трансфертов, передаваемых из Национального фонда в республиканский бюджет";
+}
+
+relation target_claims_expenditure(x: FundExpenditure) kind empirical {
+    label ru-KZ official "расходование производится в виде выплат целевых требований и покрытия расходов по оплате банковских услуг, связанных с целевыми накоплениями";
+}
+
+relation management_costs_expenditure(x: FundExpenditure) kind empirical {
+    label ru-KZ official "расходование производится на покрытие расходов, связанных с управлением Национальным фондом и проведением ежегодного аудита";
+}
+
+relation fund_expenditure_lawful(x: FundExpenditure) kind institutional {
+    label ru-KZ official "расходование средств Национального фонда произведено по направлению, названному настоящим Кодексом";
+}
+
+@source(BC_ART59) {
+    rule FundSpentOnGuaranteedTransfer(x: FundExpenditure) strict {
+        when guaranteed_transfer_expenditure(x);
+        then fund_expenditure_lawful(x);
+        label ru-KZ official "Статья 59 пункт 1 подпункт 1). Национальный фонд расходуется в виде гарантированного трансферта в республиканский бюджет";
+    }
+
+    rule FundSpentOnTargetedTransfer(x: FundExpenditure) strict {
+        when targeted_transfer_expenditure(x);
+        then fund_expenditure_lawful(x);
+        label ru-KZ official "Статья 59 пункт 1 подпункт 2). Национальный фонд расходуется в виде целевых трансфертов, передаваемых в республиканский бюджет";
+    }
+
+    rule FundSpentOnTargetClaims(x: FundExpenditure) strict {
+        when target_claims_expenditure(x);
+        then fund_expenditure_lawful(x);
+        label ru-KZ official "Статья 59 пункт 1 подпункт 3). Национальный фонд расходуется в виде выплат целевых требований и покрытия расходов по оплате банковских услуг";
+    }
+
+    rule FundSpentOnManagement(x: FundExpenditure) strict {
+        when management_costs_expenditure(x);
+        then fund_expenditure_lawful(x);
+        label ru-KZ official "Статья 59 пункт 1 подпункт 4). Национальный фонд расходуется на покрытие расходов по управлению им и проведению ежегодного аудита";
+    }
+}

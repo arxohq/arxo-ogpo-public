@@ -1,0 +1,408 @@
+language "law.core" version "0.1";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Scenarios ported from the former Python runner of the `vred_ts` family.
+// Titles are the former scenario IDs (scenario-manifest); expectations are
+// derived from the FORMER checks, not from the engine's answers.
+// For duty witnesses, decision and knowledge follow the September events (§82).
+
+context profile KZ_VRED_TS_DEADLINES {
+    deadline_policy {
+            start_count next_day;
+            include_end true;
+            roll next_working_day;
+        }
+}
+
+test "KZ-VRED-13-OTMETKA-V-SROK" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": otchet_poluchen_poterpevshim(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(predel_otmetki_poterpevshego(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-04));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-13-OTMETKA-V-SROK/2" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-10-01T12:00:00+05:00;
+            knowledge_time @2026-10-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": otchet_poluchen_poterpevshim(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "assert-f4": otmetka_o_soglasii_prostavlena(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+    expect issues_within(info);
+    expect position(ProstavitOtmetku, SATISFIED);
+    expect not position(ProstavitOtmetku, CREATED);
+    expect not position(ProstavitOtmetku, PENDING);
+    expect not position(ProstavitOtmetku, ACTIVE);
+    expect not position(ProstavitOtmetku, VIOLATED);
+    expect not position(ProstavitOtmetku, WAIVED);
+    expect not position(ProstavitOtmetku, SUSPENDED);
+    expect not position(ProstavitOtmetku, TERMINATED);
+    expect not position(ProstavitOtmetku, EXPIRED);
+    expect not position(ProstavitOtmetku, UNDETERMINED);
+    expect not position(ProstavitOtmetku, AVAILABLE);
+    expect not position(ProstavitOtmetku, EXERCISED);
+    expect not position(ProstavitOtmetku, VALIDLY_EXERCISED);
+    expect not position(ProstavitOtmetku, INVALIDLY_EXERCISED);
+    expect not position(ProstavitOtmetku, CONFLICTED);
+    expect not position(ProstavitOtmetku, DEFEATED);
+}
+
+test "KZ-VRED-14-OTMETKA-PROSROCHENA" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-10-01T12:00:00+05:00;
+            knowledge_time @2026-10-01T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": otchet_poluchen_poterpevshim(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "assert-f4": not otmetka_o_soglasii_prostavlena(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": not otmetka_o_nesoglasii_prostavlena(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": not otmetka_prostavlena(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+    expect issues_within(info);
+    expect position(ProstavitOtmetku, VIOLATED);
+    expect not position(ProstavitOtmetku, CREATED);
+    expect not position(ProstavitOtmetku, PENDING);
+    expect not position(ProstavitOtmetku, ACTIVE);
+    expect not position(ProstavitOtmetku, SATISFIED);
+    expect not position(ProstavitOtmetku, WAIVED);
+    expect not position(ProstavitOtmetku, SUSPENDED);
+    expect not position(ProstavitOtmetku, TERMINATED);
+    expect not position(ProstavitOtmetku, EXPIRED);
+    expect not position(ProstavitOtmetku, UNDETERMINED);
+    expect not position(ProstavitOtmetku, AVAILABLE);
+    expect not position(ProstavitOtmetku, EXERCISED);
+    expect not position(ProstavitOtmetku, VALIDLY_EXERCISED);
+    expect not position(ProstavitOtmetku, INVALIDLY_EXERCISED);
+    expect not position(ProstavitOtmetku, CONFLICTED);
+    expect not position(ProstavitOtmetku, DEFEATED);
+}
+
+test "KZ-VRED-15-OTVET-KORREKTIROVKOY" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-10-01T12:00:00+05:00;
+            knowledge_time @2026-10-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": otmetka_nesoglasiya_poluchena_strakhovshchikom(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "assert-f4": korrektirovka_rascheta_predostavlena(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+    expect issues_within(info);
+    expect position(OtvetitNaNesoglasie, SATISFIED);
+    expect not position(OtvetitNaNesoglasie, CREATED);
+    expect not position(OtvetitNaNesoglasie, PENDING);
+    expect not position(OtvetitNaNesoglasie, ACTIVE);
+    expect not position(OtvetitNaNesoglasie, VIOLATED);
+    expect not position(OtvetitNaNesoglasie, WAIVED);
+    expect not position(OtvetitNaNesoglasie, SUSPENDED);
+    expect not position(OtvetitNaNesoglasie, TERMINATED);
+    expect not position(OtvetitNaNesoglasie, EXPIRED);
+    expect not position(OtvetitNaNesoglasie, UNDETERMINED);
+    expect not position(OtvetitNaNesoglasie, AVAILABLE);
+    expect not position(OtvetitNaNesoglasie, EXERCISED);
+    expect not position(OtvetitNaNesoglasie, VALIDLY_EXERCISED);
+    expect not position(OtvetitNaNesoglasie, INVALIDLY_EXERCISED);
+    expect not position(OtvetitNaNesoglasie, CONFLICTED);
+    expect not position(OtvetitNaNesoglasie, DEFEATED);
+}
+
+test "KZ-VRED-16-OTVET-PISMENNYY" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": otmetka_nesoglasiya_poluchena_strakhovshchikom(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "assert-f4": pismennyy_otvet_o_korrektnosti_napravlen(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(strakhovshchik_otreagiroval_na_nesoglasie(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(ReaktsiyaPismennymOtvetom);
+}
+
+test "KZ-VRED-17-OTCHET-POZDNO" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": osmotr_osushchestvlen_strakhovshchikom(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "assert-f4": otchet_poluchen_poterpevshim(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-09) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(otchet_ne_predostavlen_v_srok(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(OtchetPoluchenPosleSroka);
+
+    evaluate truth(pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona(p: entity_ref("urn:kz:vred:poterpevshiy-1"), r: entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-18-OTCHET-NE-PREDOSTAVLEN-VOVSE" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": osmotr_osushchestvlen_strakhovshchikom(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "assert-f4": not otchet_predostavlen_poterpevshemu(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": den_rassmotreniya_dela(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-09) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona(p: entity_ref("urn:kz:vred:poterpevshiy-1"), r: entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(OtchetNePredostavlenVovse);
+}
+
+test "KZ-VRED-19-OTCHET-V-POSLEDNIY-DEN" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": osmotr_osushchestvlen_strakhovshchikom(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "assert-f4": otchet_poluchen_poterpevshim(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-08) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(otchet_ne_predostavlen_v_srok(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == NEITHER;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-20-UPROSHCHENNOE-OFORMLENIE" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": osmotr_osushchestvlen_strakhovshchikom(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "assert-f4": otchet_poluchen_poterpevshim(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-09) {
+            origin case_input;
+        }
+
+        assert "assert-f5": uproshchennoe_oformlenie_proisshestviya(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(predel_predostavleniya_otcheta(r: entity_ref("urn:kz:vred:raschet-1"), day: @2026-09-08));
+    expect truth_status == NEITHER;
+    expect issues_within(info);
+
+    evaluate truth(pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona(p: entity_ref("urn:kz:vred:poterpevshiy-1"), r: entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == NEITHER;
+    expect issues_within(info);
+}

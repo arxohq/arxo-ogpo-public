@@ -1,0 +1,51 @@
+// Header §22, import §23 and the dictionary, SHARED across several subject
+// modules `modules/`. Everything belonging to a single subject task is declared
+// in its own module; only the types and the "calculation ↔ its
+// participants" links that at least two modules read remain here.
+//
+// MODULE BOUNDARIES HERE ARE ORGANIZATIONAL. The `modules/*` directories are units
+// of authorship and navigation; the compiler still sees ONE namespace
+// for the package — the language does not introduce scopes within a package (§22, §24). Checked
+// internal contracts are a possible next stage, not a property of this layout.
+//
+// A BOUNDARY SHARED BY THE WHOLE PACKAGE, NAMED HERE ONCE.
+// The amount of depreciation wear is NOT COMPUTED by the Rules. Clause 2 delegates
+// the calculation to licensed specialized software (SPO),
+// clause 11 obliges the insurance ombudsman and insurers to provide
+// the ability to calculate wear on their own website, annex 3 (clause 1
+// subclause 2) calls "the depreciation wear calculation" a REPORT SECTION — and none
+// of the three provisions gives a formula, a coefficient, or a table. Therefore
+// wear enters the package as a RESULT: a case fact with a label naming the owner
+// of the calculation (`modules/detali/otsenka.law`, `modules/iznos/dostupnost-rascheta.law`).
+// This is a delegation by the Rules themselves, not a stub or an open legal question — the
+// judgment channel §47.3 is not needed here, because there is nothing to dispute: the Rules directly
+// refer to an external tool.
+
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Official calendar §85 — input for the act's day-based deadlines. The import is SYMBOL-FREE:
+// no names are taken from the package; it is declared to pin §11 — the snapshot must
+// enter the world as the bytes pinned here, not just any bytes (DECISION-0175).
+import kz.corpus.clir.official_calendar version "0.1.0";
+
+// Participants and subjects of the calculation. They have no owning module by nature: they
+// are read by all six subject areas.
+
+pub entity TransportnoeSredstvo { label ru official "Транспортное средство, которому причинён вред"; }
+pub entity Strakhovshchik { label ru official "Страховщик по договору обязательного страхования ответственности владельцев транспортных средств"; }
+pub entity Poterpevshiy { label ru official "Потерпевший (выгодоприобретатель) или их представитель"; }
+pub entity RaschetVreda { label ru official "Расчёт размера вреда, причинённого транспортному средству"; }
+pub entity Detal { label ru official "Заменяемая деталь транспортного средства"; }
+
+pub relation raschet_po_ts(r: RaschetVreda, v: TransportnoeSredstvo) kind empirical { label ru official "Расчёт размера вреда ведётся по этому транспортному средству"; }
+pub relation strakhovshchik_po_raschetu(r: RaschetVreda, s: Strakhovshchik) kind empirical { label ru official "Этот страховщик ведёт этот расчёт размера вреда"; }
+pub relation poterpevshiy_po_raschetu(r: RaschetVreda, p: Poterpevshiy) kind empirical { label ru official "Этот потерпевший (выгодоприобретатель) или его представитель участвует в этом расчёте размера вреда"; }
+pub relation detal_ts(d: Detal, v: TransportnoeSredstvo) kind empirical { label ru official "Заменяемая деталь принадлежит этому транспортному средству"; }
+
+// The SPO of clause 2 is read both by the basis of the calculation (`modules/raschet/organizatsiya.law`),
+// and by its stages (same clause 6), and by the appraiser branch
+// (`modules/raschet/otsenshchiki.law`) — hence the predicate is shared.
+
+relation spo_primeneno(r: RaschetVreda) kind empirical { label ru official "При составлении расчёта применено лицензионное специализированное программное обеспечение"; }

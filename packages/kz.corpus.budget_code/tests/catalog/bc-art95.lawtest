@@ -1,0 +1,29 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 95 пункт 3. Запрос, представленный не позднее последнего дня пятидневного срока, представлен в срок
+test "CATALOG-CLARIFICATIONREQUESTTIMELY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": clarification_request_submitted(entity_ref("urn:kz:catalog:clarificationrequesttimely:v0"), @2026-01-15) { origin case_input; }
+        assert "cat-1": clarification_request_deadline(entity_ref("urn:kz:catalog:clarificationrequesttimely:v0"), @2026-01-15) { origin case_input; }
+    }
+    evaluate truth(clarification_request_timely(entity_ref("urn:kz:catalog:clarificationrequesttimely:v0")));
+    expect truth_status == TRUE_ONLY;
+}
+
+// Статья 95 пункт 3. Запрос, представленный после последнего дня пятидневного срока, представлен с нарушением срока
+test "CATALOG-CLARIFICATIONREQUESTLATE" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": clarification_request_submitted(entity_ref("urn:kz:catalog:clarificationrequestlate:v0"), @2026-01-16) { origin case_input; }
+        assert "cat-1": clarification_request_deadline(entity_ref("urn:kz:catalog:clarificationrequestlate:v0"), @2026-01-15) { origin case_input; }
+    }
+    evaluate truth(clarification_request_late(entity_ref("urn:kz:catalog:clarificationrequestlate:v0")));
+    expect truth_status == TRUE_ONLY;
+}

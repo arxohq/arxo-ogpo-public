@@ -1,0 +1,73 @@
+// РАЗМЕРЫ ПОПРАВОЧНЫХ КОЭФФИЦИЕНТОВ — ДВЕ ТАБЛИЦЫ АРРФР.
+//
+// Сорок нормативных фактов: двадцать территорий на каждый из двух
+// закреплённых годов. `key(region, god)` делает каждый ряд функциональным:
+// вторая величина той же территории того же года даёт отказ считать, а не
+// тихо второй ответ о премии.
+//
+// ТЕРРИТОРИЯ НАЗВАНА КОНСТАНТОЙ ОБЩЕГО СЛОВАРЯ `vocab.geo`, а не членом
+// перечисления закона: `pub enum` членов НЕ экспортирует (§24), и назвать
+// `RegistrationTerritory::AlmatyOblast` отсюда нельзя. Мост «член
+// перечисления ↔ регион словаря» объявлен у ВЛАДЕЛЬЦА перечисления —
+// `kz/ogpo-vts/package.law`, отношение `territoriya_registratsii_regiona`.
+//
+// У КАЖДОГО ФАКТА ЯВНЫЙ `id` (§207): анонимные `assert` получают StableId по
+// дайджесту нормализованного факта и provenance, и сорок фактов одной формы
+// дали LDC-E1331/E1338 — «digest-неоднозначность, суффиксов „для
+// уникальности“ нет».
+//
+// СОРОК ЧИСЕЛ НАБРАНЫ НЕ ГЛАЗАМИ. Их независимо читает из закреплённых байтов
+// §194 `tools/tables.py`; `--check` сверяет два чтения одной публикации,
+// `--emit` печатает эти блоки.
+
+language "law.core" version "0.2";
+package kz.corpus.popravochnye_koeffitsienty version "0.1.0";
+namespace "urn:kz:corpus:clir:popravochnye-koeffitsienty";
+
+@source(PK_2025_TABLE) {
+    // Размеры на 2025 год.
+    assert "razmer-2025-ALMATY": razmer_popravochnogo_koeffitsienta(vocab.geo::ALMATY, 2025, 1.37);
+    assert "razmer-2025-ZHETISU": razmer_popravochnogo_koeffitsienta(vocab.geo::ZHETISU, 2025, 1.16);
+    assert "razmer-2025-TURKISTAN": razmer_popravochnogo_koeffitsienta(vocab.geo::TURKISTAN, 2025, 1.57);
+    assert "razmer-2025-EAST_KAZAKHSTAN": razmer_popravochnogo_koeffitsienta(vocab.geo::EAST_KAZAKHSTAN, 2025, 0.72);
+    assert "razmer-2025-ABAI": razmer_popravochnogo_koeffitsienta(vocab.geo::ABAI, 2025, 0.78);
+    assert "razmer-2025-KOSTANAY": razmer_popravochnogo_koeffitsienta(vocab.geo::KOSTANAY, 2025, 1.07);
+    assert "razmer-2025-KARAGANDA": razmer_popravochnogo_koeffitsienta(vocab.geo::KARAGANDA, 2025, 1.12);
+    assert "razmer-2025-ULYTAU": razmer_popravochnogo_koeffitsienta(vocab.geo::ULYTAU, 2025, 0.96);
+    assert "razmer-2025-NORTH_KAZAKHSTAN": razmer_popravochnogo_koeffitsienta(vocab.geo::NORTH_KAZAKHSTAN, 2025, 0.67);
+    assert "razmer-2025-AKMOLA": razmer_popravochnogo_koeffitsienta(vocab.geo::AKMOLA, 2025, 1.03);
+    assert "razmer-2025-PAVLODAR": razmer_popravochnogo_koeffitsienta(vocab.geo::PAVLODAR, 2025, 0.81);
+    assert "razmer-2025-ZHAMBYL": razmer_popravochnogo_koeffitsienta(vocab.geo::ZHAMBYL, 2025, 1.62);
+    assert "razmer-2025-AKTOBE": razmer_popravochnogo_koeffitsienta(vocab.geo::AKTOBE, 2025, 0.97);
+    assert "razmer-2025-WEST_KAZAKHSTAN": razmer_popravochnogo_koeffitsienta(vocab.geo::WEST_KAZAKHSTAN, 2025, 1.14);
+    assert "razmer-2025-KYZYLORDA": razmer_popravochnogo_koeffitsienta(vocab.geo::KYZYLORDA, 2025, 1.66);
+    assert "razmer-2025-ATYRAU": razmer_popravochnogo_koeffitsienta(vocab.geo::ATYRAU, 2025, 0.49);
+    assert "razmer-2025-MANGYSTAU": razmer_popravochnogo_koeffitsienta(vocab.geo::MANGYSTAU, 2025, 0.79);
+    assert "razmer-2025-ALMATY_CITY": razmer_popravochnogo_koeffitsienta(vocab.geo::ALMATY_CITY, 2025, 0.71);
+    assert "razmer-2025-ASTANA": razmer_popravochnogo_koeffitsienta(vocab.geo::ASTANA, 2025, 1.36);
+    assert "razmer-2025-SHYMKENT": razmer_popravochnogo_koeffitsienta(vocab.geo::SHYMKENT, 2025, 1.49);
+}
+
+@source(PK_2026_TABLE) {
+    // Размеры на 2026 год.
+    assert "razmer-2026-ALMATY": razmer_popravochnogo_koeffitsienta(vocab.geo::ALMATY, 2026, 1.44);
+    assert "razmer-2026-ZHETISU": razmer_popravochnogo_koeffitsienta(vocab.geo::ZHETISU, 2026, 1.20);
+    assert "razmer-2026-TURKISTAN": razmer_popravochnogo_koeffitsienta(vocab.geo::TURKISTAN, 2026, 1.69);
+    assert "razmer-2026-EAST_KAZAKHSTAN": razmer_popravochnogo_koeffitsienta(vocab.geo::EAST_KAZAKHSTAN, 2026, 0.72);
+    assert "razmer-2026-ABAI": razmer_popravochnogo_koeffitsienta(vocab.geo::ABAI, 2026, 0.80);
+    assert "razmer-2026-KOSTANAY": razmer_popravochnogo_koeffitsienta(vocab.geo::KOSTANAY, 2026, 1.11);
+    assert "razmer-2026-KARAGANDA": razmer_popravochnogo_koeffitsienta(vocab.geo::KARAGANDA, 2026, 1.18);
+    assert "razmer-2026-ULYTAU": razmer_popravochnogo_koeffitsienta(vocab.geo::ULYTAU, 2026, 0.99);
+    assert "razmer-2026-NORTH_KAZAKHSTAN": razmer_popravochnogo_koeffitsienta(vocab.geo::NORTH_KAZAKHSTAN, 2026, 0.67);
+    assert "razmer-2026-AKMOLA": razmer_popravochnogo_koeffitsienta(vocab.geo::AKMOLA, 2026, 1.08);
+    assert "razmer-2026-PAVLODAR": razmer_popravochnogo_koeffitsienta(vocab.geo::PAVLODAR, 2026, 0.82);
+    assert "razmer-2026-ZHAMBYL": razmer_popravochnogo_koeffitsienta(vocab.geo::ZHAMBYL, 2026, 1.74);
+    assert "razmer-2026-AKTOBE": razmer_popravochnogo_koeffitsienta(vocab.geo::AKTOBE, 2026, 1.02);
+    assert "razmer-2026-WEST_KAZAKHSTAN": razmer_popravochnogo_koeffitsienta(vocab.geo::WEST_KAZAKHSTAN, 2026, 1.19);
+    assert "razmer-2026-KYZYLORDA": razmer_popravochnogo_koeffitsienta(vocab.geo::KYZYLORDA, 2026, 1.85);
+    assert "razmer-2026-ATYRAU": razmer_popravochnogo_koeffitsienta(vocab.geo::ATYRAU, 2026, 0.48);
+    assert "razmer-2026-MANGYSTAU": razmer_popravochnogo_koeffitsienta(vocab.geo::MANGYSTAU, 2026, 0.79);
+    assert "razmer-2026-ALMATY_CITY": razmer_popravochnogo_koeffitsienta(vocab.geo::ALMATY_CITY, 2026, 0.71);
+    assert "razmer-2026-ASTANA": razmer_popravochnogo_koeffitsienta(vocab.geo::ASTANA, 2026, 1.44);
+    assert "razmer-2026-SHYMKENT": razmer_popravochnogo_koeffitsienta(vocab.geo::SHYMKENT, 2026, 1.61);
+}

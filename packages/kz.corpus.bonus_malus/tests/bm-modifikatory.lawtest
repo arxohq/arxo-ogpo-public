@@ -1,0 +1,209 @@
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// ПУНКТЫ 7, 10, 12, 13, 14, 15 И 16 — МОДИФИКАТОРЫ И ПРЕДЕЛЫ.
+//
+// ОБЩИЙ ВХОД: действующий класс 3 (место 7 порядка приложения), один
+// страховой случай по вине с выплатой, 365 дней страхования, доступ к
+// сведениям пункта 3 есть. Строка «Класс 3» столбца «1 страховой случай»
+// приложения даёт класс 1 — место 5 порядка, коэффициент 1,55.
+//
+// КАЖДАЯ СЦЕНА ЗДЕСЬ ЕЩЁ И ПРОБА `not_known` НАД СТРОГИМ ПРОДЮСЕРОМ. Ноль
+// сдвига выводится правилом, читающим `not_known(punkt_N_primenyaetsya)`;
+// окажись это чтение слепо, дело с ПРИМЕНИМЫМ модификатором получило бы
+// одновременно 1 и 0 по ключу `key(dogovor)`, и документ стал бы
+// неисполнимым. Сцены с применимым модификатором поэтому обязаны быть
+// COMPUTED, а не просто «с верным числом».
+
+// ПУНКТ 10 — упрощённый порядок: класс на 1 больше. Место 5 + 1 = 6, класс 2,
+// коэффициент 1,40.
+test "urn:query:bm-p10-uproshchennyy-poryadok" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "a0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:1"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "a1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:m:1"), 1) { origin case_input; }
+        assert "a2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:1"), Klass3) { origin case_input; }
+        assert "a3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:1"), 365) { origin case_input; }
+        assert "a4": uregulirovano_uproshchennym_poryadkom(entity_ref("urn:kz:bm:m:1")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:1"), 1.40));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 10 НЕ ПРИМЕНЯЕТСЯ при действующем классе М1: исключение названо самим
+// пунктом. Строка «Класс М1» столбца «1» даёт М2 — 3,50.
+test "urn:query:bm-p10-isklyuchenie-klass-m1" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "b0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:2"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "b1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:m:2"), 1) { origin case_input; }
+        assert "b2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:2"), KlassM1) { origin case_input; }
+        assert "b3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:2"), 365) { origin case_input; }
+        assert "b4": uregulirovano_uproshchennym_poryadkom(entity_ref("urn:kz:bm:m:2")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:2"), 3.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 12 — случай вне территории регистрации: класс на 1 меньше.
+// Место 5 − 1 = 4, класс 0, коэффициент 2,30.
+test "urn:query:bm-p12-vne-territorii" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "c0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:3"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "c1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:m:3"), 1) { origin case_input; }
+        assert "c2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:3"), Klass3) { origin case_input; }
+        assert "c3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:3"), 365) { origin case_input; }
+        assert "c4": sluchay_vne_territorii_registratsii(entity_ref("urn:kz:bm:m:3")) { origin case_input; }
+        assert "c5": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:m:3")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:3"), 2.30));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 13 — три нарушения перечня: класс на 1 меньше. Порог «три и более».
+test "urn:query:bm-p13-tri-narusheniya" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "d0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:4"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "d1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:m:4"), 1) { origin case_input; }
+        assert "d2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:4"), Klass3) { origin case_input; }
+        assert "d3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:4"), 365) { origin case_input; }
+        assert "d4": narusheniy_perechnya_punkta_13(entity_ref("urn:kz:bm:m:4"), 3) { origin case_input; }
+        assert "d5": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:m:4")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:4"), 2.30));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// НИЖНЯЯ СТОРОНА ПОРОГА ПУНКТА 13: два нарушения сдвига не дают, коэффициент
+// остаётся 1,55.
+test "urn:query:bm-p13-dva-narusheniya" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "e0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:5"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "e1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:m:5"), 1) { origin case_input; }
+        assert "e2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:5"), Klass3) { origin case_input; }
+        assert "e3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:5"), 365) { origin case_input; }
+        assert "e4": narusheniy_perechnya_punkta_13(entity_ref("urn:kz:bm:m:5"), 2) { origin case_input; }
+        assert "e5": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:m:5")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:5"), 1.55));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 15 — ОДНОВРЕМЕННОЕ ПРИМЕНЕНИЕ: упрощённый порядок (+1) и три
+// нарушения перечня (−1) дают нулевой суммарный сдвиг. Коэффициент 1,55 — тот
+// же, что без модификаторов, и это не совпадение, а проверяемое следствие.
+test "urn:query:bm-p15-odnovremenno" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "f0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:6"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "f1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:m:6"), 1) { origin case_input; }
+        assert "f2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:6"), Klass3) { origin case_input; }
+        assert "f3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:6"), 365) { origin case_input; }
+        assert "f4": uregulirovano_uproshchennym_poryadkom(entity_ref("urn:kz:bm:m:6")) { origin case_input; }
+        assert "f5": narusheniy_perechnya_punkta_13(entity_ref("urn:kz:bm:m:6"), 3) { origin case_input; }
+        assert "f6": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:m:6")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:6"), 1.55));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 7 — гибель: самый минимальный класс М2, 3,50.
+test "urn:query:bm-p7-gibel" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "g0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:7"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "g1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:m:7"), 1) { origin case_input; }
+        assert "g2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:7"), Klass13) { origin case_input; }
+        assert "g3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:7"), 365) { origin case_input; }
+        assert "g4": gibel_po_vine_s_vyplatoy(entity_ref("urn:kz:bm:m:7")) { origin case_input; }
+        assert "g5": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:m:7")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:7"), 3.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 7 НЕ ПРИМЕНЯЕТСЯ к временному въезду: пункт 6 назван его исключением.
+// Гибель есть, а класс остаётся тринадцатым — 0,50.
+test "urn:query:bm-p7-isklyuchenie-vremennyy-vezd" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "h0": vremennyy_vezd_na_territoriyu_rk(entity_ref("urn:kz:bm:m:8")) { origin case_input; }
+        assert "h1": gibel_po_vine_s_vyplatoy(entity_ref("urn:kz:bm:m:8")) { origin case_input; }
+        assert "h2": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:m:8")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:8"), 0.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 14 — опьянение: самый минимальный класс М2 помимо любого другого
+// основания. Здесь налицо и упрощённый порядок пункта 10, и он вытеснен
+// собственным исключением пункта 10.
+test "urn:query:bm-p14-opyanenie" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "i0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:9"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "i1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:m:9"), 1) { origin case_input; }
+        assert "i2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:9"), Klass13) { origin case_input; }
+        assert "i3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:9"), 365) { origin case_input; }
+        assert "i4": uregulirovano_uproshchennym_poryadkom(entity_ref("urn:kz:bm:m:9")) { origin case_input; }
+        assert "i5": narushenie_perechnya_punkta_14(entity_ref("urn:kz:bm:m:9")) { origin case_input; }
+        assert "i6": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:m:9")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:9"), 3.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 16 — собственная оценка рисков страховщика: 0,40 вместо 0,50.
+test "urn:query:bm-p16-sobstvennaya-otsenka" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "j0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:10"), OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "j1": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:10"), Klass13) { origin case_input; }
+        assert "j2": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:10"), 400) { origin case_input; }
+        assert "j3": fizlitso_v_klasse_13_bolee_pyati_let(entity_ref("urn:kz:bm:m:10")) { origin case_input; }
+        assert "j4": koeffitsient_sobstvennoy_otsenki(entity_ref("urn:kz:bm:m:10"), 0.40) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:10"), 0.40));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 16, ВЕРХНЯЯ СТОРОНА ПРЕДЕЛА: 0,60 выше значения приложения для
+// 13-класса. Коэффициент не выводится, и §93.3 объявляет нарушение — ответ
+// «нарушено» отличается от ответа «не выведено».
+test "urn:query:bm-p16-vyshe-predela" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "k0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:m:11"), OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "k1": deystvuyushchiy_klass(entity_ref("urn:kz:bm:m:11"), Klass13) { origin case_input; }
+        assert "k2": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:m:11"), 400) { origin case_input; }
+        assert "k3": fizlitso_v_klasse_13_bolee_pyati_let(entity_ref("urn:kz:bm:m:11")) { origin case_input; }
+        assert "k4": koeffitsient_sobstvennoy_otsenki(entity_ref("urn:kz:bm:m:11"), 0.60) { origin case_input; }
+    }
+    evaluate collect k: Decimal where koeffitsient_bonus_malus(entity_ref("urn:kz:bm:m:11"), k);
+    expect result_kind == COLLECTION;
+    expect collected_count(0);
+}

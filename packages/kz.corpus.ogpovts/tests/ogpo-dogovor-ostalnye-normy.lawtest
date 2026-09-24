@@ -1,0 +1,738 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// ОСТАЛЬНЫЕ НОРМЫ СТАТЕЙ 10–15, у которых своей пары в других файлах нет.
+// Файл существует затем, чтобы у КАЖДОГО правила модулей был исполняющий его
+// сценарий: правило без сценария — обещание, а не норма.
+//
+// Здесь: свобода выбора страховщика и выбор способа заключения (позиции
+// §128), обязанность уплатить премию, стандартный вид договора, обращение к
+// страховщику как способ заключения, требования к полису комплексного
+// договора, замещение ухудшающих условий (пункт 8), покрытие вреда самим
+// страхователем и противоправно завладевшим лицом по обеим статьям, обмен
+// цифровыми ресурсами через ресурс страховщика, два исключения пункта 1
+// статьи 13 и два основания иного срока пункта 4.
+
+context profile KZ_OGPO_DEADLINES {
+    deadline_policy KZ_OGPO_CALENDAR_MONTH_DEADLINES;
+}
+
+context profile KZ_OGPO_DAY_DEADLINES {
+    deadline_policy KZ_OGPO_CALENDAR_DAY_DEADLINES;
+}
+
+// Ст. 10 п. 3 абз. второй и четвёртый; п. 5 абз. второй; п. 4 подп. 1);
+// п. 5-1 первый способ — на одном деле.
+test "urn:query:ogpo-choice-and-premium-positions" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x1-0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:y1"), entity_ref("urn:kz:ogpo:owner:o9"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x1-1": insurance_application_submitted(entity_ref("urn:kz:ogpo:contract:y1"), entity_ref("urn:kz:ogpo:owner:o9"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x1-2": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:y1"), DirectApplicationToInsurer) {
+            origin case_input;
+        }
+
+        assert "ogpo-x1-3": vehicle_of(entity_ref("urn:kz:ogpo:vehicle:v14"), entity_ref("urn:kz:ogpo:owner:o9")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x1-4": insurer_licensed(entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(VybratStrakhovshchika, ACTIVE);
+    expect position(VybratSposobZaklyucheniyaDogovora, ACTIVE);
+    expect position(UplatitStrakhovuyuPremiyuPoDogovoru, ACTIVE);
+}
+
+test "urn:query:ogpo-ground-for-conclusion" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x2-0": insurance_application_submitted(entity_ref("urn:kz:ogpo:contract:y2"), entity_ref("urn:kz:ogpo:owner:o9"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(ground_for_conclusion_established(entity_ref("urn:kz:ogpo:contract:y2")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-direct-application-channel" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x3-0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:y3"), DirectApplicationToInsurer) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(conclusion_channel_permitted(entity_ref("urn:kz:ogpo:contract:y3"), DirectApplicationToInsurer));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-standard-contract-kind" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x4-0": standard_contract(entity_ref("urn:kz:ogpo:contract:y4")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_kind_established(entity_ref("urn:kz:ogpo:contract:y4")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 10 п. 6: предельный объём ответственности требуется всякому полису.
+test "urn:query:ogpo-liability-limit-required" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x5-0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:y5"), entity_ref("urn:kz:ogpo:owner:o9"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(policy_requisite_required(entity_ref("urn:kz:ogpo:contract:y5"), LiabilityLimitPerInsuredEvent));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-contract-kind-requisite-required" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x6-0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:y6"), entity_ref("urn:kz:ogpo:owner:o9"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(policy_requisite_required(entity_ref("urn:kz:ogpo:contract:y6"), ContractKindIndication));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 12 п. 3: полис комплексного договора и его полнота.
+test "urn:query:ogpo-complex-policy-complete" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x7-0": complex_contract(entity_ref("urn:kz:ogpo:contract:y7")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x7-1": policy_contains_requisite(entity_ref("urn:kz:ogpo:contract:y7"), LiabilityLimitPerInsuredEvent) {
+            origin case_input;
+        }
+
+        assert "ogpo-x7-2": policy_contains_requisite(entity_ref("urn:kz:ogpo:contract:y7"), ContractKindIndication) {
+            origin case_input;
+        }
+
+        assert "ogpo-x7-3": policy_contains_requisite(entity_ref("urn:kz:ogpo:contract:y7"), ComplexNaturalPersonAndVehiclesDetails) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(policy_meets_requisites_of_this_law(entity_ref("urn:kz:ogpo:contract:y7")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-complex-policy-requisite-required" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x8-0": complex_contract(entity_ref("urn:kz:ogpo:contract:y8")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(policy_requisite_required(entity_ref("urn:kz:ogpo:contract:y8"), ComplexNaturalPersonAndVehiclesDetails));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 10 п. 8: договор заключён на ухудшающих условиях — при страховом случае
+// обязательства страховщика определяются законом. Страховой случай выводится
+// статьёй 22 пятью фактами дела.
+test "urn:query:ogpo-worse-terms-replaced" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x9-0": contract_terms_worsen_position(entity_ref("urn:kz:ogpo:contract:y9")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x9-1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:y9"), entity_ref("urn:kz:ogpo:owner:o10")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x9-2": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:y9"), entity_ref("urn:kz:ogpo:vehicle:v15")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x9-3": accident_arose_from_vehicle_operation(entity_ref("urn:kz:ogpo:accident:x4"), entity_ref("urn:kz:ogpo:owner:o10"), entity_ref("urn:kz:ogpo:vehicle:v15")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x9-4": victim_recognized(entity_ref("urn:kz:ogpo:accident:x4"), entity_ref("urn:kz:ogpo:victim:p4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x9-5": property_harm_amount(entity_ref("urn:kz:ogpo:accident:x4"), entity_ref("urn:kz:ogpo:victim:p4"), 400000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(insurer_obligations_governed_by_this_law(entity_ref("urn:kz:ogpo:contract:y9"), entity_ref("urn:kz:ogpo:accident:x4")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 11 п. 5 абзац первый: вред причинён самим страхователем.
+test "urn:query:ogpo-standard-cover-by-insured-personally" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x10-0": standard_contract(entity_ref("urn:kz:ogpo:contract:y10")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x10-1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:y10"), entity_ref("urn:kz:ogpo:owner:o11")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x10-2": harm_to_third_party_caused_by(entity_ref("urn:kz:ogpo:contract:y10"), entity_ref("urn:kz:ogpo:owner:o11")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(liability_insured_under_standard_contract(entity_ref("urn:kz:ogpo:contract:y10"), entity_ref("urn:kz:ogpo:owner:o11"), entity_ref("urn:kz:ogpo:owner:o11")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 11 п. 5 подп. 1): водитель, имеющий право управления, в присутствии
+// страхователя — и покрытие, и предикат моста к статье 28.
+test "urn:query:ogpo-standard-cover-driver-in-presence" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x11-0": standard_contract(entity_ref("urn:kz:ogpo:contract:y11")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x11-1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:y11"), entity_ref("urn:kz:ogpo:owner:o11")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x11-2": driver_had_right_to_drive_in_presence_of_insured(entity_ref("urn:kz:ogpo:contract:y11"), entity_ref("urn:kz:ogpo:owner:d4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x11-3": harm_to_third_party_caused_by(entity_ref("urn:kz:ogpo:contract:y11"), entity_ref("urn:kz:ogpo:owner:d4")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(liability_insured_under_standard_contract(entity_ref("urn:kz:ogpo:contract:y11"), entity_ref("urn:kz:ogpo:owner:o11"), entity_ref("urn:kz:ogpo:owner:d4")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 11 п. 5 подп. 3): противоправно завладевшее лицо — покрытие есть.
+test "urn:query:ogpo-standard-cover-unlawful-taker" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x12-0": standard_contract(entity_ref("urn:kz:ogpo:contract:y12")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x12-1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:y12"), entity_ref("urn:kz:ogpo:owner:o11")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x12-2": driver_unlawfully_took_vehicle(entity_ref("urn:kz:ogpo:contract:y12"), entity_ref("urn:kz:ogpo:owner:d5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x12-3": liability_imposed_on_insured_for_unlawful_taking(entity_ref("urn:kz:ogpo:contract:y12"), entity_ref("urn:kz:ogpo:owner:d5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x12-4": harm_to_third_party_caused_by(entity_ref("urn:kz:ogpo:contract:y12"), entity_ref("urn:kz:ogpo:owner:d5")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(liability_insured_under_standard_contract(entity_ref("urn:kz:ogpo:contract:y12"), entity_ref("urn:kz:ogpo:owner:o11"), entity_ref("urn:kz:ogpo:owner:d5")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 12 п. 5 абзац первый и подпункт 2).
+test "urn:query:ogpo-complex-cover-by-insured-personally" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x13-0": complex_contract(entity_ref("urn:kz:ogpo:contract:y13")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x13-1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:y13"), entity_ref("urn:kz:ogpo:owner:o12")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x13-2": harm_to_third_party_caused_by(entity_ref("urn:kz:ogpo:contract:y13"), entity_ref("urn:kz:ogpo:owner:o12")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(liability_insured_under_complex_contract(entity_ref("urn:kz:ogpo:contract:y13"), entity_ref("urn:kz:ogpo:owner:o12"), entity_ref("urn:kz:ogpo:owner:o12")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-complex-cover-unlawful-taker" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x14-0": complex_contract(entity_ref("urn:kz:ogpo:contract:y14")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x14-1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:y14"), entity_ref("urn:kz:ogpo:owner:o12")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x14-2": driver_unlawfully_took_vehicle(entity_ref("urn:kz:ogpo:contract:y14"), entity_ref("urn:kz:ogpo:owner:d6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x14-3": liability_imposed_on_insured_for_unlawful_taking(entity_ref("urn:kz:ogpo:contract:y14"), entity_ref("urn:kz:ogpo:owner:d6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x14-4": harm_to_third_party_caused_by(entity_ref("urn:kz:ogpo:contract:y14"), entity_ref("urn:kz:ogpo:owner:d6")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(liability_insured_under_complex_contract(entity_ref("urn:kz:ogpo:contract:y14"), entity_ref("urn:kz:ogpo:owner:o12"), entity_ref("urn:kz:ogpo:owner:d6")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 12-1 п. 1 абзац первый: обмен цифровыми ресурсами идёт через ресурс
+// страховщика.
+test "urn:query:ogpo-digital-exchange-on-insurer-resource" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x15-0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:y15"), entity_ref("urn:kz:ogpo:owner:o13"), entity_ref("urn:kz:ogpo:insurer:i3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x15-1": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:y15"), DigitalResourceExchange) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(digital_exchange_runs_on_insurer_resource(entity_ref("urn:kz:ogpo:contract:y15"), entity_ref("urn:kz:ogpo:insurer:i3")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 13 п. 1 подп. 1): потерпевший управлял ТС по службе.
+test "urn:query:ogpo-service-driver-victim-excluded" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x16-0": contract_insured_person(entity_ref("urn:kz:ogpo:contract:y16"), entity_ref("urn:kz:ogpo:owner:o14")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x16-1": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:y16"), entity_ref("urn:kz:ogpo:vehicle:v16")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x16-2": accident_arose_from_vehicle_operation(entity_ref("urn:kz:ogpo:accident:x5"), entity_ref("urn:kz:ogpo:owner:o14"), entity_ref("urn:kz:ogpo:vehicle:v16")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x16-3": victim_recognized(entity_ref("urn:kz:ogpo:accident:x5"), entity_ref("urn:kz:ogpo:victim:p5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x16-4": property_harm_amount(entity_ref("urn:kz:ogpo:accident:x5"), entity_ref("urn:kz:ogpo:victim:p5"), 300000 KZT) {
+            origin case_input;
+        }
+
+        assert "ogpo-x16-5": victim_drove_in_service_of_insured(entity_ref("urn:kz:ogpo:contract:y16"), entity_ref("urn:kz:ogpo:victim:p5")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_applies_to_victim(entity_ref("urn:kz:ogpo:contract:y16"), entity_ref("urn:kz:ogpo:victim:p5")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 13 п. 1 подп. 2): пассажир перевозчика, обязанного страховать
+// ответственность перед пассажирами.
+test "urn:query:ogpo-carrier-passenger-excluded" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x17-0": contract_insured_person(entity_ref("urn:kz:ogpo:contract:y17"), entity_ref("urn:kz:ogpo:owner:o15")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x17-1": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:y17"), entity_ref("urn:kz:ogpo:vehicle:v17")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x17-2": accident_arose_from_vehicle_operation(entity_ref("urn:kz:ogpo:accident:x6"), entity_ref("urn:kz:ogpo:owner:o15"), entity_ref("urn:kz:ogpo:vehicle:v17")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x17-3": victim_recognized(entity_ref("urn:kz:ogpo:accident:x6"), entity_ref("urn:kz:ogpo:victim:p6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x17-4": property_harm_amount(entity_ref("urn:kz:ogpo:accident:x6"), entity_ref("urn:kz:ogpo:victim:p6"), 300000 KZT) {
+            origin case_input;
+        }
+
+        assert "ogpo-x17-5": victim_is_passenger(entity_ref("urn:kz:ogpo:contract:y17"), entity_ref("urn:kz:ogpo:victim:p6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x17-6": insured_is_carrier_liable_to_passengers(entity_ref("urn:kz:ogpo:contract:y17")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_applies_to_victim(entity_ref("urn:kz:ogpo:contract:y17"), entity_ref("urn:kz:ogpo:victim:p6")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 13 п. 2 и п. 4 подп. 1): вступление в силу и сезонная эксплуатация.
+// Политика §86 здесь с `month_end`: наименьший срок этого основания — шесть
+// МЕСЯЦЕВ.
+test "urn:query:ogpo-seasonal-ground-available" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x18-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:y18")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x18-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:y18"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-x18-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:y18"), SeasonalOperation) {
+            origin case_input;
+        }
+
+        assert "ogpo-x18-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:y18"), @2026-08-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-x18-4": seasonal_operation(entity_ref("urn:kz:ogpo:contract:y18")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(other_term_ground_available(entity_ref("urn:kz:ogpo:contract:y18"), SeasonalOperation));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пара к сезонному основанию: договор с 1 января по 1 июня короче шести
+// месяцев, наименьший допустимый день окончания — 1 июля.
+test "urn:query:ogpo-seasonal-term-below-minimum" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x19-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:y19")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x19-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:y19"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-x19-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:y19"), SeasonalOperation) {
+            origin case_input;
+        }
+
+        assert "ogpo-x19-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:y19"), @2026-06-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-x19-4": seasonal_operation(entity_ref("urn:kz:ogpo:contract:y19")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_term_below_statutory_minimum(entity_ref("urn:kz:ogpo:contract:y19"), SeasonalOperation));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 13 п. 4 подп. 3): перегон своим ходом до государственной регистрации —
+// признак статьи 5, а не второй такой же в статье 13.
+test "urn:query:ogpo-pre-registration-ground-available" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x20-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:y20")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x20-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:y20"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-x20-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:y20"), PriorToStateRegistration) {
+            origin case_input;
+        }
+
+        assert "ogpo-x20-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:y20"), @2026-01-10) {
+            origin case_input;
+        }
+
+        assert "ogpo-x20-4": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:y20"), entity_ref("urn:kz:ogpo:vehicle:v18")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x20-5": compulsory_insurance_ground(entity_ref("urn:kz:ogpo:vehicle:v18"), DeliveredUnderOwnPower) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(other_term_ground_available(entity_ref("urn:kz:ogpo:contract:y20"), PriorToStateRegistration));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 14 п. 1 подп. 2): досрочное прекращение прекращает договор.
+test "urn:query:ogpo-terminated-by-early-termination" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x21-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:y21")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x21-1": civil_code_early_termination_ground(entity_ref("urn:kz:ogpo:contract:y21")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x21-2": early_termination_application_by_policyholder(entity_ref("urn:kz:ogpo:contract:y21")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_terminated(entity_ref("urn:kz:ogpo:contract:y21")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 15 п. 3: срок, прошедший до досрочного прекращения, включая день
+// обращения. Обращение 4 января при вступлении в силу 1 января — четыре дня.
+test "urn:query:ogpo-elapsed-term-days" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-x22-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:y22")) {
+            origin case_input;
+        }
+
+        assert "ogpo-x22-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:y22"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-x22-2": early_termination_day(entity_ref("urn:kz:ogpo:contract:y22"), @2026-01-04) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(elapsed_term_days(entity_ref("urn:kz:ogpo:contract:y22"), 4));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

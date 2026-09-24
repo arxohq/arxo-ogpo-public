@@ -1,0 +1,107 @@
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Cl. 2 part 4: additional inspection and adjustment for hidden defects.
+// Three norms — an application with annex 1 data, inspection by the insurer
+// with an act under annex 2, adjustment by an addendum to the report.
+
+// All conditions are satisfied — the adjustment is formalised by an addendum.
+test "urn:query:vred-t10-a" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t10a-a0": skrytye_defekty_vyyavleny(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10a-a1": zayavlenie_o_dopolnitelnom_osmotre(z: entity_ref("urn:case:vred:zayavlenie-2"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10a-a2": zayavlenie_soderzhit_datu_i_vremya_postupleniya(entity_ref("urn:case:vred:zayavlenie-2")) { origin case_input; }
+        assert "t10a-a3": zayavlenie_soderzhit_svedeniya_ob_imushchestve(entity_ref("urn:case:vred:zayavlenie-2")) { origin case_input; }
+        assert "t10a-a4": dopolnitelnyy_osmotr_proveden_strakhovshchikom(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10a-a5": akt_dopolnitelnogo_osmotra_po_raschetu(a: entity_ref("urn:case:vred:akt-2"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10a-a6": akt_soderzhit_svedeniya_prilozheniya_2(entity_ref("urn:case:vred:akt-2")) { origin case_input; }
+    }
+    evaluate truth(korrektirovka_pri_skrytykh_defektakh_oformlyaetsya_dopolneniem(entity_ref("urn:case:vred:raschet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    expect applied(DopolnitelnyyOsmotrOformlenAktom);
+    expect applied(DopolnitelnyyOsmotrPoPravilam);
+    expect applied(KorrektirovkaPriSkrytykhDefektakh);
+}
+
+// There is no application for an additional inspection (only the primary
+// inspection act exists) — the additional inspection is not under the Rules,
+// the adjustment is not derived.
+test "urn:query:vred-t10-b" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t10b-a0": skrytye_defekty_vyyavleny(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10b-a1": zayavlenie_po_raschetu(z: entity_ref("urn:case:vred:zayavlenie-1"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10b-a2": zayavlenie_soderzhit_datu_i_vremya_postupleniya(entity_ref("urn:case:vred:zayavlenie-1")) { origin case_input; }
+        assert "t10b-a3": zayavlenie_soderzhit_svedeniya_ob_imushchestve(entity_ref("urn:case:vred:zayavlenie-1")) { origin case_input; }
+        assert "t10b-a4": dopolnitelnyy_osmotr_proveden_strakhovshchikom(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10b-a5": akt_dopolnitelnogo_osmotra_po_raschetu(a: entity_ref("urn:case:vred:akt-2"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10b-a6": akt_soderzhit_svedeniya_prilozheniya_2(entity_ref("urn:case:vred:akt-2")) { origin case_input; }
+    }
+    evaluate truth(korrektirovka_pri_skrytykh_defektakh_oformlyaetsya_dopolneniem(entity_ref("urn:case:vred:raschet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// The additional inspection is not formalised by an act with annex 2 information — NEITHER.
+test "urn:query:vred-t10-c" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t10c-a0": skrytye_defekty_vyyavleny(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10c-a1": zayavlenie_o_dopolnitelnom_osmotre(z: entity_ref("urn:case:vred:zayavlenie-2"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10c-a2": zayavlenie_soderzhit_datu_i_vremya_postupleniya(entity_ref("urn:case:vred:zayavlenie-2")) { origin case_input; }
+        assert "t10c-a3": zayavlenie_soderzhit_svedeniya_ob_imushchestve(entity_ref("urn:case:vred:zayavlenie-2")) { origin case_input; }
+        assert "t10c-a4": dopolnitelnyy_osmotr_proveden_strakhovshchikom(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10c-a5": akt_dopolnitelnogo_osmotra_po_raschetu(a: entity_ref("urn:case:vred:akt-2"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate truth(korrektirovka_pri_skrytykh_defektakh_oformlyaetsya_dopolneniem(entity_ref("urn:case:vred:raschet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// No hidden defects: the inspection under the Rules is derived, the adjustment is not.
+test "urn:query:vred-t10-d" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t10d-a1": zayavlenie_o_dopolnitelnom_osmotre(z: entity_ref("urn:case:vred:zayavlenie-2"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10d-a2": zayavlenie_soderzhit_datu_i_vremya_postupleniya(entity_ref("urn:case:vred:zayavlenie-2")) { origin case_input; }
+        assert "t10d-a3": zayavlenie_soderzhit_svedeniya_ob_imushchestve(entity_ref("urn:case:vred:zayavlenie-2")) { origin case_input; }
+        assert "t10d-a4": dopolnitelnyy_osmotr_proveden_strakhovshchikom(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10d-a5": akt_dopolnitelnogo_osmotra_po_raschetu(a: entity_ref("urn:case:vred:akt-2"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t10d-a6": akt_soderzhit_svedeniya_prilozheniya_2(entity_ref("urn:case:vred:akt-2")) { origin case_input; }
+    }
+    evaluate truth(dopolnitelnyy_osmotr_proveden_po_pravilam(entity_ref("urn:case:vred:raschet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(korrektirovka_pri_skrytykh_defektakh_oformlyaetsya_dopolneniem(entity_ref("urn:case:vred:raschet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

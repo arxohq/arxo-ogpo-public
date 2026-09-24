@@ -1,0 +1,125 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 24 п. 1 пп. 3) и п. 4 ч. 2 — общий предел на всех потерпевших.
+//
+// МРП дня выплаты (2026 год) — 4 325 ₸. Отсюда:
+//   предел одного потерпевшего   600 × 4 325 = 2 595 000 ₸;
+//   общий предел на всех        2000 × 4 325 = 8 650 000 ₸.
+
+// OGPO-P24-1 — СУММА ВРЕДА МЕНЬШЕ ОБЩЕГО ПРЕДЕЛА.
+// Два потерпевших: 1 000 000 ₸ и 2 000 000 ₸; всего 3 000 000 ₸ ≤
+// 8 650 000 ₸. Соразмерная ветвь не открывается, каждый получает свой
+// вред в пределах собственного предела: min(1 000 000; 2 595 000).
+test "urn:query:ogpo-p24-within-total-limit" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p24a-0": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 1000000 KZT) { origin case_input; }
+        assert "p24a-1": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v2"), 2000000 KZT) { origin case_input; }
+    }
+    evaluate truth(insurance_payment_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 1000000 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P24-2 — тот же мир, общий размер вреда: 1 000 000 + 2 000 000.
+test "urn:query:ogpo-p24-property-harm-total" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p24b-0": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 1000000 KZT) { origin case_input; }
+        assert "p24b-1": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v2"), 2000000 KZT) { origin case_input; }
+    }
+    evaluate truth(property_harm_total(entity_ref("urn:kz:ogpo:accident:a1"), 3000000 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P24-3 — СУММА ВРЕДА БОЛЬШЕ ОБЩЕГО ПРЕДЕЛА, ЧЕТЫРЕ ПОТЕРПЕВШИХ.
+// Вред: 4 000 000 + 3 000 000 + 2 000 000 + 1 000 000 = 10 000 000 ₸ >
+// 8 650 000 ₸ — открывается соразмерная ветвь.
+// Доля третьего потерпевшего: 2 000 000 / 10 000 000 = 0,2;
+// соразмерная выплата: 8 650 000 × 0,2 = 1 730 000 ₸, что ниже предела
+// 2 595 000 ₸, поэтому минимум её не срезает.
+//
+// ЧЕТЫРЕ, А НЕ ДВА ПОТЕРПЕВШИХ — ЭТО НЕ ПРОИЗВОЛ. При двух и трёх
+// потерпевших наибольшая соразмерная доля общего предела не меньше
+// 8 650 000 / 3 ≈ 2 883 333 ₸ и всегда срезается пределом 2 595 000 ₸;
+// третье предложение подпункта 3) начинает менять ответ с четырёх.
+test "urn:query:ogpo-p24-proportional-share" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p24c-0": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w1"), 4000000 KZT) { origin case_input; }
+        assert "p24c-1": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w2"), 3000000 KZT) { origin case_input; }
+        assert "p24c-2": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w3"), 2000000 KZT) { origin case_input; }
+        assert "p24c-3": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w4"), 1000000 KZT) { origin case_input; }
+    }
+    evaluate truth(insurance_payment_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w3"), 1730000 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P24-4 — тот же мир: доля первого потерпевшего 0,4 даёт
+// 8 650 000 × 0,4 = 3 460 000 ₸, что ВЫШЕ предела 2 595 000 ₸;
+// минимум срезает её до предела. Здесь и виден принятый выбор прочтения:
+// предел шестисот МРП действует и в соразмерной ветви.
+test "urn:query:ogpo-p24-proportional-share-capped" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p24d-0": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w1"), 4000000 KZT) { origin case_input; }
+        assert "p24d-1": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w2"), 3000000 KZT) { origin case_input; }
+        assert "p24d-2": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w3"), 2000000 KZT) { origin case_input; }
+        assert "p24d-3": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w4"), 1000000 KZT) { origin case_input; }
+    }
+    evaluate truth(insurance_payment_amount(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:w1"), 2595000 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P24-5 — ПУНКТ 4 ЧАСТЬ ВТОРАЯ: общая сумма выплаты и компенсации.
+// Один потерпевший, вред имуществу 2 000 000 ₸ — выплата
+// min(2 000 000; 2 595 000) = 2 000 000 ₸. Расходы по уменьшению убытков
+// 100 000 ₸ понесены не по указанию страховщика, значит входят в предел.
+// Общая сумма 2 000 000 + 100 000 = 2 100 000 ₸ ≤ 2 595 000 ₸.
+test "urn:query:ogpo-p24-combined-payment-and-expenses" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p24e-0": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a3"), entity_ref("urn:kz:ogpo:victim:v1"), 2000000 KZT) { origin case_input; }
+        assert "p24e-1": loss_prevention_expenses(entity_ref("urn:kz:ogpo:accident:a3"), entity_ref("urn:kz:ogpo:beneficiary:b1"), 100000 KZT) { origin case_input; }
+        assert "p24e-2": loss_prevention_expenses_necessary(entity_ref("urn:kz:ogpo:accident:a3"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+        assert "p24e-3": loss_prevention_expenses_on_instructions(entity_ref("urn:kz:ogpo:accident:a3"), entity_ref("urn:kz:ogpo:beneficiary:b1"), false) { origin case_input; }
+    }
+    evaluate truth(combined_payment_and_expenses(entity_ref("urn:kz:ogpo:accident:a3"), 2100000 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

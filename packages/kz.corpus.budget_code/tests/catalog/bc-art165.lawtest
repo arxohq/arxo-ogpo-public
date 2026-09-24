@@ -1,0 +1,18 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 165 пункт 2. В случае одобрения донором заявки на привлечение связанного гранта целесообразность его привлечения определяется соответствующими бюджетными
+test "CATALOG-GRANTATTRACTIONNEEDSEXPEDIENCY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": grant_expediency_determined(entity_ref("urn:kz:catalog:grantattractionneedsexpediency:v0")) { origin case_input; }
+        assert "cat-1": donor_approved_application(entity_ref("urn:kz:catalog:grantattractionneedsexpediency:v0")) { origin case_input; }
+    }
+    evaluate truth(grant_may_be_attracted(entity_ref("urn:kz:catalog:grantattractionneedsexpediency:v0")));
+    expect truth_status == TRUE_ONLY;
+}

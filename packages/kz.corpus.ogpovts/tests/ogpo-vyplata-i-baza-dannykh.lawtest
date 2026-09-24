@@ -1,0 +1,134 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 13 п. 3 абз. второй подп. 2) и ст. 14 п. 2 абз. второй — ДВА СРОКА В
+// РАБОЧИХ ДНЯХ, и потому отдельный файл: обоим нужен снимок официального
+// календаря §85 в мире дела. Поверхность §267, вызванная напрямую
+// (`law engine test <файл> --program …`), снимка не подаёт — аргумента для
+// него у неё нет, — и оба сценария локально отвечают MISSING_INPUT. Семейство
+// объявляет календарь в `world`; замер и дословный вывод — в отчёте наряда.
+//
+// РАСЧЁТ РУКАМИ ПО СНИМКУ `kz-official-2026.calendar.json`. Счёт §86 —
+// «N-й считающийся день от старта», старт при `start_count same_day` есть сам
+// день события.
+//
+//   16 февраля 2026 года — понедельник, рабочий; ПЕРВЫЙ рабочий день от него
+//   есть он сам, и срок «в течение одного рабочего дня» истекает 16 февраля.
+//
+//   12 января 2026 года — понедельник, рабочий (праздники 1 и 2 января
+//   позади). Десятый рабочий день от него: 12, 13, 14, 15, 16, затем 19, 20,
+//   21, 22 и 23 января — пятница 23 января 2026 года.
+
+context profile KZ_OGPO_DAY_DEADLINES {
+    deadline_policy KZ_OGPO_CALENDAR_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-database-notification-due-day" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t14-d0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:u4"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-d1": insurance_payment_made_on(entity_ref("urn:kz:ogpo:contract:u4"), @2026-02-16) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(database_notification_due_day(entity_ref("urn:kz:ogpo:contract:u4"), @2026-02-16));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-duty-to-inform-database" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            // E-0212: статус позиции спрашивается на дату РЕШЕНИЯ; решение — внутри срока.
+            decision_time @2026-09-14T12:00:00+05:00;
+            knowledge_time @2026-09-14T12:00:00+05:00;
+            legal_time @2026-09-14;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t14-e0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:u5"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-e1": insurance_payment_made_on(entity_ref("urn:kz:ogpo:contract:u5"), @2026-09-14) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(ProinformirovatOrganizaciyuBazyDannykh, ACTIVE);
+}
+
+// Ст. 13 п. 3 абз. второй подп. 2): десять рабочих дней со дня государственной
+// регистрации. Право владения возникло 12 января, регистрация в тот же день;
+// срок истекает 23 января 2026 года.
+test "urn:query:ogpo-conclusion-due-day-after-registration" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-l0": vehicle_of(entity_ref("urn:kz:ogpo:vehicle:v12"), entity_ref("urn:kz:ogpo:owner:o7")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-l1": state_registration_day(entity_ref("urn:kz:ogpo:vehicle:v12"), @2026-01-12) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(conclusion_due_day(entity_ref("urn:kz:ogpo:vehicle:v12"), entity_ref("urn:kz:ogpo:owner:o7"), @2026-01-23));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-duty-to-conclude-on-ownership" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            // E-0212: статус позиции спрашивается на дату РЕШЕНИЯ; решение — внутри срока.
+            decision_time @2026-09-10T12:00:00+05:00;
+            knowledge_time @2026-09-10T12:00:00+05:00;
+            legal_time @2026-09-10;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-m0": vehicle_of(entity_ref("urn:kz:ogpo:vehicle:v13"), entity_ref("urn:kz:ogpo:owner:o8")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-m1": state_registration_day(entity_ref("urn:kz:ogpo:vehicle:v13"), @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-m2": ownership_right_arose_on(entity_ref("urn:kz:ogpo:vehicle:v13"), entity_ref("urn:kz:ogpo:owner:o8"), @2026-09-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(ZaklyuchitDogovorPriVozniknoveniiPravaVladeniya, ACTIVE);
+}

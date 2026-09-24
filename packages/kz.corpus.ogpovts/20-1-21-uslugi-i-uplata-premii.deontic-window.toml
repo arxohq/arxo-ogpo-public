@@ -1,0 +1,51 @@
+# Экземпляр шаблона `deontic-window` — ДАННЫЕ, не код.
+# Контракт: corpus/templates/deontic-window/TEMPLATE.ru.md
+# Правится руками; правила в .law порождаются из этого файла между маркерами генерации.
+
+target = "20-1-21-uslugi-i-uplata-premii.law"
+
+[[rule]]
+name      = "PolicyholderMustPayPremiumInSinglePayment"
+strength  = "defeasible"
+anchors   = ["LAW_446_ART16", "LAW_446_ART21"]
+label     = { lang = "ru-KZ", status = "official", text = "Статья 16 пункт 2 подпункт 2) и статья 21 пункт 1. Страхователь обязан уплачивать страховые премии в размере, порядке и сроки, которые установлены договором обязательного страхования ответственности владельцев транспортных средств; если договором не предусмотрено иное, страховая премия уплачивается разовым платежом" }
+params    = ["contract: InsuranceContract", "policyholder: VehicleOwner", "insurer: Insurer", "amount: Money", "concluded, due: Date"]
+premises  = ["policyholder_of(contract, policyholder, insurer)", "applicable_premium_payment_mode(contract, SinglePayment)", "premium_payable(contract, amount)", "contract_concluded_on(contract, concluded)", "contract_premium_due_day(contract, due)"]
+note      = "// Правило поражаемое: способ уплаты выводится поражаемым правилом пункта 1, и\n// цепочка от него до обязанности обязана дойти целиком — строгое правило над\n// головой поражаемого отвергается §111 (LDC-E4103).\n"
+layout    = { indent = 0, params = "multiline", wrapped = false }
+
+[rule.norm]
+modality      = "duty"
+name          = "UplatitStrakhovuyuPremiyu"
+bearer        = "policyholder"
+beneficiary   = "insurer"
+goal          = "achieve"
+condition     = "premium_paid(contract, amount)"
+start         = "concluded"
+start_event   = "contract_concluded_on(contract, concluded)"
+end           = "due"
+end_event     = "contract_premium_due_day(contract, due)"
+end_inclusive = true
+
+[[rule]]
+name      = "PolicyholderMustPayInstalment"
+strength  = "strict"
+anchors   = ["LAW_446_ART16", "LAW_446_ART21"]
+label     = { lang = "ru-KZ", status = "official", text = "Статья 16 пункт 2 подпункт 2) и статья 21 пункт 2. При уплате страховой премии в рассрочку страхователь обязан уплатить очередной страховой взнос в размере и срок, которые установлены договором обязательного страхования ответственности владельцев транспортных средств" }
+params    = ["contract: InsuranceContract", "policyholder: VehicleOwner", "insurer: Insurer", "number: Integer", "amount: Money", "concluded, due: Date"]
+premises  = ["policyholder_of(contract, policyholder, insurer)", "instalment_payment_stipulated(contract)", "instalment_schedule(contract, number, amount, due)", "contract_concluded_on(contract, concluded)"]
+note      = "// При рассрочке обязанность возникает на КАЖДЫЙ взнос: у каждого свой размер\n// и свой срок, и одна позиция на договор скрыла бы, какой именно взнос\n// просрочен.\n"
+layout    = { indent = 0, params = "multiline", wrapped = false }
+
+[rule.norm]
+modality      = "duty"
+name          = "UplatitOcherednoyStrakhovoyVznos"
+bearer        = "policyholder"
+beneficiary   = "insurer"
+goal          = "achieve"
+condition     = "instalment_paid(contract, number)"
+start         = "concluded"
+start_event   = "contract_concluded_on(contract, concluded)"
+end           = "due"
+end_event     = "instalment_schedule(contract, number, amount, due)"
+end_inclusive = true

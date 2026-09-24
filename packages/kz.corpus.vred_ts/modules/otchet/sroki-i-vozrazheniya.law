@@ -1,0 +1,265 @@
+// Deadlines around the damage-amount report: clauses 3 and 3-1.
+//
+// PURPOSE. The victim's mark of agreement or disagreement, the insurer's
+// response to disagreement, providing the report within a five-day deadline, and
+// the disapplication of all three deadlines under simplified accident registration.
+//
+// SOURCE PROVISIONS: clause 3 (second through sixth parts), clause 3-1.
+
+// DEADLINES ARE COMPUTED HERE, NOT NAMED IN THE PREDICATE NAME. Each one's value
+// is pinned as a `Quantity` with the §86 unit (`business_day`); the deadline's last day
+// is computed with the term `add_business_days` and supplied as the §123 duty WINDOW.
+// The day unit always reads the §85 calendar snapshot (errata E-0029), so the
+// case must name it; without a snapshot the norms honestly answer MISSING_CALENDAR,
+// rather than taking some default calendar.
+//
+// The §86 counting policy is a CASE INPUT, not a norm of these Rules: the Rules
+// name the deadlines but do not establish the order for counting them. The general order
+// of the law of the Republic of Kazakhstan is taken (Civil Code art. 173 and 176), the same choice
+// for the same reason as in the personal-data and anti-corruption packages.
+
+// THE FIRST PART OF CLAUSE 3 IS A BOUNDARY, NOT A GAP: it hands off the deadlines for the
+// inspection and for drawing up the inspection act to clause 3 of article 22 of the Law, and the
+// amount of the payment when the report is not provided to clause 3-1 of article 22 of the Law. The
+// Law's pinned bytes are not in this package, so the RIGHT to such a payment is computed, while its
+// amount stays beyond the package boundary and is named in the rule's head.
+
+// --- Clause 3-1. Disapplication of deadlines under simplified registration ---------------
+relation uproshchennoe_oformlenie_proisshestviya(r: RaschetVreda) kind empirical { label ru official "Транспортное происшествие оформлено в упрощённом порядке по статье 22-2 Закона"; }
+
+// --- Clause 3. The victim's mark of agreement or disagreement ----------------
+relation otchet_poluchen_poterpevshim(r: RaschetVreda, day: Date) kind empirical { label ru official "Потерпевший (выгодоприобретатель) получил отчёт о размере вреда в этот день"; }
+relation srok_otmetki_poterpevshego(period: Quantity) kind institutional { label ru official "Продолжительность срока проставления отметки о согласии либо несогласии"; }
+relation predel_otmetki_poterpevshego(r: RaschetVreda, day: Date) kind institutional { label ru official "Последний день срока проставления отметки о согласии либо несогласии"; }
+relation otmetka_o_soglasii_prostavlena(r: RaschetVreda) kind empirical { label ru official "В полученном отчёте проставлена отметка о согласии с результатами расчёта"; }
+relation otmetka_o_nesoglasii_prostavlena(r: RaschetVreda) kind empirical { label ru official "В полученном отчёте проставлена отметка о несогласии с результатами расчёта"; }
+relation prichiny_nesoglasiya_ukazany(r: RaschetVreda) kind empirical { label ru official "При отметке о несогласии указаны причины несогласия"; }
+relation otmetka_prostavlena(r: RaschetVreda) kind institutional { label ru official "Отметка о согласии либо несогласии проставлена по требованиям пункта 3 Правил"; }
+
+@source(VRED_TS_PT_3)
+assert srok_otmetki_poterpevshego(3 business_day);
+
+// The three rules about deadline limits are DEFEASIBLE, and they share the same defeater:
+// clause 3-1 lifts the deadlines of clause 3 entirely under simplified registration. Recording
+// this as an exception on each limit, rather than as a separate "disapplication", gives
+// exactly the behavior the text describes: the deadline simply does not exist.
+//
+// THE `unless` CLAUSE REBINDS ALL HEAD VARIABLES, and this is not redundancy.
+// The `unless` generates a separate defeater `<rule>/unless/N`, whose HEAD is
+// the negation of the rule's head, while its BODY is the clause alone. The head here carries
+// a term computed from `got` and `limit`; leave only the clause-3-1 condition in the clause
+// and both variables in the defeater's head end up unbound. The failure in that case is
+// not a diagnostic but the oracle crashing at substitution (a KeyError on the
+// variable's name), i.e. the cost of the mistake is visible only at execution time.
+@source(VRED_TS_PT_3, quote = "Потерпевший (выгодоприобретатель) или их представитель в течение 3 (трех) рабочих дней со дня получения отчета о размере вреда указывает в полученном отчете отметку о согласии либо несогласии с результатами проведенного расчета размера вреда с указанием причин несогласия.")
+@source(VRED_TS_PT_3_1, quote = "Сроки осуществления страховщиком осмотра и составления акта осмотра, определения размера вреда, указанные в пункте 3 Правил, не применяются при упрощенном оформлении транспортного происшествия в соответствии со статьей 22-2 Закона.")
+rule PredelOtmetkiPoterpevshego(r: RaschetVreda, got: Date, limit: Quantity) defeasible {
+    label ru official "Пункт 3. Отметка проставляется в течение трёх рабочих дней со дня получения отчёта о размере вреда";
+    when srok_otmetki_poterpevshego(limit);
+    when otchet_poluchen_poterpevshim(r: r, day: got);
+    unless UproshchennoeOformlenie when uproshchennoe_oformlenie_proisshestviya(r)
+        and srok_otmetki_poterpevshego(limit)
+        and otchet_poluchen_poterpevshim(r: r, day: got);
+    then predel_otmetki_poterpevshego(r: r, day: add_business_days(got, limit));
+}
+
+@source(VRED_TS_PT_3) {
+    rule OtmetkaSoglasiya(r: RaschetVreda) strict {
+        label ru official "Пункт 3. Требование к отметке исполнено проставлением отметки о согласии с результатами расчёта";
+        when otmetka_o_soglasii_prostavlena(r);
+        then otmetka_prostavlena(r);
+    }
+
+    rule OtmetkaNesoglasiyaSPrichinami(r: RaschetVreda) strict {
+        label ru official "Пункт 3. Требование к отметке исполнено проставлением отметки о несогласии с указанием причин несогласия";
+        when otmetka_o_nesoglasii_prostavlena(r);
+        when prichiny_nesoglasiya_ukazany(r);
+        then otmetka_prostavlena(r);
+    }
+
+    rule ObyazannostProstavitOtmetku(
+        r: RaschetVreda,
+        s: Strakhovshchik,
+        p: Poterpevshiy,
+        got, due: Date,
+    ) strict {
+        label ru official "Пункт 3. Обязанность потерпевшего проставить отметку о согласии либо несогласии до истечения трёхдневного срока";
+        when strakhovshchik_po_raschetu(r: r, s: s);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        when otchet_poluchen_poterpevshim(r: r, day: got);
+        when predel_otmetki_poterpevshego(r: r, day: due);
+        then duty ProstavitOtmetku {
+            bearer p;
+            beneficiary s;
+            achieve otmetka_prostavlena(r) during [got, due];
+        };
+    }
+}
+
+// --- Clause 3. The insurer's response to a mark of disagreement ---------------------
+relation otmetka_nesoglasiya_poluchena_strakhovshchikom(r: RaschetVreda, day: Date) kind empirical { label ru official "Страховщик получил отметку о несогласии с результатами расчёта в этот день"; }
+relation srok_otveta_strakhovshchika(period: Quantity) kind institutional { label ru official "Продолжительность срока предоставления корректировки расчёта либо письменного ответа"; }
+relation predel_otveta_strakhovshchika(r: RaschetVreda, day: Date) kind institutional { label ru official "Последний день срока предоставления корректировки расчёта либо письменного ответа"; }
+relation korrektirovka_rascheta_predostavlena(r: RaschetVreda) kind empirical { label ru official "Страховщик предоставил корректировку расчёта дополнением к отчёту о размере вреда"; }
+relation pismennyy_otvet_o_korrektnosti_napravlen(r: RaschetVreda) kind empirical { label ru official "Страховщик направил письменный ответ о корректности отчёта с пояснениями"; }
+relation strakhovshchik_otreagiroval_na_nesoglasie(r: RaschetVreda) kind institutional { label ru official "Страховщик отреагировал на отметку о несогласии по требованиям пункта 3 Правил"; }
+
+@source(VRED_TS_PT_3)
+assert srok_otveta_strakhovshchika(3 business_day);
+
+@source(VRED_TS_PT_3, quote = "Страховщик в течение 3 (трех) рабочих дней после получения отметки о несогласии с результатами проведенного расчета размера вреда предоставляет корректировку расчета в виде дополнения к отчету о размере вреда, либо направляет письменный ответ о корректности отчета о размере вреда с пояснениями.")
+@source(VRED_TS_PT_3_1, quote = "Сроки осуществления страховщиком осмотра и составления акта осмотра, определения размера вреда, указанные в пункте 3 Правил, не применяются при упрощенном оформлении транспортного происшествия в соответствии со статьей 22-2 Закона.")
+rule PredelOtvetaStrakhovshchika(r: RaschetVreda, got: Date, limit: Quantity) defeasible {
+    label ru official "Пункт 3. Корректировка расчёта либо письменный ответ предоставляются в течение трёх рабочих дней после получения отметки о несогласии";
+    when srok_otveta_strakhovshchika(limit);
+    when otmetka_nesoglasiya_poluchena_strakhovshchikom(r: r, day: got);
+    unless UproshchennoeOformlenie when uproshchennoe_oformlenie_proisshestviya(r)
+        and srok_otveta_strakhovshchika(limit)
+        and otmetka_nesoglasiya_poluchena_strakhovshchikom(r: r, day: got);
+    then predel_otveta_strakhovshchika(r: r, day: add_business_days(got, limit));
+}
+
+// The "or" of clause 3 is split (§206): the correction and the written response are two
+// independent grounds for the same performance.
+@source(VRED_TS_PT_3) {
+    rule ReaktsiyaKorrektirovkoy(r: RaschetVreda) strict {
+        label ru official "Пункт 3. Страховщик отреагировал на несогласие, предоставив корректировку расчёта дополнением к отчёту";
+        when korrektirovka_rascheta_predostavlena(r);
+        then strakhovshchik_otreagiroval_na_nesoglasie(r);
+    }
+
+    rule ReaktsiyaPismennymOtvetom(r: RaschetVreda) strict {
+        label ru official "Пункт 3. Страховщик отреагировал на несогласие, направив письменный ответ о корректности отчёта с пояснениями";
+        when pismennyy_otvet_o_korrektnosti_napravlen(r);
+        then strakhovshchik_otreagiroval_na_nesoglasie(r);
+    }
+
+    rule ObyazannostOtvetitNaNesoglasie(
+        r: RaschetVreda,
+        s: Strakhovshchik,
+        p: Poterpevshiy,
+        got, due: Date,
+    ) strict {
+        label ru official "Пункт 3. Обязанность страховщика ответить на отметку о несогласии до истечения трёхдневного срока";
+        when strakhovshchik_po_raschetu(r: r, s: s);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        when otmetka_nesoglasiya_poluchena_strakhovshchikom(r: r, day: got);
+        when predel_otveta_strakhovshchika(r: r, day: due);
+        then duty OtvetitNaNesoglasie {
+            bearer s;
+            beneficiary p;
+            achieve strakhovshchik_otreagiroval_na_nesoglasie(r) during [got, due];
+        };
+    }
+}
+
+// --- Clause 3. Failure to provide the report within the five-day deadline --------------------
+relation osmotr_osushchestvlen_strakhovshchikom(r: RaschetVreda, day: Date) kind empirical { label ru official "Страховщик осуществил осмотр поврежденного транспортного средства в этот день"; }
+relation srok_predostavleniya_otcheta(period: Quantity) kind institutional { label ru official "Продолжительность срока предоставления отчёта о размере вреда потерпевшему"; }
+relation predel_predostavleniya_otcheta(r: RaschetVreda, day: Date) kind institutional { label ru official "Последний день срока предоставления отчёта о размере вреда потерпевшему"; }
+relation otchet_predostavlen_poterpevshemu(r: RaschetVreda) kind empirical { label ru official "Отчёт о размере вреда предоставлен потерпевшему (выгодоприобретателю) или его представителю"; }
+relation den_rassmotreniya_dela(r: RaschetVreda, day: Date) kind empirical { label ru official "День, на который проверяется соблюдение сроков по этому расчёту"; }
+relation otchet_ne_predostavlen_v_srok(r: RaschetVreda) kind institutional { label ru official "Отчёт о размере вреда не предоставлен в установленный пятидневный срок"; }
+pub relation pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona(p: Poterpevshiy, r: RaschetVreda) kind institutional { label ru official "У потерпевшего возникло право получить страховую выплату в размере, определённом по пункту 3-1 статьи 22 Закона"; }
+
+@source(VRED_TS_PT_3)
+assert srok_predostavleniya_otcheta(5 business_day);
+
+@source(VRED_TS_PT_3, quote = "При непредоставлении страховщиком отчета о размере вреда потерпевшему (выгодоприобретателю) или их представителю в течение 5 (пяти) рабочих дней со дня осуществления страховщиком осмотра поврежденного транспортного средства")
+@source(VRED_TS_PT_3_1, quote = "Сроки осуществления страховщиком осмотра и составления акта осмотра, определения размера вреда, указанные в пункте 3 Правил, не применяются при упрощенном оформлении транспортного происшествия в соответствии со статьей 22-2 Закона.")
+rule PredelPredostavleniyaOtcheta(r: RaschetVreda, day: Date, limit: Quantity) defeasible {
+    label ru official "Пункт 3. Отчёт о размере вреда предоставляется в течение пяти рабочих дней со дня осуществления страховщиком осмотра";
+    when srok_predostavleniya_otcheta(limit);
+    when osmotr_osushchestvlen_strakhovshchikom(r: r, day: day);
+    unless UproshchennoeOformlenie when uproshchennoe_oformlenie_proisshestviya(r)
+        and srok_predostavleniya_otcheta(limit)
+        and osmotr_osushchestvlen_strakhovshchikom(r: r, day: day);
+    then predel_predostavleniya_otcheta(r: r, day: add_business_days(day, limit));
+}
+
+// Two grounds for "not provided" and two rules (§206): the report was received AFTER
+// the last day — and the report was not provided at all, while the review day is already
+// past the last day. In a single fact they would be indistinguishable to whynot and argmap.
+//
+// THE WHOLE CHAIN FROM THE DEADLINE LIMIT IS DEFEASIBLE, AND THIS IS NOT A STYLE CHOICE. The limit is
+// produced by a defeasible rule (the clause-3-1 defeater), and a strict rule reading the
+// bare conclusion of a defeasible one is rejected by both engines — LDC-E4103
+// LATE_STATUS_PRODUCER §111: the status would be consumed before the producers of
+// both polarities finished. Therefore both "the report was not provided on time" and the right to
+// a payment under clause 3-1 of article 22 of the Law are declared defeasible: the exception of
+// clause 3-1 must reach all the way to the legal consequence itself, rather than fizzling out
+// halfway.
+@source(VRED_TS_PT_3) {
+    rule OtchetPoluchenPosleSroka(r: RaschetVreda, got, due: Date) defeasible {
+        label ru official "Пункт 3. Отчёт не предоставлен в срок, если получен потерпевшим после последнего дня пятидневного срока";
+        when otchet_poluchen_poterpevshim(r: r, day: got);
+        when predel_predostavleniya_otcheta(r: r, day: due);
+        when got > due;
+        then otchet_ne_predostavlen_v_srok(r);
+    }
+
+    rule OtchetNePredostavlenVovse(r: RaschetVreda, day, due: Date) defeasible {
+        label ru official "Пункт 3. Отчёт не предоставлен в срок, если он не предоставлен вовсе, а день проверки уже позже последнего дня пятидневного срока";
+        when not otchet_predostavlen_poterpevshemu(r);
+        when predel_predostavleniya_otcheta(r: r, day: due);
+        when den_rassmotreniya_dela(r: r, day: day);
+        when day > due;
+        then otchet_ne_predostavlen_v_srok(r);
+    }
+
+    rule PravoNaVyplatuPriNepredostavleniiOtcheta(r: RaschetVreda, p: Poterpevshiy) defeasible {
+        label ru official "Пункт 3. При непредоставлении отчёта в пятидневный срок потерпевший получает страховую выплату в размере, определённом по пункту 3-1 статьи 22 Закона";
+        when otchet_ne_predostavlen_v_srok(r);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        then pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona(p: p, r: r);
+    }
+}
+
+// --- Clause 3. The insurer's duty to provide the report --------------------
+//
+// The second part of clause 3 OBLIGES the insurer to present the report to the victim
+// for review; the sixth part ties the consequence of non-provision to
+// five business days from the day of the inspection. The duty window is [day of inspection, the
+// clause-3 limit]. The limit is produced by a defeasible rule (the clause-3-1 defeater),
+// so the duty rule is also defeasible (LDC-E4103 §111). Under simplified
+// registration there is no deadline, but the duty to present the report remains — the second
+// rule gives it with an OPEN window.
+@source(VRED_TS_PT_3) {
+    rule ObyazannostPredostavitOtchet(
+        r: RaschetVreda,
+        s: Strakhovshchik,
+        p: Poterpevshiy,
+        day, due: Date,
+    ) defeasible {
+        label ru official "Пункт 3. Обязанность страховщика предоставить потерпевшему отчёт о размере вреда до истечения пяти рабочих дней со дня осмотра";
+        when strakhovshchik_po_raschetu(r: r, s: s);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        when osmotr_osushchestvlen_strakhovshchikom(r: r, day: day);
+        when predel_predostavleniya_otcheta(r: r, day: due);
+        then duty PredostavitOtchet {
+            bearer s;
+            beneficiary p;
+            achieve otchet_predostavlen_poterpevshemu(r) during [day, due];
+        };
+    }
+}
+
+@source(VRED_TS_PT_3, quote = "По окончании процедуры расчета размера вреда страховщик представляет потерпевшему (выгодоприобретателю) или их представителям отчет о размере вреда для ознакомления.")
+@source(VRED_TS_PT_3_1, quote = "Сроки осуществления страховщиком осмотра и составления акта осмотра, определения размера вреда, указанные в пункте 3 Правил, не применяются при упрощенном оформлении транспортного происшествия в соответствии со статьей 22-2 Закона.")
+rule ObyazannostPredostavitOtchetBezSroka(
+    r: RaschetVreda,
+    s: Strakhovshchik,
+    p: Poterpevshiy,
+    day: Date,
+) strict {
+    label ru official "Пункты 3 и 3-1. При упрощённом оформлении происшествия страховщик представляет отчёт потерпевшему без срока пункта 3";
+    when strakhovshchik_po_raschetu(r: r, s: s);
+    when poterpevshiy_po_raschetu(r: r, p: p);
+    when osmotr_osushchestvlen_strakhovshchikom(r: r, day: day);
+    when uproshchennoe_oformlenie_proisshestviya(r);
+    then duty PredostavitOtchetBezSroka {
+        bearer s;
+        beneficiary p;
+        achieve otchet_predostavlen_poterpevshemu(r) during [day, infinity);
+    };
+}

@@ -1,0 +1,23 @@
+language "law.core" version "0.1";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Cl. 4-1. Lower edge of the threshold: exactly two appraisers — "at least
+// two", the choice is ensured.
+test "urn:query:vred-t07" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "vred-t07-a0": predlozheno_otsenshchikov(r: entity_ref("urn:case:vred:raschet-1"), n: 2) { origin case_input; }
+    }
+
+    evaluate truth(vybor_otsenshchikov_obespechen(entity_ref("urn:case:vred:raschet-1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

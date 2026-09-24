@@ -1,0 +1,43 @@
+language "law.core" version "0.2";
+package vocab.geo version "0.1.0";
+namespace "urn:law:vocab:geo";
+
+// Словарь читается как факты: код и опора региона — утверждения пакета,
+// ключ отношения — сам регион (одна опора на сущность).
+
+test "urn:query:vocab-geo:mangystau-code" {
+    given {
+    }
+    evaluate truth(region_code(MANGYSTAU, "KZ-47"));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+}
+
+test "urn:query:vocab-geo:mangystau-anchor" {
+    given {
+    }
+    evaluate truth(region_anchor(MANGYSTAU, 44.20, 53.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+}
+
+// Чужой код региону не приписан: словарь молчит, а не опровергает.
+test "urn:query:vocab-geo:foreign-code-is-unknown" {
+    given {
+    }
+    evaluate truth(region_code(MANGYSTAU, "KZ-19"));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}
+
+// Станций в словаре нет: положение объявлено, факты — у потребителя.
+test "urn:query:vocab-geo:station-location-declared-only" {
+    given {
+        assert "assert-station": station_location(entity_ref("urn:test:station"), 43.24, 76.93) {
+            origin case_input;
+        }
+    }
+    evaluate truth(station_location(entity_ref("urn:test:station"), 43.24, 76.93));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+}

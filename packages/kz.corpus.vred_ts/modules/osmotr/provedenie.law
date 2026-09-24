@@ -1,0 +1,77 @@
+// Conducting the inspection: technical service station, additional
+// inspection and hidden defects (clause 2, third and fourth parts).
+//
+// PURPOSE. Where the inspection is conducted at the victim's demand and in what
+// order the additional inspection is conducted, and how its result is documented.
+//
+// SOURCE PROVISIONS: clause 2, third and fourth parts.
+//
+// MODEL BOUNDARY. THE INSPECTION DEADLINE IS NOT COMPUTED HERE AND CANNOT BE: the first part
+// of clause 3 refers it directly to clause 3 of article 22 of the Law, which is not present in the
+// pinned bytes. Therefore the duty to conduct the inspection at a technical
+// service station is recorded with an OPEN window: it is performable
+// (SATISFIED), but cannot become breached by deadline — the deadline belongs to
+// a different act.
+
+// --- Clause 2. Inspection at a technical service station -------------------
+relation trebovanie_ob_osmotre_na_sto(r: RaschetVreda, p: Poterpevshiy, day: Date) kind empirical { label ru official "Потерпевший (выгодоприобретатель) потребовал проведения осмотра на станции технического обслуживания в этот день"; }
+relation osmotr_proveden_na_sto(r: RaschetVreda) kind empirical { label ru official "Осмотр поврежденного транспортного средства проведён на станции технического обслуживания"; }
+
+@source(VRED_TS_PT_2, quote = "Осмотр проводится на станциях технического обслуживания по требованию потерпевшего (выгодоприобретателя).")
+rule OsmotrNaStantsiiPoTrebovaniyu(
+    r: RaschetVreda,
+    s: Strakhovshchik,
+    p: Poterpevshiy,
+    day: Date,
+) strict {
+    label ru official "Пункт 2. По требованию потерпевшего осмотр проводится на станции технического обслуживания";
+    when strakhovshchik_po_raschetu(r: r, s: s);
+    when trebovanie_ob_osmotre_na_sto(r: r, p: p, day: day);
+    then duty OsmotrNaStantsii {
+        bearer s;
+        beneficiary p;
+        achieve osmotr_proveden_na_sto(r) during [day, infinity);
+    };
+}
+
+// --- Clause 2. Hidden defects and additional inspection -----------------------
+//
+// The fourth part of clause 2 is THREE norms, not one: the additional inspection
+// is conducted "also on the basis of an application" with the data of annex 1; in doing so
+// it is carried out by the insurer and documented by an act with the data of annex 2;
+// the calculation's correction for hidden defects is documented by an addendum to the report.
+// The additional inspection has ITS OWN act and ITS OWN application: reading the primary
+// inspection's act here would amount to treating the additional inspection as documented
+// by someone else's document.
+relation skrytye_defekty_vyyavleny(r: RaschetVreda) kind empirical { label ru official "При дополнительном осмотре выявлены скрытые дефекты транспортного средства"; }
+relation zayavlenie_o_dopolnitelnom_osmotre(z: Zayavlenie, r: RaschetVreda) kind empirical { label ru official "По этому расчёту подано заявление об определении размера вреда, на основании которого проводится дополнительный осмотр"; }
+relation dopolnitelnyy_osmotr_proveden_strakhovshchikom(r: RaschetVreda) kind empirical { label ru official "Дополнительный осмотр транспортного средства осуществлён страховщиком"; }
+relation akt_dopolnitelnogo_osmotra_po_raschetu(a: AktOsmotra, r: RaschetVreda) kind empirical { label ru official "Акт дополнительного осмотра составлен по этому расчёту размера вреда"; }
+relation dopolnitelnyy_osmotr_oformlen(r: RaschetVreda) kind institutional { label ru official "Дополнительный осмотр оформлен актом осмотра, содержащим сведения приложения 2"; }
+relation dopolnitelnyy_osmotr_proveden_po_pravilam(r: RaschetVreda) kind institutional { label ru official "Дополнительный осмотр проведён в порядке части четвёртой пункта 2 Правил: по надлежащему заявлению, страховщиком, с оформлением актом"; }
+relation korrektirovka_pri_skrytykh_defektakh_oformlyaetsya_dopolneniem(r: RaschetVreda) kind institutional { label ru official "Корректировка расчёта при скрытых дефектах оформляется дополнением к отчёту о размере вреда"; }
+
+@source(VRED_TS_PT_2) {
+    rule DopolnitelnyyOsmotrOformlenAktom(r: RaschetVreda, a: AktOsmotra) strict {
+        label ru official "Пункт 2. Дополнительный осмотр оформлен, если по расчёту составлен акт дополнительного осмотра со сведениями приложения 2";
+        when akt_dopolnitelnogo_osmotra_po_raschetu(a: a, r: r);
+        when akt_soderzhit_svedeniya_prilozheniya_2(a);
+        then dopolnitelnyy_osmotr_oformlen(r);
+    }
+
+    rule DopolnitelnyyOsmotrPoPravilam(r: RaschetVreda, z: Zayavlenie) strict {
+        label ru official "Пункт 2. Дополнительный осмотр проведён по Правилам, если он основан на заявлении со сведениями приложения 1, осуществлён страховщиком и оформлен актом";
+        when zayavlenie_o_dopolnitelnom_osmotre(z: z, r: r);
+        when zayavlenie_soderzhit_svedeniya_prilozheniya_1(z);
+        when dopolnitelnyy_osmotr_proveden_strakhovshchikom(r);
+        when dopolnitelnyy_osmotr_oformlen(r);
+        then dopolnitelnyy_osmotr_proveden_po_pravilam(r);
+    }
+
+    rule KorrektirovkaPriSkrytykhDefektakh(r: RaschetVreda) strict {
+        label ru official "Пункт 2. Корректировка расчёта при скрытых дефектах, выявленных дополнительным осмотром по Правилам, оформляется дополнением к отчёту о размере вреда";
+        when skrytye_defekty_vyyavleny(r);
+        when dopolnitelnyy_osmotr_proveden_po_pravilam(r);
+        then korrektirovka_pri_skrytykh_defektakh_oformlyaetsya_dopolneniem(r);
+    }
+}

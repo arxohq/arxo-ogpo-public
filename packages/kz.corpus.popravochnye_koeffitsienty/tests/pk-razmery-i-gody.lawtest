@@ -1,0 +1,152 @@
+language "law.core" version "0.2";
+package kz.corpus.popravochnye_koeffitsienty version "0.1.0";
+namespace "urn:kz:corpus:clir:popravochnye-koeffitsienty";
+
+// РАЗМЕРЫ ПО ТЕРРИТОРИИ И ПО ВРЕМЕНИ — ОБЕ СТОРОНЫ РУБЕЖА ГОДА.
+//
+// Независимые ожидания взяты из самих постановлений, а не из правил:
+// Алматинская область — 1,37 на 2025 год (№ 82) и 1,44 на 2026 (№ 72);
+// город Алматы — 0,71 на 2026 год. Величины сверены с закреплёнными байтами
+// независимым чтением `tools/tables.py --check`.
+//
+// ПОЧЕМУ РУБЕЖ ГОДА ПРОВЕРЯЕТСЯ НА СВОЁМ ПРЕДИКАТЕ, А НЕ ЧЕРЕЗ СТАТЬЮ 19.
+// Закреплённая редакция Закона № 446-II объявлена действующей с 31 августа
+// 2026 года — раньше этого дня `kz.corpus.ogpovts` снят проекцией as-of §31
+// целиком, вместе с отношением `territory_adjustment_coefficient`. То есть
+// через статью 19 рубеж 31.12.2025 → 01.01.2026 не наблюдаем В ПРИНЦИПЕ, и
+// сцена, поставленная туда, проверяла бы не переход года, а границу редакции
+// закона. Переход проверяется на `razmer_popravochnogo_koeffitsienta` и
+// `raschetnyy_god` — они живут в окнах самих постановлений, — а мост в статью
+// 19 отдельными сценами на дату, где закон отвечает.
+
+// PK-01 — 31 ДЕКАБРЯ 2025 ГОДА: действуют размеры на 2025 год.
+test "urn:query:pk-granitsa-goda-2025" {
+    given {
+        context { decision_time @2025-12-31T12:00:00+05:00; knowledge_time @2025-12-31T12:00:00+05:00; legal_time @2025-12-31; timezone "Asia/Almaty"; }
+    }
+    evaluate truth(razmer_popravochnogo_koeffitsienta(vocab.geo::ALMATY, 2025, 1.37));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// PK-02 — 1 ЯНВАРЯ 2026 ГОДА: на СЛЕДУЮЩИЙ день расчётным становится другой
+// год. Пара с предыдущей сценой и есть проверка перехода.
+test "urn:query:pk-granitsa-goda-2026" {
+    given {
+        context { decision_time @2026-01-01T12:00:00+05:00; knowledge_time @2026-01-01T12:00:00+05:00; legal_time @2026-01-01; timezone "Asia/Almaty"; }
+    }
+    evaluate collect god: Integer where raschetnyy_god(god);
+    expect result_kind == COLLECTION;
+    expect collected_count(1);
+    expect collected(2026);
+}
+
+// PK-03 — 31 ДЕКАБРЯ 2025 ГОДА расчётный год РОВНО ОДИН, и это 2025-й:
+// размеры на 2026 год ещё не введены в действие.
+test "urn:query:pk-raschetnyy-god-2025" {
+    given {
+        context { decision_time @2025-12-31T12:00:00+05:00; knowledge_time @2025-12-31T12:00:00+05:00; legal_time @2025-12-31; timezone "Asia/Almaty"; }
+    }
+    evaluate collect god: Integer where raschetnyy_god(god);
+    expect result_kind == COLLECTION;
+    expect collected_count(1);
+    expect collected(2025);
+}
+
+// PK-04 — ВЕЛИЧИНА ПРОШЛОГО ГОДА НЕ ОТВЕЧАЕТ В НОВОМ. На 01.01.2026 размер
+// 1,37 не выводится вовсе: постановление № 82 утвердило его «на 2025 год».
+test "urn:query:pk-razmer-2025-ne-otvechaet-v-2026" {
+    given {
+        context { decision_time @2026-01-01T12:00:00+05:00; knowledge_time @2026-01-01T12:00:00+05:00; legal_time @2026-01-01; timezone "Asia/Almaty"; }
+    }
+    evaluate collect k: Decimal where razmer_popravochnogo_koeffitsienta(vocab.geo::ALMATY, 2025, k);
+    expect result_kind == COLLECTION;
+    expect collected_count(0);
+}
+
+// PK-05 — ДО ПЕРВОГО ЗАКРЕПЛЁННОГО ГОДА пакет не отвечает НИЧЕГО. На
+// 31.12.2024 действовали размеры постановления № 79 (на 2024 год), в пакет не
+// закреплённого; подставить сюда величину соседнего года значило бы ответить
+// о годе, о котором не спрашивали. Объявленная граница.
+test "urn:query:pk-do-zakreplennykh-godov" {
+    given {
+        context { decision_time @2024-12-31T12:00:00+05:00; knowledge_time @2024-12-31T12:00:00+05:00; legal_time @2024-12-31; timezone "Asia/Almaty"; }
+    }
+    evaluate collect god: Integer where raschetnyy_god(god);
+    expect result_kind == COLLECTION;
+    expect collected_count(0);
+}
+
+// PK-06 — МОСТ В ПУНКТ 3-1 СТАТЬИ 19 на дату, где отвечает и закон:
+// Алматинская область, 2026 год — 1,44.
+test "urn:query:pk-most-v-statyu-19" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "f0": kz.corpus.ogpovts::registration_territory(entity_ref("urn:kz:pk:c:6"), kz.corpus.ogpovts::AlmatyOblast) { origin case_input; }
+    }
+    evaluate truth(kz.corpus.ogpovts::territory_adjustment_coefficient(entity_ref("urn:kz:pk:c:6"), 1.44));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// PK-07 — ГОРОД РЕСПУБЛИКАНСКОГО ЗНАЧЕНИЯ: у Алматы своя строка, и она НЕ
+// совпадает со строкой одноимённой области (0,71 против 1,44). Сцена стережёт
+// мост словаря: перепутай `ALMATY` и `ALMATY_CITY` — ответ станет чужим.
+test "urn:query:pk-almaty-gorod-ne-oblast" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "g0": kz.corpus.ogpovts::registration_territory(entity_ref("urn:kz:pk:c:7"), kz.corpus.ogpovts::Almaty) { origin case_input; }
+    }
+    evaluate truth(kz.corpus.ogpovts::territory_adjustment_coefficient(entity_ref("urn:kz:pk:c:7"), 0.71));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// PK-08 — ТЕРРИТОРИЯ ДЕЛОМ НЕ НАЗВАНА: коэффициент не выводится. Ни единицы,
+// ни среднего по таблице пакет не подставляет.
+test "urn:query:pk-territoriya-ne-nazvana" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+    }
+    evaluate collect k: Decimal where kz.corpus.ogpovts::territory_adjustment_coefficient(entity_ref("urn:kz:pk:c:8"), k);
+    expect result_kind == COLLECTION;
+    expect collected_count(0);
+}
+
+// PK-09 — ИСКЛЮЧЕНИЕ ПУНКТА 12 ПРАВИЛ «БОНУС-МАЛУС»: случай наступил вне
+// территории регистрации, но территория регистрации НЕ дешевле.
+//
+// Независимый счёт по обеим таблицам: Алматинская область — коэффициент
+// пункта 3 статьи 19 равен 1,78, поправочный на 2026 год 1,44, произведение
+// 2,5632. Северо-Казахстанская область — 1,33 и 0,67, произведение 0,8911.
+// 2,5632 ≥ 0,8911, значит понижение класса по пункту 12 не применяется.
+test "urn:query:pk-punkt-12-registratsiya-ne-deshevle" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "h0": kz.corpus.ogpovts::raschet_bonus_malus_dogovora(entity_ref("urn:kz:pk:c:9"), entity_ref("urn:kz:pk:bm:9")) { origin case_input; }
+        assert "h1": kz.corpus.ogpovts::registration_territory(entity_ref("urn:kz:pk:c:9"), kz.corpus.ogpovts::AlmatyOblast) { origin case_input; }
+        assert "h2": territoriya_nastupleniya_sluchaya(entity_ref("urn:kz:pk:bm:9"), kz.corpus.ogpovts::NorthKazakhstanOblast) { origin case_input; }
+    }
+    evaluate truth(kz.corpus.bonus_malus::registratsiya_ne_deshevle_mesta_sluchaya(entity_ref("urn:kz:pk:bm:9")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// PK-10 — ОБРАТНАЯ СТОРОНА ТОГО ЖЕ СРАВНЕНИЯ: регистрация в Северо-
+// Казахстанской области (0,8911), случай в Алматинской (2,5632). Признак НЕ
+// выводится, и потому исключение пункта 12 не срабатывает — класс понижается.
+test "urn:query:pk-punkt-12-registratsiya-deshevle" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "i0": kz.corpus.ogpovts::raschet_bonus_malus_dogovora(entity_ref("urn:kz:pk:c:10"), entity_ref("urn:kz:pk:bm:10")) { origin case_input; }
+        assert "i1": kz.corpus.ogpovts::registration_territory(entity_ref("urn:kz:pk:c:10"), kz.corpus.ogpovts::NorthKazakhstanOblast) { origin case_input; }
+        assert "i2": territoriya_nastupleniya_sluchaya(entity_ref("urn:kz:pk:bm:10"), kz.corpus.ogpovts::AlmatyOblast) { origin case_input; }
+    }
+    evaluate truth(kz.corpus.bonus_malus::registratsiya_ne_deshevle_mesta_sluchaya(entity_ref("urn:kz:pk:bm:10")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}

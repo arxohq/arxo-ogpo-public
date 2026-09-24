@@ -1,0 +1,173 @@
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Annex 2 by SUB-CLAUSE. Expectations are derived from the form's checklist,
+// not from the engine's answer: the act contains the annex 2 information if
+// and only if each of the six clauses is present, and cl. 3, 4 and 5 — each
+// of their sub-clauses; sub-cl. 4.8 is satisfied by an odometer photo OR by
+// its established absence.
+
+// Full act: all sub-clauses, odometer photo attached — TRUE_ONLY.
+test "urn:query:vred-t09-a" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t09a-a0-0": akt_data_provedeniya_osmotra(entity_ref("urn:case:vred:akt-1"), @2026-08-30T10:00:00+05:00) { origin case_input; }
+        assert "t09a-a0-1": akt_data_sostavleniya(entity_ref("urn:case:vred:akt-1"), @2026-08-30T11:30:00+05:00) { origin case_input; }
+        assert "t09a-a1": akt_sobstvennik(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a2": akt_fio_predstavivshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a3-0": akt_iin_predstavivshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a3-1": akt_udostoverenie_predstavivshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a4": akt_dokument_o_prave_sobstvennosti(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a5": akt_vin(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a6-0": akt_marka(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a6-1": akt_model(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a7": akt_gos_nomer(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a8": akt_god_vypuska(entity_ref("urn:case:vred:akt-1"), 2019) { origin case_input; }
+        assert "t09a-a9": akt_probeg(entity_ref("urn:case:vred:akt-1"), 1000 km) { origin case_input; }
+        assert "t09a-a10": akt_dopolnitelnoe_oborudovanie(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a11": akt_snimok_identifikatsionnogo_nomera(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a12": akt_foto_odometra(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a13": akt_povrezhdennye_detali(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a14": akt_fotografii_povrezhdeniy(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a15": akt_skrytye_povrezhdeniya(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09a-a16": akt_fio_osmotrevshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(akt_soderzhit_svedeniya_prilozheniya_2(entity_ref("urn:case:vred:akt-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    expect applied(AktSoderzhitSvedeniyaOTs);
+    expect applied(FotoOdometraPrilozheno);
+}
+
+// Without a VIN (sub-cl. 4.1): the "vehicle information" group is not
+// derived, and the act does not contain the annex 2 information — NEITHER.
+test "urn:query:vred-t09-b" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t09b-a0-0": akt_data_provedeniya_osmotra(entity_ref("urn:case:vred:akt-1"), @2026-08-30T10:00:00+05:00) { origin case_input; }
+        assert "t09b-a0-1": akt_data_sostavleniya(entity_ref("urn:case:vred:akt-1"), @2026-08-30T11:30:00+05:00) { origin case_input; }
+        assert "t09b-a1": akt_sobstvennik(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a2": akt_fio_predstavivshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a3-0": akt_iin_predstavivshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a3-1": akt_udostoverenie_predstavivshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a4": akt_dokument_o_prave_sobstvennosti(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a6-0": akt_marka(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a6-1": akt_model(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a7": akt_gos_nomer(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a8": akt_god_vypuska(entity_ref("urn:case:vred:akt-1"), 2019) { origin case_input; }
+        assert "t09b-a9": akt_probeg(entity_ref("urn:case:vred:akt-1"), 1000 km) { origin case_input; }
+        assert "t09b-a10": akt_dopolnitelnoe_oborudovanie(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a11": akt_snimok_identifikatsionnogo_nomera(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a12": akt_foto_odometra(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a13": akt_povrezhdennye_detali(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a14": akt_fotografii_povrezhdeniy(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a15": akt_skrytye_povrezhdeniya(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09b-a16": akt_fio_osmotrevshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(akt_soderzhit_svedeniya_prilozheniya_2(entity_ref("urn:case:vred:akt-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Sub-cl. 4.8 "if present": no odometer photo, the odometer is absent —
+// the requirement is satisfied, the cl. 4 group is derived.
+test "urn:query:vred-t09-c" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t09c-a5": akt_vin(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09c-a6-0": akt_marka(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09c-a6-1": akt_model(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09c-a7": akt_gos_nomer(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09c-a8": akt_god_vypuska(entity_ref("urn:case:vred:akt-1"), 2019) { origin case_input; }
+        assert "t09c-a9": akt_probeg(entity_ref("urn:case:vred:akt-1"), 1000 km) { origin case_input; }
+        assert "t09c-a10": akt_dopolnitelnoe_oborudovanie(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09c-a11": akt_snimok_identifikatsionnogo_nomera(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09c-a12": odometr_otsutstvuet(entity_ref("urn:case:vred:akt-1")) { origin case_input; }
+    }
+    evaluate truth(akt_soderzhit_svedeniya_o_ts(entity_ref("urn:case:vred:akt-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    expect applied(FotoOdometraNeTrebuetsyaBezOdometra);
+}
+
+// Sub-cl. 4.8: no odometer photo, and the absence of the odometer is NOT
+// established — the case being silent is not the absence of an odometer,
+// the group is not derived.
+test "urn:query:vred-t09-d" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t09d-a5": akt_vin(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09d-a6-0": akt_marka(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09d-a6-1": akt_model(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09d-a7": akt_gos_nomer(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09d-a8": akt_god_vypuska(entity_ref("urn:case:vred:akt-1"), 2019) { origin case_input; }
+        assert "t09d-a9": akt_probeg(entity_ref("urn:case:vred:akt-1"), 1000 km) { origin case_input; }
+        assert "t09d-a10": akt_dopolnitelnoe_oborudovanie(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09d-a11": akt_snimok_identifikatsionnogo_nomera(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(akt_soderzhit_svedeniya_o_ts(entity_ref("urn:case:vred:akt-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Annex 2 cl. 3 without the ownership document (3.3) — NEITHER.
+test "urn:query:vred-t09-e" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t09e-a2": akt_fio_predstavivshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09e-a3-0": akt_iin_predstavivshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09e-a3-1": akt_udostoverenie_predstavivshego(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(akt_soderzhit_svedeniya_o_predstavivshem_lice(entity_ref("urn:case:vred:akt-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Annex 2 cl. 5 without information on hidden damage (5.3) — NEITHER.
+test "urn:query:vred-t09-f" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t09f-a13": akt_povrezhdennye_detali(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+        assert "t09f-a14": akt_fotografii_povrezhdeniy(entity_ref("urn:case:vred:akt-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(akt_soderzhit_svedeniya_o_povrezhdennykh_elementakh(entity_ref("urn:case:vred:akt-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

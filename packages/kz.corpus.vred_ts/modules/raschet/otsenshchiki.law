@@ -1,0 +1,79 @@
+// Engaged appraiser: clauses 4 and 4-1.
+//
+// PURPOSE. How the appraiser enters the calculation, how they conduct that calculation, and
+// how many appraisers the insurer must offer the victim to choose from.
+//
+// SOURCE PROVISIONS: clause 4, clause 4-1; clause 2 in the second-branch part of §206
+// ("by the insurer OR the appraiser").
+//
+// MODEL BOUNDARY. THE DUTY OF CLAUSE 4-1 IS RECORDED WITH AN OPEN WINDOW, and this is a
+// property of the norm itself: the Rules do not name a deadline for offering the choice.
+// The consequence is named aloud — such a duty can be performed, but is never breached
+// by deadline (the lint `achievement-open-window` sees it and must see it).
+
+entity Otsenshchik { label ru official "Оценщик, привлекаемый страховщиком по договору об оказании услуг"; }
+
+// --- Clause 4. Appraiser engaged under a contract -----------------------------
+relation otsenshchik_privlechen_po_dogovoru(s: Strakhovshchik, o: Otsenshchik, r: RaschetVreda) kind empirical { label ru official "Страховщик привлёк оценщика к этому расчёту на основании договора об оказании услуг"; }
+relation raschet_osushchestvlyaet_otsenshchik(r: RaschetVreda, o: Otsenshchik) kind institutional { label ru official "Расчёт размера вреда осуществляет привлечённый оценщик"; }
+
+// Clause 4 is not a restatement of clause 2, but a WIRE: it brings the engaged appraiser
+// into the same order, and the rule below is the only way the appraiser
+// ever enters the calculation.
+@source(VRED_TS_PT_4, quote = "Порядок определения размера вреда, причиненного транспортному средству, предусмотренный пунктами 2 и 3 Правил, действует также в отношении оценщика, привлеченного страховщиком на основании договора об оказании услуг.")
+rule PrivlechennyyOtsenshchikVeretRaschet(
+    r: RaschetVreda,
+    s: Strakhovshchik,
+    o: Otsenshchik,
+) strict {
+    label ru official "Пункт 4. Порядок определения размера вреда действует также в отношении оценщика, привлечённого страховщиком по договору об оказании услуг";
+    when otsenshchik_privlechen_po_dogovoru(s: s, o: o, r: r);
+    then raschet_osushchestvlyaet_otsenshchik(r: r, o: o);
+}
+
+@source(VRED_TS_PT_2, quote = "Расчет размера вреда, причиненного транспортному средству (далее – расчет размера вреда) осуществляется страховщиком или оценщиком с применением лицензионного специализированного программного обеспечения (далее – СПО) на основании заявления об определении размера вреда, причиненного имуществу, содержащего сведения согласно приложению 1 к Правилам.")
+@source(VRED_TS_PT_4, quote = "Порядок определения размера вреда, причиненного транспортному средству, предусмотренный пунктами 2 и 3 Правил, действует также в отношении оценщика, привлеченного страховщиком на основании договора об оказании услуг.")
+rule RaschetOtsenshchikom(r: RaschetVreda, o: Otsenshchik, z: Zayavlenie) strict {
+    label ru official "Пункт 2. Расчёт ведётся по Правилам, когда его осуществляет оценщик с применением лицензионного программного обеспечения на основании надлежащего заявления";
+    when raschet_osushchestvlyaet_otsenshchik(r: r, o: o);
+    when zayavlenie_po_raschetu(z: z, r: r);
+    when zayavlenie_soderzhit_svedeniya_prilozheniya_1(z);
+    when spo_primeneno(r);
+    then raschet_vedetsya_po_pravilam(r);
+}
+
+// --- Clause 4-1. Choice from no fewer than two appraisers ------------------------
+relation predlozheno_otsenshchikov(r: RaschetVreda, n: Integer) kind empirical { label ru official "Число оценщиков, предложенных страховщиком потерпевшему на выбор"; }
+relation vybor_otsenshchikov_obespechen(r: RaschetVreda) kind institutional { label ru official "Потерпевшему предоставлен выбор из числа оценщиков, требуемого пунктом 4-1 Правил"; }
+
+@source(VRED_TS_PT_4_1) {
+    rule VyborOtsenshchikovObespechen(r: RaschetVreda, n: Integer) strict {
+        label ru official "Пункт 4-1. Выбор обеспечен, если страховщик предложил потерпевшему не менее двух оценщиков";
+        when predlozheno_otsenshchikov(r: r, n: n);
+        when n >= 2;
+        then vybor_otsenshchikov_obespechen(r);
+    }
+
+    rule VyborOtsenshchikovNeObespechen(r: RaschetVreda, n: Integer) defeasible {
+        label ru official "Пункт 4-1. Выбор не обеспечен, если страховщик предложил потерпевшему менее двух оценщиков";
+        when predlozheno_otsenshchikov(r: r, n: n);
+        when n < 2;
+        then not vybor_otsenshchikov_obespechen(r);
+    }
+
+    rule ObyazannostPredlozhitDvukhOtsenshchikov(
+        r: RaschetVreda,
+        s: Strakhovshchik,
+        o: Otsenshchik,
+        p: Poterpevshiy,
+    ) strict {
+        label ru official "Пункт 4-1. Обязанность страховщика при привлечении оценщика предоставить потерпевшему на выбор не менее двух оценщиков";
+        when otsenshchik_privlechen_po_dogovoru(s: s, o: o, r: r);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        then duty PredlozhitDvukhOtsenshchikov {
+            bearer s;
+            beneficiary p;
+            achieve vybor_otsenshchikov_obespechen(r) during [@2016-02-08, infinity);
+        };
+    }
+}

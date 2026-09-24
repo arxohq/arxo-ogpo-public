@@ -1,0 +1,20 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 20 пункт 7 абзац третий. Не допускается финансирование из резерва на неотложные затраты расходов, финансируемых за счёт Специального государственного фон
+test "CATALOG-NOURGENTRESERVEFORSPECIALFUNDEXPENDITURE" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": expenditure_funded_by_special_state_fund(entity_ref("urn:kz:catalog:nourgentreserveforspecialfundexpenditure:v1")) { origin case_input; }
+        assert "cat-1": reuse_next_year_intended(entity_ref("urn:kz:catalog:nourgentreserveforspecialfundexpenditure:v0"), entity_ref("urn:kz:catalog:nourgentreserveforspecialfundexpenditure:v2")) { origin case_input; }
+        assert "cat-2": urgent_costs_reserve(entity_ref("urn:kz:catalog:nourgentreserveforspecialfundexpenditure:v0")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(FundSpecialFundExpenditureFromUrgentReserve, ACTIVE);
+}

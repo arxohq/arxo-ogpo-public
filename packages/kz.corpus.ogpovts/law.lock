@@ -1,0 +1,210 @@
+{
+  "dependencyEdges": [
+    {
+      "features": [],
+      "from": "kz.corpus.bonus_malus",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.budget"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.budget",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.budget_code"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.2.0",
+      "resolved": "0.2.0",
+      "to": "kz.corpus.bonus_malus"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.budget"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.vred_ts"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "vocab.geo"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "vocab.vehicle"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.vred_ts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.clir.official_calendar"
+    },
+    {
+      "features": [],
+      "from": "vocab.vehicle",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "vocab.maintenance"
+    }
+  ],
+  "expansions": [
+    {
+      "alias": "claim_deadline_duty",
+      "consumer": "kz.corpus.ogpovts",
+      "contentHash": "sha256:0dd97541dd8e9dafeff54edb3a28b7fe98ab93865bfc83787a1856d25804d14a",
+      "entry": "claim_deadline_duty.law",
+      "expansionProfile": "law.expansion/0.2",
+      "name": "law.expansions.claim_deadline_duty",
+      "version": "0.1.0"
+    },
+    {
+      "alias": "matter_deadline_duty",
+      "consumer": "kz.corpus.ogpovts",
+      "contentHash": "sha256:b267b26d18017637f628bd401ac2e98cffdb10ef180a695c67dbc39df35352fc",
+      "entry": "matter_deadline_duty.law",
+      "expansionProfile": "law.expansion/0.2",
+      "name": "law.expansions.matter_deadline_duty",
+      "version": "0.1.0"
+    }
+  ],
+  "languageSemantics": "law.core/0.2.0",
+  "lockVersion": "0.2",
+  "packages": [
+    {
+      "contentHash": "sha256:b37b244c04ea48cf8186216f23cfbd35d133f6f154627aa4dbaf25176ddf929a",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.bonus_malus",
+      "namespace": "urn:kz:corpus:clir:bonus-malus",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/kz.corpus.bonus_malus/0.2.0",
+      "version": "0.2.0"
+    },
+    {
+      "contentHash": "sha256:1e0ebb1d019617e0785b7b2121cda3aeabd269d388e8f802afe719933bcd3f18",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.budget",
+      "namespace": "urn:kz:corpus:clir:budget",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/kz.corpus.budget/0.1.0",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:e54ba547c66ee357e9a3fb12b4a2175b3544c8a560ae266d06a7b54a01836c53",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.budget_code",
+      "namespace": "urn:kz:corpus:clir:budget-code",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/kz.corpus.budget_code/0.1.0",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:d5dd393f6b712104611798a39bb03c43da014f16c150c1b95c5a8f3587fc44d5",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.clir.official_calendar",
+      "namespace": "urn:kz:corpus:clir:official-calendar",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/kz.corpus.clir.official_calendar/0.1.0",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:1b021c6a928c6248e90214c6ecc0c192df99576b179e5d2452f3bb1c77035fa2",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.vred_ts",
+      "namespace": "urn:kz:corpus:clir:vred-ts",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/kz.corpus.vred_ts/0.1.0",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:90e40c94390540a21ba156bf585ff6899929b9facfead6337de828a7f4561674",
+      "features": [
+        "core-executable"
+      ],
+      "name": "vocab.geo",
+      "namespace": "urn:law:vocab:geo",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/vocab.geo/0.1.0",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:c85fa41eef6ccb2af463d912eee0ea33d087c1ecbed8b78c47d6d79d61cfab73",
+      "features": [
+        "core-executable"
+      ],
+      "name": "vocab.maintenance",
+      "namespace": "urn:law:vocab:maintenance",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/vocab.maintenance/0.1.0",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:33e92c9dd392d374c956a4ce6d43baf3e04d7121613e7127668a784f7a65e779",
+      "features": [
+        "core-executable"
+      ],
+      "name": "vocab.vehicle",
+      "namespace": "urn:law:vocab:vehicle",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/vocab.vehicle/0.1.0",
+      "version": "0.1.0"
+    }
+  ],
+  "resolutionHash": "sha256:31c5e4a2a1548338ebec021b5e2ac800fcf93b2dd3f94d17b4db23fa9e3320da",
+  "resources": [
+    {
+      "capability": "law.calendar/0.1",
+      "contentHash": "sha256:d04f48761d98cdcf2a094cc728fd160fbc3b73e2eb5ebbed6743d17e976fe9c6",
+      "id": "urn:kz:corpus:clir:official-calendar#snapshot-2026",
+      "kind": "calendar-dataset",
+      "path": "resources/d04f48761d98cdcf-kz-official-2026.calendar.json"
+    },
+    {
+      "capability": "compile_time",
+      "contentHash": "sha256:136872de7ccd2ab1d20a7d3c1d51ffab3ae475f1173707e99b024dde7ac23332",
+      "id": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient",
+      "kind": "decision-table",
+      "path": "age-experience-coefficient.lawtable.json"
+    },
+    {
+      "capability": "compile_time",
+      "contentHash": "sha256:3c12ad92d251e1bc80831ff6fb8dcbaaad9f65ca1a7558b24a47bf7bf5e7f2f6",
+      "id": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient",
+      "kind": "decision-table",
+      "path": "operation-term-coefficient.lawtable.json"
+    }
+  ],
+  "root": {
+    "contentHash": "sha256:a69ad70e2aa025fe3a9480397ac0a44a0d12d900d514f0cd9e9c18358ac1234b",
+    "name": "kz.corpus.ogpovts",
+    "namespace": "urn:kz:corpus:clir:ogpo-vts",
+    "version": "0.1.0"
+  },
+  "semanticLayer": "L1"
+}

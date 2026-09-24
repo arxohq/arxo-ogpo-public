@@ -1,0 +1,195 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 10 пп. 6 и 6-1, ст. 11 п. 3, ст. 12 п. 3 — содержание страхового полиса.
+//
+// ПАРА ПОЛНОТЫ. Полис стандартного договора со всеми тремя реквизитами
+// требованиям закона отвечает; тот же полис без сведений о страхователе и
+// транспортном средстве — нет. Без второй половины пары правило полноты
+// оставалось бы зелёным на любом полисе, где есть хоть что-то.
+//
+// ТЕСТ ЗАМЫКАНИЯ §70 — третий: вопрос о реквизите, которого пункт 6 статьи 10
+// НЕ добавляет, получает FALSE_ONLY, а не NEITHER. Разница здесь и есть
+// разница между «закон об этом молчит» и «закон этого не требует».
+
+test "urn:query:ogpo-standard-policy-requisites-required" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p6-a0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:r1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p6-a1": standard_contract(entity_ref("urn:kz:ogpo:contract:r1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(policy_requisite_required(entity_ref("urn:kz:ogpo:contract:r1"), StandardInsuredAndVehicleDetails));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-standard-policy-complete" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p6-b0": standard_contract(entity_ref("urn:kz:ogpo:contract:r2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p6-b1": policy_contains_requisite(entity_ref("urn:kz:ogpo:contract:r2"), LiabilityLimitPerInsuredEvent) {
+            origin case_input;
+        }
+
+        assert "ogpo-p6-b2": policy_contains_requisite(entity_ref("urn:kz:ogpo:contract:r2"), ContractKindIndication) {
+            origin case_input;
+        }
+
+        assert "ogpo-p6-b3": policy_contains_requisite(entity_ref("urn:kz:ogpo:contract:r2"), StandardInsuredAndVehicleDetails) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(policy_meets_requisites_of_this_law(entity_ref("urn:kz:ogpo:contract:r2")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-standard-policy-incomplete" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p6-c0": standard_contract(entity_ref("urn:kz:ogpo:contract:r3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p6-c1": policy_contains_requisite(entity_ref("urn:kz:ogpo:contract:r3"), LiabilityLimitPerInsuredEvent) {
+            origin case_input;
+        }
+
+        assert "ogpo-p6-c2": policy_contains_requisite(entity_ref("urn:kz:ogpo:contract:r3"), ContractKindIndication) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(policy_meets_requisites_of_this_law(entity_ref("urn:kz:ogpo:contract:r3")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Замыкание пункта 6: сведения о страхователе и транспортном средстве — это
+// требование СТАТЬИ 11, а не пункта 6 статьи 10. Ответ FALSE_ONLY.
+test "urn:query:ogpo-article-ten-requisite-list-closed" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+    }
+
+    evaluate truth(requisite_added_by_article_ten(StandardInsuredAndVehicleDetails));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-policy-amendment-prohibited" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p61-a0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:r4"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(VnestiIzmeneniyaVStrakhovoyPolis, ACTIVE);
+}
+
+// Ст. 10 п. 9: физическое лицо платит премию единовременным платежом.
+// Признак лица читается у статьи 19 — `insured_kind_of`.
+test "urn:query:ogpo-single-payment-duty-natural-person" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p9-a0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:r5"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p9-a1": insured_kind_of(entity_ref("urn:kz:ogpo:contract:r5"), NaturalPerson) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(UplatitPremiyuEdinovremennymPlatezhom, ACTIVE);
+}
+
+// Пара к предыдущему: у юридического лица такой обязанности пункт 9 не
+// создаёт — оно платит в порядке, установленном договором.
+test "urn:query:ogpo-single-payment-not-for-legal-entity" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p9-b0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:r6"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p9-b1": insured_kind_of(entity_ref("urn:kz:ogpo:contract:r6"), LegalEntity) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect not position(UplatitPremiyuEdinovremennymPlatezhom, ACTIVE);
+}

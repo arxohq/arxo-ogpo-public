@@ -1,0 +1,215 @@
+// ПРИЛОЖЕНИЕ К ПРАВИЛАМ — размер коэффициента и переход класса.
+//
+// Семнадцать строк таблицы дают сто два нормативных факта: коэффициент у
+// каждого класса, его место в порядке классов и пять клеток перехода по числу
+// страховых случаев, произошедших по вине страхователя (застрахованного) и по
+// которым осуществлена страховая выплата.
+//
+// ПОЧЕМУ ФАКТЫ, А НЕ ТАБЛИЦА РЕШЕНИЙ A3. Обе оси приложения и его выход —
+// перечисления: класс на входе, класс на выходе. Схема `law.decision/0.1`
+// знает в ячейке только литерал и не знает `const_ref` вовсе; текстовая
+// колонка перенесла бы тождество значения с символа на строку, и опечатка
+// перестала бы быть ошибкой. Тот же довод записан у статьи 19 в
+// `kz/ogpo-vts/package.law`.
+//
+// ПОЧЕМУ ЕСТЬ ОТДЕЛЬНЫЙ ПОРЯДОК КЛАССОВ. Пункты 10 и 11 говорят «класс на 1
+// класс больше», пункты 12 и 13 — «на 1 класс меньше». Без объявленного
+// порядка эти слова не имеют значения; порядок повторяет порядок строк
+// приложения снизу вверх, от самого минимального класса М2 (пункты 3, 7 и 14
+// называют его таковым прямо) к классу 13.
+//
+// СТО ДВА ЧИСЛА НАБРАНЫ НЕ ГЛАЗАМИ. Их независимо читает из закреплённых
+// байтов §194 `tools/annex_table.py`; `--check` сверяет два чтения одной
+// публикации, `--emit` печатает этот блок. Разбор не знает ни одного имени
+// отсюда и правил не читает — совпадение и есть проверка.
+
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// `key(klass)` делает каждый ряд функциональным: второй коэффициент того же
+// класса даёт KEY_CONFLICT, а не тихо второй ответ о премии.
+pub relation koeffitsient_klassa(klass: Klass, koeffitsient: Decimal)
+    kind institutional {
+    key(klass);
+    label ru-KZ official "размер коэффициента по системе «бонус-малус», установленный приложением к Правилам для класса";
+}
+
+pub relation poryadok_klassa(klass: Klass, mesto: Integer) kind institutional {
+    key(klass);
+    label ru-KZ official "место класса в порядке классов приложения: 1 — самый минимальный класс М2, 17 — класс 13";
+}
+
+// Обратное отношение того же порядка. Заведено отдельно, а не выведено
+// переворотом `poryadok_klassa` в теле правила: пункты 10—13 сдвигают МЕСТО и
+// затем спрашивают КЛАСС этого места, и чтение в эту сторону обязано быть
+// функциональным по месту, иначе сдвиг на один класс дал бы два ответа.
+pub relation klass_na_meste(mesto: Integer, klass: Klass) kind institutional {
+    key(mesto);
+    label ru-KZ official "класс, занимающий указанное место в порядке классов приложения к Правилам";
+}
+
+// Клетка перехода. `chislo_sluchaev` — номер СТОЛБЦА приложения: 0, 1, 2, 3 и
+// 4, где последний означает «4 и более страховых случая». Приведение числа
+// случаев дела к номеру столбца делает пункт 3 в `04-izmenenie-klassa.law`, а
+// не эта таблица: столбец «4 и более» есть решение о границе, и прятать его в
+// данные значило бы потерять его из виду.
+pub relation perekhod_klassa(iz: Klass, chislo_sluchaev: Integer, v: Klass)
+    kind institutional {
+    key(iz, chislo_sluchaev);
+    label ru-KZ official "класс при заключении договора обязательного страхования с учетом наступления страховых случаев по вине страхователя (застрахованного)";
+}
+
+// Два якоря: та же таблица из семнадцати строк стоит и в редакции № 87
+// (окно [2025-04-08, 2025-12-23)), и в действующей; `tools/annex_table.py
+// --check --state 2025` сверяет равенство таблиц и наличие второго якоря.
+@source(BM_ANNEX_TABLE) {
+  @source(BM2025_ANNEX_TABLE) {
+    assert koeffitsient_klassa(KlassM2, 3.50);
+    assert koeffitsient_klassa(KlassM1, 3.00);
+    assert koeffitsient_klassa(KlassM, 2.45);
+    assert koeffitsient_klassa(Klass0, 2.30);
+    assert koeffitsient_klassa(Klass1, 1.55);
+    assert koeffitsient_klassa(Klass2, 1.40);
+    assert koeffitsient_klassa(Klass3, 1.00);
+    assert koeffitsient_klassa(Klass4, 0.95);
+    assert koeffitsient_klassa(Klass5, 0.90);
+    assert koeffitsient_klassa(Klass6, 0.85);
+    assert koeffitsient_klassa(Klass7, 0.80);
+    assert koeffitsient_klassa(Klass8, 0.75);
+    assert koeffitsient_klassa(Klass9, 0.70);
+    assert koeffitsient_klassa(Klass10, 0.65);
+    assert koeffitsient_klassa(Klass11, 0.60);
+    assert koeffitsient_klassa(Klass12, 0.55);
+    assert koeffitsient_klassa(Klass13, 0.50);
+
+    assert poryadok_klassa(KlassM2, 1);
+    assert poryadok_klassa(KlassM1, 2);
+    assert poryadok_klassa(KlassM, 3);
+    assert poryadok_klassa(Klass0, 4);
+    assert poryadok_klassa(Klass1, 5);
+    assert poryadok_klassa(Klass2, 6);
+    assert poryadok_klassa(Klass3, 7);
+    assert poryadok_klassa(Klass4, 8);
+    assert poryadok_klassa(Klass5, 9);
+    assert poryadok_klassa(Klass6, 10);
+    assert poryadok_klassa(Klass7, 11);
+    assert poryadok_klassa(Klass8, 12);
+    assert poryadok_klassa(Klass9, 13);
+    assert poryadok_klassa(Klass10, 14);
+    assert poryadok_klassa(Klass11, 15);
+    assert poryadok_klassa(Klass12, 16);
+    assert poryadok_klassa(Klass13, 17);
+
+    assert perekhod_klassa(KlassM2, 0, KlassM1);
+    assert perekhod_klassa(KlassM2, 1, KlassM2);
+    assert perekhod_klassa(KlassM2, 2, KlassM2);
+    assert perekhod_klassa(KlassM2, 3, KlassM2);
+    assert perekhod_klassa(KlassM2, 4, KlassM2);
+
+    assert perekhod_klassa(KlassM1, 0, KlassM);
+    assert perekhod_klassa(KlassM1, 1, KlassM2);
+    assert perekhod_klassa(KlassM1, 2, KlassM2);
+    assert perekhod_klassa(KlassM1, 3, KlassM2);
+    assert perekhod_klassa(KlassM1, 4, KlassM2);
+
+    assert perekhod_klassa(KlassM, 0, Klass0);
+    assert perekhod_klassa(KlassM, 1, KlassM2);
+    assert perekhod_klassa(KlassM, 2, KlassM2);
+    assert perekhod_klassa(KlassM, 3, KlassM2);
+    assert perekhod_klassa(KlassM, 4, KlassM2);
+
+    assert perekhod_klassa(Klass0, 0, Klass1);
+    assert perekhod_klassa(Klass0, 1, KlassM2);
+    assert perekhod_klassa(Klass0, 2, KlassM2);
+    assert perekhod_klassa(Klass0, 3, KlassM2);
+    assert perekhod_klassa(Klass0, 4, KlassM2);
+
+    assert perekhod_klassa(Klass1, 0, Klass2);
+    assert perekhod_klassa(Klass1, 1, KlassM);
+    assert perekhod_klassa(Klass1, 2, KlassM1);
+    assert perekhod_klassa(Klass1, 3, KlassM2);
+    assert perekhod_klassa(Klass1, 4, KlassM2);
+
+    assert perekhod_klassa(Klass2, 0, Klass3);
+    assert perekhod_klassa(Klass2, 1, Klass1);
+    assert perekhod_klassa(Klass2, 2, KlassM);
+    assert perekhod_klassa(Klass2, 3, KlassM1);
+    assert perekhod_klassa(Klass2, 4, KlassM2);
+
+    assert perekhod_klassa(Klass3, 0, Klass4);
+    assert perekhod_klassa(Klass3, 1, Klass1);
+    assert perekhod_klassa(Klass3, 2, KlassM);
+    assert perekhod_klassa(Klass3, 3, KlassM1);
+    assert perekhod_klassa(Klass3, 4, KlassM2);
+
+    assert perekhod_klassa(Klass4, 0, Klass5);
+    assert perekhod_klassa(Klass4, 1, Klass2);
+    assert perekhod_klassa(Klass4, 2, Klass0);
+    assert perekhod_klassa(Klass4, 3, KlassM1);
+    assert perekhod_klassa(Klass4, 4, KlassM2);
+
+    assert perekhod_klassa(Klass5, 0, Klass6);
+    assert perekhod_klassa(Klass5, 1, Klass3);
+    assert perekhod_klassa(Klass5, 2, Klass0);
+    assert perekhod_klassa(Klass5, 3, KlassM);
+    assert perekhod_klassa(Klass5, 4, KlassM2);
+
+    assert perekhod_klassa(Klass6, 0, Klass7);
+    assert perekhod_klassa(Klass6, 1, Klass4);
+    assert perekhod_klassa(Klass6, 2, Klass1);
+    assert perekhod_klassa(Klass6, 3, KlassM);
+    assert perekhod_klassa(Klass6, 4, KlassM2);
+
+    assert perekhod_klassa(Klass7, 0, Klass8);
+    assert perekhod_klassa(Klass7, 1, Klass4);
+    assert perekhod_klassa(Klass7, 2, Klass1);
+    assert perekhod_klassa(Klass7, 3, KlassM);
+    assert perekhod_klassa(Klass7, 4, KlassM2);
+
+    assert perekhod_klassa(Klass8, 0, Klass9);
+    assert perekhod_klassa(Klass8, 1, Klass5);
+    assert perekhod_klassa(Klass8, 2, Klass2);
+    assert perekhod_klassa(Klass8, 3, KlassM);
+    assert perekhod_klassa(Klass8, 4, KlassM2);
+
+    assert perekhod_klassa(Klass9, 0, Klass10);
+    assert perekhod_klassa(Klass9, 1, Klass5);
+    assert perekhod_klassa(Klass9, 2, Klass2);
+    assert perekhod_klassa(Klass9, 3, Klass0);
+    assert perekhod_klassa(Klass9, 4, KlassM2);
+
+    assert perekhod_klassa(Klass10, 0, Klass11);
+    assert perekhod_klassa(Klass10, 1, Klass6);
+    assert perekhod_klassa(Klass10, 2, Klass3);
+    assert perekhod_klassa(Klass10, 3, Klass0);
+    assert perekhod_klassa(Klass10, 4, KlassM2);
+
+    assert perekhod_klassa(Klass11, 0, Klass12);
+    assert perekhod_klassa(Klass11, 1, Klass6);
+    assert perekhod_klassa(Klass11, 2, Klass3);
+    assert perekhod_klassa(Klass11, 3, Klass0);
+    assert perekhod_klassa(Klass11, 4, KlassM2);
+
+    assert perekhod_klassa(Klass12, 0, Klass13);
+    assert perekhod_klassa(Klass12, 1, Klass6);
+    assert perekhod_klassa(Klass12, 2, Klass3);
+    assert perekhod_klassa(Klass12, 3, Klass0);
+    assert perekhod_klassa(Klass12, 4, KlassM2);
+
+    assert perekhod_klassa(Klass13, 0, Klass13);
+    assert perekhod_klassa(Klass13, 1, Klass7);
+    assert perekhod_klassa(Klass13, 2, Klass3);
+    assert perekhod_klassa(Klass13, 3, Klass0);
+    assert perekhod_klassa(Klass13, 4, KlassM2);
+  }
+}
+
+// Порядок «место → класс» есть тот же самый порядок, прочитанный в другую
+// сторону. Правило, а не второй список фактов: список разошёлся бы молча.
+@source(BM_ANNEX_TABLE)
+rule KlassNaMesteIzPoryadka(klass: Klass, mesto: Integer) strict {
+    label ru-KZ official "Место класса в порядке классов приложения определяет класс однозначно";
+    when poryadok_klassa(klass, mesto);
+    then klass_na_meste(mesto, klass);
+}

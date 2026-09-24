@@ -1,0 +1,52 @@
+{
+  "dependencyEdges": [
+    {
+      "features": [],
+      "from": "kz.corpus.bonus_malus",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.budget"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.budget",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.budget_code"
+    }
+  ],
+  "languageSemantics": "law.core/0.2.0",
+  "lockVersion": "0.1",
+  "packages": [
+    {
+      "contentHash": "sha256:1e0ebb1d019617e0785b7b2121cda3aeabd269d388e8f802afe719933bcd3f18",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.budget",
+      "namespace": "urn:kz:corpus:clir:budget",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/kz.corpus.budget/0.1.0",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:e54ba547c66ee357e9a3fb12b4a2175b3544c8a560ae266d06a7b54a01836c53",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.budget_code",
+      "namespace": "urn:kz:corpus:clir:budget-code",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/kz.corpus.budget_code/0.1.0",
+      "version": "0.1.0"
+    }
+  ],
+  "resolutionHash": "sha256:6fcb4609643303684abe89aa1de53493256458b261a0cf106e9dd86bd04e5d1c",
+  "root": {
+    "contentHash": "sha256:190c0133c0094c622a38df7cb31bc589c8ee41c0c917aa2b643d31746b6a5e4a",
+    "name": "kz.corpus.bonus_malus",
+    "namespace": "urn:kz:corpus:clir:bonus-malus",
+    "version": "0.2.0"
+  },
+  "semanticLayer": "L1"
+}

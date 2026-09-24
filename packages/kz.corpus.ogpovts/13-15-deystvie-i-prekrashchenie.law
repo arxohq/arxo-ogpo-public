@@ -1,0 +1,929 @@
+// СТАТЬИ 13, 14 И 15. ДЕЙСТВИЕ ДОГОВОРА, ЕГО ПРЕКРАЩЕНИЕ И ДОСРОЧНОЕ
+// ПРЕКРАЩЕНИЕ С УДЕРЖАНИЕМ ЧАСТИ СТРАХОВОЙ ПРЕМИИ.
+//
+// Три статьи в одном модуле потому, что они считают ОДНУ И ТУ ЖЕ величину —
+// срок договора в днях. Статья 13 его устанавливает (двенадцать месяцев либо
+// иной срок пунктом 4), статья 14 кончает договор его истечением, статья 15
+// делит по нему уплаченную премию. Развести их по файлам значило бы трижды
+// вывести один и тот же `N`.
+//
+// ШКАЛА ПУНКТА 4 СТАТЬИ 15 — ТРИНАДЦАТЬ ПРАВИЛ С ГАРДАМИ, А НЕ A3-ТАБЛИЦА, И
+// ЭТО ВЫНУЖДЕННЫЙ ВЫБОР, НАЗВАННЫЙ ВСЛУХ. A3-таблица в режиме `rules`
+// запрашивается ЯВНЫМ ФАКТОМ ДЕЛА на внутреннем предикате `<id таблицы>/input`
+// (§A3.3.4), StableId которого содержит слэш; поверхность §267 (`.lawtest`)
+// такое имя назвать не может — та же оговорка стоит у сеток статьи 19 этого
+// же пакета (докстринг `corpus/kz/acts/ogpo_vts.py`) и у `kz.paracetamol`.
+// Зелёный `.lawtest`, НЕ исполняющий таблицу, был бы обманом: он проверял бы
+// молчание. Правила с гардами исполняются той же поверхностью, что и всё
+// остальное в модуле, и границы интервалов у них закреплены ПАРНЫМИ
+// сценариями с обеих сторон.
+//
+// ЧЕМ ГАРД ОТЛИЧАЕТСЯ ОТ СТРОКИ ТАБЛИЦЫ ПО СУЩЕСТВУ: ничем, кроме того, что
+// сравнение записано без деления. Столбец шкалы — «срок, прошедший… В
+// ПРОЦЕНТАХ от срока, на который заключен договор», то есть `n * 100 / N`.
+// Деление здесь не выполняется НИ РАЗУ: `n * 100 >= 4 * N` есть то же самое
+// условие в целых числах. Причина не в экономии, а в точности: `Integer /
+// Integer` даёт `Rational` (§58), сравнивать его с целым порогом нельзя без
+// конверсии (§48 — конверсий нет), а деление с округлением сдвинуло бы
+// границу интервала — ровно ту величину, ради которой шкала и написана.
+//
+// ПЕРЕЧЕНЬ ШКАЛЫ ПОЛОН И НЕ ПЕРЕСЕКАЕТСЯ. Тринадцать полуинтервалов покрывают
+// [0, +∞) без дыр: «до 4 (не включая 4)», двенадцать интервалов вида «от X до
+// Y (не включая Y)» и «от 92 и выше». Значение РОВНО НА ГРАНИЦЕ принадлежит
+// ВЕРХНЕЙ строке — это написано в самой шкале словами «не включая», и потому
+// догадкой не является. Ключ `key(contract)` держит непересечение громко:
+// если два гарда когда-нибудь сойдутся на одном деле, придёт KEY_CONFLICT с
+// именем договора, а не тихая вторая доля.
+//
+// ДВЕ ПОЛИТИКИ §86 НА ОДНО СЕМЕЙСТВО — ИЗМЕРЕННАЯ ГРАНИЦА, А НЕ НЕДОСМОТР.
+// Календарный МЕСЯЦ требует `policy.month_end` (иначе «31 февраля» решалось бы
+// умолчанием), календарный ДЕНЬ и РАБОЧИЙ день это поле ОТВЕРГАЮТ, а политика
+// в деле одна. Отсюда: общий срок в двенадцать месяцев (пункт 3 статьи 13) и
+// наименьший срок в шесть месяцев (пункт 4 подпункт 1) считаются под политикой
+// С `month_end`; наименьший срок в пять календарных дней (подпункты 3 и 4),
+// десять рабочих дней (пункт 3 абзац второй) и один рабочий день (пункт 2
+// статьи 14) — под политикой БЕЗ него. Дело, в котором сошлись бы обе
+// единицы, ответа не получит; такого дела у этих статей нет — общий срок и
+// иной срок взаимно исключены замыканием ниже, — но у семейства сценариев
+// поэтому два профиля контекста, а не один.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ И ПОЧЕМУ (решение формализатора, 10.09.2026):
+//
+//   статья 13 пункт 5, статья 14 пункт 1 подпункт 3), статья 13 пункт 4
+//              подпункт 2) — исключены поправками 2009, 2018 и 2022 годов;
+//              нормы в них нет.
+//
+//   статья 15 пункт 1 — «Договор прекращается досрочно в случаях,
+//              установленных Гражданским кодексом Республики Казахстан».
+//              САМ ПЕРЕЧЕНЬ ОСНОВАНИЙ здесь неисполним: он в чужом акте, и
+//              пересказать его под якорем статьи 15 значило бы формализовать
+//              Гражданский кодекс. Взято то, что принадлежит этой статье:
+//              основание приходит фактом дела, а последствия (прекращение,
+//              удержание, возврат) выводятся. Мост к `kz.corpus.civilcode`
+//              записан в отчёте наряда.
+//
+//   статья 15 пункт 2 в части ФОРМЫ заявления («письменное заявление») —
+//              требование к форме документа проверяется не расчётом, а
+//              наличием самого документа; факт дела назван по форме из
+//              текста, отдельного правила о форме нет.
+
+
+// ============================================================================
+// Статья 13 пункты 2, 3 и 4. Вступление в силу и срок
+// ============================================================================
+
+relation contract_stipulated_start_day(contract: InsuranceContract, day: Date)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "дата, установленная договором обязательного страхования, с которой он вступает в силу";
+}
+
+relation contract_stipulated_end_day(contract: InsuranceContract, day: Date)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "день окончания срока, на который заключён договор обязательного страхования, при заключении его на срок иной, чем двенадцать месяцев";
+}
+
+relation contract_in_force_from(contract: InsuranceContract, day: Date) kind institutional {
+    key(contract);
+    label ru-KZ official "день, с которого договор обязательного страхования вступает в силу и становится обязательным для сторон";
+}
+
+relation standard_contract_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок, на который заключается договор обязательного страхования по общему правилу (статья 13 пункт 3)";
+}
+@source(LAW_446_ART13)
+assert standard_contract_term(12 calendar_month);
+
+// Пункт 4 — ТРИ ДЕЙСТВУЮЩИХ ОСНОВАНИЯ иного срока. Перечислением, а не тремя
+// предикатами, по тому же доводу, что у осей статьи 19 (`package.law`): дело
+// называет одно основание, `key(contract)` делает второе невыразимым.
+enum OtherTermGround {
+    label ru-KZ official "основание заключения договора на срок иной, чем двенадцать месяцев (статья 13 пункт 4)";
+    SeasonalOperation;
+    PriorToStateRegistration;
+    TemporaryEntryToKz;
+}
+
+relation other_term_ground(contract: InsuranceContract, ground: OtherTermGround)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "договор заключается на иной срок по названному основанию";
+}
+
+relation seasonal_operation(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "транспортное средство эксплуатируется сезонно";
+}
+
+relation contract_has_other_term(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "договор заключается на срок иной, чем предусмотрено пунктом 3 статьи 13";
+}
+
+relation other_term_ground_available(contract: InsuranceContract, ground: OtherTermGround)
+    kind institutional {
+    label ru-KZ official "основание заключения договора на иной срок подтверждено обстоятельствами дела";
+}
+
+relation contract_term_end_day(contract: InsuranceContract, day: Date) kind institutional {
+    key(contract);
+    label ru-KZ official "день окончания срока действия договора обязательного страхования";
+}
+
+relation contract_term_days(contract: InsuranceContract, days: Integer) kind institutional {
+    key(contract);
+    label ru-KZ official "срок, на который заключён договор обязательного страхования, в днях";
+}
+
+// ЗАМЫКАНИЕ §70 НАД ОСНОВАНИЯМИ ИНОГО СРОКА. Пункт 4 — исключение из пункта
+// 3, и без замыкания общее правило двенадцати месяцев потребовало бы от дела
+// УТВЕРЖДЕНИЯ «иного срока нет»: классическое `not` без продюсера отрицания
+// не срабатывает никогда (§113). Молчание дела значит здесь ровно то, что
+// значит в праве: договор заключён на общий срок.
+closure ContractOtherTermByCase {
+    label ru-KZ official "молчание дела об основаниях пункта 4 значит: договор заключён на срок, предусмотренный пунктом 3 статьи 13";
+    predicate contract_has_other_term;
+    domain contract_in_question;
+    snapshot "urn:kz:corpus:clir:ogpo-vts:snapshot:contract-terms";
+    complete_as_of @2003-07-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+@source(LAW_446_ART13) {
+    rule ContractInForceFromStipulatedDay(contract: InsuranceContract, day: Date) strict {
+        label ru-KZ official "Статья 13 пункт 2. Договор обязательного страхования ответственности владельцев транспортных средств вступает в силу и становится обязательным для сторон с даты, установленной договором обязательного страхования ответственности владельцев транспортных средств";
+        when contract_stipulated_start_day(contract, day);
+        then contract_in_force_from(contract, day);
+    }
+
+    rule OtherTermGroundMakesTermSpecial(contract: InsuranceContract, ground: OtherTermGround)
+        strict {
+        label ru-KZ official "Статья 13 пункт 4. Допускается заключение договора обязательного страхования ответственности владельцев транспортных средств на срок иной, чем предусмотрено пунктом 3 настоящей статьи";
+        when other_term_ground(contract, ground);
+        then contract_has_other_term(contract);
+    }
+
+    rule ContractTermIsTwelveMonths(contract: InsuranceContract, start: Date, term: Quantity)
+        strict {
+        label ru-KZ official "Статья 13 пункт 3 абзац первый. Договор обязательного страхования ответственности владельцев транспортных средств заключается сроком на двенадцать месяцев с даты вступления его в силу";
+        when contract_in_force_from(contract, start);
+        when standard_contract_term(term);
+        when not contract_has_other_term(contract);
+        then contract_term_end_day(contract, add_calendar_period(start, term));
+    }
+
+    rule ContractTermIsStipulated(contract: InsuranceContract, day: Date) strict {
+        label ru-KZ official "Статья 13 пункт 4. При заключении договора на срок иной, чем предусмотрено пунктом 3 настоящей статьи, срок действия договора оканчивается днём, установленным договором";
+        when contract_has_other_term(contract);
+        when contract_stipulated_end_day(contract, day);
+        then contract_term_end_day(contract, day);
+    }
+
+    rule ContractTermInDays(contract: InsuranceContract, start: Date, end: Date) strict {
+        label ru-KZ official "Статья 13 пункты 3 и 4. Срок заключения договора обязательного страхования исчисляется в днях от дня вступления договора в силу до дня окончания его срока";
+        when contract_in_force_from(contract, start);
+        when contract_term_end_day(contract, end);
+        then contract_term_days(contract, days_between(start, end));
+    }
+}
+
+// --- Пункт 4: подтверждение основания иного срока ---------------------------
+//
+// Три правила (§206) — по одному на действующий подпункт. Подпункты 3) и 4)
+// читают признак статьи 5, уже заведённый модулем `05-obyazannost-
+// strakhovaniya.law`: подпункт 3) прямо отсылает к подпункту 3) пункта 1
+// статьи 5 (перегон транспортного средства своим ходом), подпункт 4) говорит
+// о временном въезде — том же основании, что `TemporaryEntry` статьи 5.
+
+@source(LAW_446_ART13) {
+    rule SeasonalOperationAllowsOtherTerm(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 13 пункт 4 подпункт 1). Допускается заключение договора при сезонной эксплуатации транспортного средства";
+        when other_term_ground(contract, SeasonalOperation);
+        when seasonal_operation(contract);
+        then other_term_ground_available(contract, SeasonalOperation);
+    }
+
+    rule PreRegistrationDeliveryAllowsOtherTerm(contract: InsuranceContract, vehicle: Vehicle)
+        strict {
+        label ru-KZ official "Статья 13 пункт 4 подпункт 3). Допускается заключение договора в случаях, предусмотренных подпунктом 3) пункта 1 статьи 5 настоящего Закона, на срок, предшествующий государственной регистрации транспортного средства";
+        when other_term_ground(contract, PriorToStateRegistration);
+        when contract_covers_vehicle(contract, vehicle);
+        when compulsory_insurance_ground(vehicle, DeliveredUnderOwnPower);
+        then other_term_ground_available(contract, PriorToStateRegistration);
+    }
+
+    rule TemporaryEntryAllowsOtherTerm(contract: InsuranceContract, vehicle: Vehicle) strict {
+        label ru-KZ official "Статья 13 пункт 4 подпункт 4). Допускается заключение договора в случае временного въезда транспортного средства на территорию Республики Казахстан на весь период временного въезда";
+        when other_term_ground(contract, TemporaryEntryToKz);
+        when contract_covers_vehicle(contract, vehicle);
+        when compulsory_insurance_ground(vehicle, TemporaryEntry);
+        then other_term_ground_available(contract, TemporaryEntryToKz);
+    }
+}
+
+// --- Пункт 4: наименьший допустимый срок ------------------------------------
+//
+// «Но не менее шести месяцев», «но не менее чем на пять календарных дней» —
+// три величины в трёх подпунктах. Они стоят в утверждениях, а сравнение —
+// одно: срок договора в днях против того же срока, отсчитанного от дня
+// вступления в силу. Отсчёт через `add_calendar_period` держит МЕСЯЦ месяцем:
+// шесть месяцев от 1 января и «сто восемьдесят дней» — разные дни.
+
+relation minimum_other_term(ground: OtherTermGround, term: Quantity) kind institutional {
+    key(ground);
+    label ru-KZ official "наименьший срок, на который допускается заключение договора по названному основанию";
+}
+
+@source(LAW_446_ART13) {
+    assert minimum_other_term(SeasonalOperation, 6 calendar_month);
+
+    assert minimum_other_term(PriorToStateRegistration, 5 calendar_day);
+
+    assert minimum_other_term(TemporaryEntryToKz, 5 calendar_day);
+}
+
+relation minimum_term_end_day(contract: InsuranceContract, ground: OtherTermGround,
+                              day: Date) kind institutional {
+    key(contract, ground);
+    label ru-KZ official "наиболее ранний день, которым может окончиться срок договора, заключённого по названному основанию пункта 4 статьи 13";
+}
+
+relation contract_term_below_statutory_minimum(contract: InsuranceContract,
+                                               ground: OtherTermGround)
+    kind institutional {
+    label ru-KZ official "срок, на который заключён договор, меньше наименьшего срока, допускаемого пунктом 4 статьи 13 по этому основанию";
+}
+
+// ДВА ПРАВИЛА, А НЕ ОДНО, И РАЗДЕЛЕНЫ ОНИ ЗАМЕРОМ, А НЕ ВКУСОМ. Календарный
+// шаг `add_calendar_period` в ТЕЛЕ правила отвечает MISSING_POLICY и делает
+// документ NON_EXECUTABLE даже при объявленной делом политике §86 (замер
+// 10.09.2026 на сценариях OGPO-T13-C…F); тот же шаг в ГОЛОВЕ правила
+// исполняется и даёт дату. Поэтому наименьший допустимый день считается
+// головой отдельного правила, а сравнение остаётся сравнением двух дат.
+@source(LAW_446_ART13) {
+    rule MinimumTermEndDay(
+        contract: InsuranceContract,
+        ground: OtherTermGround,
+        term: Quantity,
+        start: Date,
+    ) strict {
+        label ru-KZ official "Статья 13 пункт 4. Заключение договора на иной срок допускается не менее чем на срок, названный подпунктом настоящего пункта";
+        when other_term_ground(contract, ground);
+        when minimum_other_term(ground, term);
+        when contract_in_force_from(contract, start);
+        then minimum_term_end_day(contract, ground, add_calendar_period(start, term));
+    }
+
+    rule ContractTermBelowStatutoryMinimum(
+        contract: InsuranceContract,
+        ground: OtherTermGround,
+        earliest: Date,
+        end: Date,
+    ) strict {
+        label ru-KZ official "Статья 13 пункт 4. Срок договора, заключённого по основанию настоящего пункта, короче наименьшего допускаемого им срока";
+        when minimum_term_end_day(contract, ground, earliest);
+        when contract_term_end_day(contract, end);
+        when end < earliest;
+        then contract_term_below_statutory_minimum(contract, ground);
+    }
+}
+
+// --- Пункт 3 абзац второй: когда договор должен быть заключён ---------------
+//
+// Два подпункта — две обязанности с РАЗНЫМИ окнами, и в этом вся норма:
+// подпункт 1) назначает момент («на момент пересечения Государственной
+// границы»), подпункт 2) — окно от возникновения права владения до десятого
+// РАБОЧЕГО дня со дня государственной регистрации. Единица взята из текста:
+// рабочие дни, а не календарные, и потому срок считается `add_business_days`
+// по снимку календаря §85 — тем же термом, каким считает сроки выплаты
+// `26-poryadok-vyplaty.law`.
+
+relation border_crossing_day(vehicle: Vehicle, day: Date) kind empirical {
+    key(vehicle);
+    label ru-KZ official "день пересечения Государственной границы Республики Казахстан транспортным средством, находящимся в международном движении по территории Республики Казахстан";
+}
+
+relation ownership_right_arose_on(vehicle: Vehicle, owner: VehicleOwner, day: Date)
+    kind empirical {
+    key(vehicle, owner);
+    label ru-KZ official "день возникновения у физического или юридического лица права владения транспортным средством";
+}
+
+relation state_registration_day(vehicle: Vehicle, day: Date) kind empirical {
+    key(vehicle);
+    label ru-KZ official "день государственной регистрации (перерегистрации) транспортного средства в территориальных подразделениях уполномоченного органа по обеспечению безопасности дорожного движения";
+}
+
+relation conclusion_after_registration_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок заключения договора со дня государственной регистрации транспортного средства (статья 13 пункт 3 абзац второй подпункт 2))";
+}
+@source(LAW_446_ART13)
+assert conclusion_after_registration_term(10 business_day);
+
+relation conclusion_due_day(vehicle: Vehicle, owner: VehicleOwner, day: Date)
+    kind institutional {
+    label ru-KZ official "день, в который истекает срок заключения договора обязательного страхования при возникновении права владения транспортным средством";
+}
+
+@source(LAW_446_ART13) {
+    // BEGIN GENERATED ContractDueAtBorderCrossing (deontic-window)
+    rule ContractDueAtBorderCrossing(
+        vehicle: Vehicle,
+        owner: VehicleOwner,
+        crossing: Date,
+    ) strict {
+        label ru-KZ official "Статья 13 пункт 3 абзац второй подпункт 1). Договор обязательного страхования должен быть заключен на момент пересечения Государственной границы Республики Казахстан транспортными средствами, находящимися в международном движении по территории Республики Казахстан";
+        when vehicle_of(vehicle, owner);
+        when international_movement_status(vehicle, InInternationalMovement);
+        when border_crossing_day(vehicle, crossing);
+        then duty ZaklyuchitDogovorNaMomentPeresecheniyaGranicy {
+            bearer owner;
+            achieve compulsory_insurance_contract_concluded(vehicle, owner)
+                during [crossing, crossing];
+        };
+    }
+    // END GENERATED ContractDueAtBorderCrossing
+
+    rule ConclusionDueDayAfterRegistration(
+        vehicle: Vehicle,
+        owner: VehicleOwner,
+        registration: Date,
+        term: Quantity,
+    ) strict {
+        label ru-KZ official "Статья 13 пункт 3 абзац второй подпункт 2). Договор должен быть заключен не позднее десяти рабочих дней с момента государственной регистрации (перерегистрации) данного транспортного средства";
+        when vehicle_of(vehicle, owner);
+        when state_registration_day(vehicle, registration);
+        when conclusion_after_registration_term(term);
+        then conclusion_due_day(vehicle, owner, add_business_days(registration, term));
+    }
+
+    // BEGIN GENERATED ContractDueOnAcquiringOwnership (deontic-window)
+    rule ContractDueOnAcquiringOwnership(
+        vehicle: Vehicle,
+        owner: VehicleOwner,
+        arose: Date,
+        due: Date,
+    ) strict {
+        label ru-KZ official "Статья 13 пункт 3 абзац второй подпункт 2). Договор обязательного страхования должен быть заключен на момент возникновения у физического или юридического лица права владения транспортным средством, но не позднее десяти рабочих дней с момента государственной регистрации (перерегистрации) данного транспортного средства";
+        when ownership_right_arose_on(vehicle, owner, arose);
+        when conclusion_due_day(vehicle, owner, due);
+        then duty ZaklyuchitDogovorPriVozniknoveniiPravaVladeniya {
+            bearer owner;
+            achieve compulsory_insurance_contract_concluded(vehicle, owner)
+                during [arose, due];
+        };
+    }
+    // END GENERATED ContractDueOnAcquiringOwnership
+}
+
+// ============================================================================
+// Статья 13 пункт 1. На кого договор действует
+// ============================================================================
+//
+// Общее правило и ТРИ ИСКЛЮЧЕНИЯ — поражаемое правило и три дефитера §95.3.
+// Исключения не сводятся к конъюнкции отрицаний: каждое из них есть
+// самостоятельное основание, и `why-not` обязан назвать то, которое сработало.
+//
+// ПОЧЕМУ ФАКТЫ ИСКЛЮЧЕНИЙ ЗАВЕДЕНЫ НАД `Victim`, А НЕ ПЕРЕИСПОЛЬЗОВАНЫ У
+// СТАТЬИ 5. У пакета есть `drives_in_performance_of_service_or_labour_duties`
+// (модуль статей 4 и 5), но его аргумент — `VehicleOwner`, а исключаемое лицо
+// здесь `Victim`: статья 13 говорит о том, кому договор НЕ ДАЁТ возмещения,
+// то есть о потерпевшем. Соединить их без моста между двумя типами субъектов
+// нельзя; долг записан в отчёте наряда.
+
+relation victim_drove_in_service_of_insured(contract: InsuranceContract, victim: Victim)
+    kind empirical {
+    label ru-KZ official "потерпевший управлял этим транспортным средством в силу исполнения служебных или трудовых обязанностей со страхователем (застрахованным), в том числе на основании трудового или иного договора с владельцем транспортного средства, либо в присутствии страхователя (застрахованного) на основании его волеизъявления без оформления письменной формы сделки";
+}
+
+relation victim_is_passenger(contract: InsuranceContract, victim: Victim) kind empirical {
+    label ru-KZ official "потерпевший является пассажиром";
+}
+
+relation insured_is_carrier_liable_to_passengers(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователь (застрахованный) является перевозчиком, на которого распространяется требование законодательного акта Республики Казахстан, регламентирующего обязательное страхование гражданско-правовой ответственности перевозчика перед пассажирами";
+}
+
+relation victim_is_employee_of_insured(contract: InsuranceContract, victim: Victim)
+    kind empirical {
+    label ru-KZ official "потерпевший является работником страхователя (застрахованного)";
+}
+
+relation insured_must_insure_employees(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "законодательными актами Республики Казахстан на страхователя (застрахованного) как на работодателя возложена обязанность страховать работника от несчастных случаев при исполнении им трудовых (служебных) обязанностей";
+}
+
+relation contract_applies_to_victim(contract: InsuranceContract, victim: Victim)
+    kind institutional {
+    label ru-KZ official "договор обязательного страхования действует в отношении названного потерпевшего";
+}
+
+@source(LAW_446_ART13) {
+    rule ContractAppliesToEveryVictim(contract: InsuranceContract,
+                                      accident: TrafficAccident,
+                                      victim: Victim) defeasible {
+        label ru-KZ official "Статья 13 пункт 1. Договор обязательного страхования ответственности владельцев транспортных средств действует в отношении всех лиц, признанных потерпевшими в соответствии с настоящим Законом, в том числе находящихся в транспортном средстве страхователя (застрахованного), являющегося виновным в причинении вреда";
+        when insured_event(contract, accident);
+        when victim_recognized(accident, victim);
+        then contract_applies_to_victim(contract, victim);
+    }
+
+    rule ServiceDriverVictimExcluded(contract: InsuranceContract, victim: Victim) defeater {
+        label ru-KZ official "Статья 13 пункт 1 подпункт 1). Договор не действует в отношении лица, управляющего этим транспортным средством в силу исполнения служебных или трудовых обязанностей со страхователем (застрахованным)";
+        when victim_drove_in_service_of_insured(contract, victim);
+        defeat contract_applies_to_victim(contract, victim);
+    }
+
+    rule PassengerOfCarrierExcluded(contract: InsuranceContract, victim: Victim) defeater {
+        label ru-KZ official "Статья 13 пункт 1 подпункт 2). Договор не действует в отношении пассажиров, если страхователь (застрахованный) является перевозчиком, на которого распространяется требование законодательного акта Республики Казахстан, регламентирующего обязательное страхование гражданско-правовой ответственности перевозчика перед пассажирами";
+        when victim_is_passenger(contract, victim);
+        when insured_is_carrier_liable_to_passengers(contract);
+        defeat contract_applies_to_victim(contract, victim);
+    }
+
+    rule EmployeeOfInsuredExcluded(contract: InsuranceContract, victim: Victim) defeater {
+        label ru-KZ official "Статья 13 пункт 1 подпункт 3). Договор не действует в отношении работников страхователя (застрахованного), если законодательными актами Республики Казахстан на страхователя (застрахованного) как на работодателя возложена обязанность страховать работника от несчастных случаев при исполнении им трудовых (служебных) обязанностей";
+        when victim_is_employee_of_insured(contract, victim);
+        when insured_must_insure_employees(contract);
+        defeat contract_applies_to_victim(contract, victim);
+    }
+}
+
+// ============================================================================
+// Статья 13 пункт 6. Территория действия
+// ============================================================================
+
+relation international_treaty_extends_territory(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "международным договором, заключённым Республикой Казахстан, предусмотрено иное действие договора обязательного страхования по территории";
+}
+
+relation contract_territory_limited_to_kz(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "действие договора обязательного страхования ограничивается территорией Республики Казахстан";
+}
+
+@source(LAW_446_ART13) {
+    rule ContractTerritoryIsKazakhstan(contract: InsuranceContract) defeasible {
+        label ru-KZ official "Статья 13 пункт 6. Действие договора обязательного страхования ответственности владельцев транспортных средств ограничивается территорией Республики Казахстан";
+        when contract_in_question(contract);
+        then contract_territory_limited_to_kz(contract);
+    }
+
+    rule InternationalTreatyDefeatsTerritoryLimit(contract: InsuranceContract) defeater {
+        label ru-KZ official "Статья 13 пункт 6. Оговорка «если иное не предусмотрено международным договором, заключенным Республикой Казахстан» отводит ограничение территорией Республики Казахстан";
+        when international_treaty_extends_territory(contract);
+        defeat contract_territory_limited_to_kz(contract);
+    }
+}
+
+// ============================================================================
+// Статья 14. Прекращение действия договора
+// ============================================================================
+//
+// ПУНКТ 2 ИСПОЛНЯЕТСЯ ЗАМЫКАНИЕМ, А НЕ ПРАВИЛОМ, и это главное решение
+// статьи. «Договор не прекращает свое действие при осуществлении страховой
+// выплаты» есть утверждение об ОТСУТСТВИИ основания, а не о наличии: правило
+// «выплата не прекращает договор» было бы правилом о несуществующем дефитере.
+// Перечень оснований пункта 1 закрыт самим текстом («считается прекращенным в
+// случаях:»), и замыкание §70 над `contract_terminated` даёт делу, где есть
+// только выплата, ответ FALSE_ONLY — то есть ровно то, что говорит пункт 2, и
+// говорит он это КАЖДОМУ делу, а не одному предусмотренному.
+
+relation termination_assessment_day(contract: InsuranceContract, day: Date) kind empirical {
+    key(contract);
+    label ru-KZ official "день, на который в деле оценивается действие договора обязательного страхования";
+}
+
+relation contract_terminated(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "договор обязательного страхования ответственности владельцев транспортных средств считается прекращённым";
+}
+
+relation contract_terminated_early(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "договор обязательного страхования прекращён досрочно";
+}
+
+@source(LAW_446_ART14) {
+    rule ContractTerminatedByExpiry(contract: InsuranceContract, day: Date, end: Date) strict {
+        label ru-KZ official "Статья 14 пункт 1 подпункт 1). Договор обязательного страхования ответственности владельцев транспортных средств считается прекращенным в случае истечения срока действия договора";
+        when termination_assessment_day(contract, day);
+        when contract_term_end_day(contract, end);
+        when day > end;
+        then contract_terminated(contract);
+    }
+
+    rule ContractTerminatedByEarlyTermination(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 14 пункт 1 подпункт 2). Договор обязательного страхования ответственности владельцев транспортных средств считается прекращенным в случае досрочного прекращения договора";
+        when contract_terminated_early(contract);
+        then contract_terminated(contract);
+    }
+}
+
+closure ContractTerminationGroundsClosure {
+    label ru-KZ official "перечень случаев прекращения договора закрыт пунктом 1 статьи 14: молчание дела значит, что договор не прекращён";
+    predicate contract_terminated;
+    domain contract_in_question;
+    snapshot "urn:kz:corpus:clir:ogpo-vts:snapshot:contract-termination";
+    complete_as_of @2003-07-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+// --- Пункт 2 абзац второй: один рабочий день на сообщение в базу данных -----
+
+relation insurance_payment_made_on(contract: InsuranceContract, day: Date) kind empirical {
+    key(contract);
+    label ru-KZ official "день осуществления страховой выплаты по договору обязательного страхования";
+}
+
+relation database_notification_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок информирования организации по формированию и ведению базы данных об осуществлении страховой выплаты (статья 14 пункт 2)";
+}
+@source(LAW_446_ART14)
+assert database_notification_term(1 business_day);
+
+relation database_informed_of_payment(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страховщик проинформировал организацию по формированию и ведению базы данных об осуществлении страховой выплаты";
+}
+
+relation database_notification_due_day(contract: InsuranceContract, day: Date)
+    kind institutional {
+    label ru-KZ official "день, в который истекает срок информирования организации по формированию и ведению базы данных об осуществлении страховой выплаты";
+}
+
+@source(LAW_446_ART14) {
+    rule DatabaseNotificationDueDay(contract: InsuranceContract, paid: Date, term: Quantity)
+        strict {
+        label ru-KZ official "Статья 14 пункт 2 абзац второй. Срок информирования организации по формированию и ведению базы данных истекает на первый рабочий день со дня осуществления страховой выплаты";
+        when insurance_payment_made_on(contract, paid);
+        when database_notification_term(term);
+        then database_notification_due_day(contract, add_business_days(paid, term));
+    }
+
+    // BEGIN GENERATED InsurerMustInformDatabaseOrganization (deontic-window)
+    rule InsurerMustInformDatabaseOrganization(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+        paid: Date,
+        due: Date,
+    ) strict {
+        label ru-KZ official "Статья 14 пункт 2 абзац второй. При осуществлении страховой выплаты страховщик в течение одного рабочего дня информирует об этом организацию по формированию и ведению базы данных";
+        when insurance_contract_of(contract, policyholder, insurer);
+        when insurance_payment_made_on(contract, paid);
+        when database_notification_due_day(contract, due);
+        then duty ProinformirovatOrganizaciyuBazyDannykh {
+            bearer insurer;
+            achieve database_informed_of_payment(contract) during [paid, due];
+        };
+    }
+    // END GENERATED InsurerMustInformDatabaseOrganization
+}
+
+// ============================================================================
+// Статья 15 пункты 1 и 2. Досрочное прекращение
+// ============================================================================
+
+relation civil_code_early_termination_ground(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "по договору наступил случай досрочного прекращения, установленный Гражданским кодексом Республики Казахстан";
+}
+
+relation early_termination_application_by_policyholder(contract: InsuranceContract)
+    kind empirical {
+    label ru-KZ official "страхователь подал страховщику письменное заявление о досрочном прекращении договора";
+}
+
+relation early_termination_application_by_heir(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "наследник (наследники) умершего страхователя подал страховщику письменное заявление о досрочном прекращении договора";
+}
+
+relation early_termination_application_filed(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "для досрочного прекращения договора страховщику подано письменное заявление";
+}
+
+relation early_termination_day(contract: InsuranceContract, day: Date) kind empirical {
+    key(contract);
+    label ru-KZ official "день обращения о досрочном прекращении договора обязательного страхования";
+}
+
+@source(LAW_446_ART15) {
+    rule EarlyTerminationApplicationByPolicyholder(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 15 пункт 2. Для досрочного прекращения договора обязательного страхования страхователь подает письменное заявление страховщику";
+        when early_termination_application_by_policyholder(contract);
+        then early_termination_application_filed(contract);
+    }
+
+    rule EarlyTerminationApplicationByHeir(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 15 пункт 2. В случае смерти страхователя письменное заявление страховщику подает его наследник (наследники)";
+        when early_termination_application_by_heir(contract);
+        then early_termination_application_filed(contract);
+    }
+
+    // Пункт 1 даёт ОСНОВАНИЕ, пункт 2 — ПОРЯДОК, и досрочное прекращение
+    // требует обоих: закон не знает досрочного прекращения без заявления.
+    // Прочтение записано вслух — см. отчёт наряда, «Открытые вопросы».
+    rule ContractTerminatedEarlyOnApplication(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 15 пункты 1 и 2. Договор обязательного страхования ответственности владельцев транспортных средств прекращается досрочно в случаях, установленных Гражданским кодексом Республики Казахстан, по письменному заявлению, поданному страховщику";
+        when civil_code_early_termination_ground(contract);
+        when early_termination_application_filed(contract);
+        then contract_terminated_early(contract);
+    }
+}
+
+// ============================================================================
+// Статья 15 пункты 3 и 4. Удержание части страховой премии и возврат остатка
+// ============================================================================
+
+relation premium_paid_amount(contract: InsuranceContract, amount: Money) kind empirical {
+    key(contract);
+    label ru-KZ official "размер страховой премии, оплаченной по договору обязательного страхования";
+}
+
+relation new_contract_with_same_insurer(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "при досрочном прекращении договора с этим же страховщиком заключён новый договор обязательного страхования";
+}
+
+relation elapsed_term_days(contract: InsuranceContract, days: Integer) kind institutional {
+    key(contract);
+    label ru-KZ official "срок, прошедший с момента вступления в силу договора обязательного страхования до момента его досрочного прекращения, в днях, включая день обращения";
+}
+
+relation premium_retained_pro_rata(contract: InsuranceContract, amount: Money)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "часть страховой премии, удерживаемая страховщиком по формуле пункта 3 статьи 15";
+}
+
+relation retention_share(contract: InsuranceContract, share: Decimal) kind institutional {
+    key(contract);
+    label ru-KZ official "доля страховой премии, удерживаемая страховщиком по шкале пункта 4 статьи 15";
+}
+
+relation premium_retained_by_scale(contract: InsuranceContract, amount: Money)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "часть страховой премии, удерживаемая страховщиком по шкале пункта 4 статьи 15";
+}
+
+relation premium_retained(contract: InsuranceContract, amount: Money) kind institutional {
+    key(contract);
+    label ru-KZ official "размер страховой премии, удерживаемой страховщиком при досрочном прекращении договора";
+}
+
+// Беззначная применимость шкалы пункта 4 (DECISION-0344): пункт 3 отводит сам
+// ПОРЯДОК удержания по шкале, а не величину, которую шкала насчитала. Разбор
+// — у дефитера ниже.
+relation scale_retention_applies(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "к данному договору применяется удержание части страховой премии в размере, определённом шкалой пункта 4 статьи 15";
+}
+
+relation premium_refunded(contract: InsuranceContract, amount: Money) kind institutional {
+    key(contract);
+    label ru-KZ official "часть оплаченной страховой премии, не удержанная страховщиком при досрочном прекращении договора";
+}
+
+@source(LAW_446_ART15) {
+    rule ElapsedTermDays(contract: InsuranceContract, start: Date, day: Date) strict {
+        label ru-KZ official "Статья 15 пункт 3. n - срок, прошедший с момента вступления в силу договора обязательного страхования ответственности владельцев транспортных средств до момента его досрочного прекращения (в днях), включая день обращения";
+        when contract_in_force_from(contract, start);
+        when early_termination_day(contract, day);
+        then elapsed_term_days(contract, days_between(start, day) + 1);
+    }
+
+    // ЧСП = СП * n/N. Деление здесь ТОЧНОЕ и намеренно без округления: статья
+    // 15 о нём молчит, а `round` менял бы ответ. Если частное не представимо
+    // точно, оракул скажет INEXACT_DIVISION — и это честнее, чем тихо
+    // округлить за закон.
+    rule PremiumRetainedProRata(
+        contract: InsuranceContract,
+        paid: Money,
+        elapsed: Integer,
+        total: Integer,
+    ) strict {
+        label ru-KZ official "Статья 15 пункт 3. При досрочном прекращении договора обязательного страхования ответственности владельцев и заключении нового договора с этим же страховщиком страховщик имеет право на удержание части страховой премии, рассчитываемой по формуле ЧСП = СП * n/N";
+        when premium_paid_amount(contract, paid);
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        then premium_retained_pro_rata(contract, paid * (elapsed / total));
+    }
+}
+
+// --- Пункт 4: шкала из тринадцати строк -------------------------------------
+//
+// Условие каждой строки записано без деления: «от X до Y (не включая Y)»
+// процентов прошедшего срока есть `elapsed * 100 >= X * total` и
+// `elapsed * 100 < Y * total`. Разбор выбора формы — в шапке модуля.
+
+@source(LAW_446_ART15) {
+    rule RetentionShareBelowFour(contract: InsuranceContract, elapsed: Integer, total: Integer)
+        strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 1. Срок, прошедший до досрочного прекращения, до 4 процентов (не включая 4) — удерживается 15 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 < 4 * total;
+        then retention_share(contract, 15 percent);
+    }
+
+    rule RetentionShareFourToEight(contract: InsuranceContract, elapsed: Integer,
+                                   total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 2. От 4 до 8 процентов (не включая 8) — удерживается 20 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 4 * total;
+        when elapsed * 100 < 8 * total;
+        then retention_share(contract, 20 percent);
+    }
+
+    rule RetentionShareEightToSeventeen(contract: InsuranceContract, elapsed: Integer,
+                                        total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 3. От 8 до 17 процентов (не включая 17) — удерживается 30 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 8 * total;
+        when elapsed * 100 < 17 * total;
+        then retention_share(contract, 30 percent);
+    }
+
+    rule RetentionShareSeventeenToTwentyFive(contract: InsuranceContract, elapsed: Integer,
+                                             total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 4. От 17 до 25 процентов (не включая 25) — удерживается 40 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 17 * total;
+        when elapsed * 100 < 25 * total;
+        then retention_share(contract, 40 percent);
+    }
+
+    rule RetentionShareTwentyFiveToThirtyThree(contract: InsuranceContract, elapsed: Integer,
+                                               total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 5. От 25 до 33 процентов (не включая 33) — удерживается 50 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 25 * total;
+        when elapsed * 100 < 33 * total;
+        then retention_share(contract, 50 percent);
+    }
+
+    rule RetentionShareThirtyThreeToFortyTwo(contract: InsuranceContract, elapsed: Integer,
+                                             total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 6. От 33 до 42 процентов (не включая 42) — удерживается 60 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 33 * total;
+        when elapsed * 100 < 42 * total;
+        then retention_share(contract, 60 percent);
+    }
+
+    rule RetentionShareFortyTwoToFifty(contract: InsuranceContract, elapsed: Integer,
+                                       total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 7. От 42 до 50 процентов (не включая 50) — удерживается 70 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 42 * total;
+        when elapsed * 100 < 50 * total;
+        then retention_share(contract, 70 percent);
+    }
+
+    rule RetentionShareFiftyToFiftyEight(contract: InsuranceContract, elapsed: Integer,
+                                         total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 8. От 50 до 58 процентов (не включая 58) — удерживается 75 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 50 * total;
+        when elapsed * 100 < 58 * total;
+        then retention_share(contract, 75 percent);
+    }
+
+    rule RetentionShareFiftyEightToSixtySeven(contract: InsuranceContract, elapsed: Integer,
+                                              total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 9. От 58 до 67 процентов (не включая 67) — удерживается 80 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 58 * total;
+        when elapsed * 100 < 67 * total;
+        then retention_share(contract, 80 percent);
+    }
+
+    rule RetentionShareSixtySevenToSeventyFive(contract: InsuranceContract, elapsed: Integer,
+                                               total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 10. От 67 до 75 процентов (не включая 75) — удерживается 85 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 67 * total;
+        when elapsed * 100 < 75 * total;
+        then retention_share(contract, 85 percent);
+    }
+
+    rule RetentionShareSeventyFiveToEightyThree(contract: InsuranceContract, elapsed: Integer,
+                                                total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 11. От 75 до 83 процентов (не включая 83) — удерживается 90 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 75 * total;
+        when elapsed * 100 < 83 * total;
+        then retention_share(contract, 90 percent);
+    }
+
+    rule RetentionShareEightyThreeToNinetyTwo(contract: InsuranceContract, elapsed: Integer,
+                                              total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 12. От 83 до 92 процентов (не включая 92) — удерживается 95 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 83 * total;
+        when elapsed * 100 < 92 * total;
+        then retention_share(contract, 95 percent);
+    }
+
+    rule RetentionShareNinetyTwoAndAbove(contract: InsuranceContract, elapsed: Integer,
+                                         total: Integer) strict {
+        label ru-KZ official "Статья 15 пункт 4 строка 13. От 92 процентов и выше — удерживается 100 процентов страховой премии";
+        when elapsed_term_days(contract, elapsed);
+        when contract_term_days(contract, total);
+        when elapsed * 100 >= 92 * total;
+        then retention_share(contract, 100 percent);
+    }
+
+    rule PremiumRetainedByScale(contract: InsuranceContract, paid: Money, share: Decimal)
+        strict {
+        label ru-KZ official "Статья 15 пункт 4. Страховщик имеет право на удержание части страховой премии в размере, определённом шкалой настоящего пункта, от страховой премии, оплаченной по договору";
+        when premium_paid_amount(contract, paid);
+        when retention_share(contract, share);
+        then premium_retained_by_scale(contract, paid * share);
+    }
+}
+
+// --- Какая из двух величин удерживается ------------------------------------
+//
+// «При НЕСОБЛЮДЕНИИ условия, предусмотренного пунктом 3» — пункт 4 есть общее
+// правило, а пункт 3 исключение из него, и разведены они дефитером §95.3, а
+// не приоритетом §116: две головы `premium_retained(договор, величина)` с
+// разными величинами — РАЗНЫЕ АТОМЫ, а не атом и его отрицание, и ребро
+// приоритета между ними не применяется (разбор — `20-reduction.law`).
+//
+// ОТВОДИТСЯ ПРИМЕНИМОСТЬ ШКАЛЫ, А НЕ НАСЧИТАННАЯ ЕЮ ВЕЛИЧИНА (DECISION-0344).
+// Прежде дефитер бил по литералу `premium_retained(договор, величина шкалы)`.
+// Поражение §95/§107 адресно, и у такой записи было скрытое условие
+// корректности: величина шкалы не должна совпасть с величиной пункта 3.
+// Совпали бы — и отмена сняла бы тождественный вывод пункта 3, о котором
+// дефитер не говорит ничего; оба промежуточных отношения стояли бы,
+// `premium_retained` осталось бы пустым, issue не было бы ни одного. Условие
+// это нигде не записано и никем не проверяется: равенство удержания по шкале
+// и по формуле пункта 3 — обычный арифметический случай (на границе строки
+// шкалы доли сходятся), а не экзотика. Поэтому между шкалой и результатом
+// стоит беззначное `scale_retention_applies(contract)`, и дефитер бьёт по
+// нему: под беззначную цель не подпадает ни одна величина — ни чужая, ни
+// тождественная.
+//
+// `key(contract)` у `premium_retained` — сторож: если дефитер когда-нибудь
+// перестанет срабатывать, придёт KEY_CONFLICT с именем договора, а не тихие
+// две величины удержания по одному договору.
+
+@source(LAW_446_ART15) {
+    // Поражаемое умолчание на том же входе, что и прежнее общее правило, —
+    // поведение на всех прежних делах сохраняется дословно.
+    rule ScaleRetentionApplies(contract: InsuranceContract, amount: Money) defeasible {
+        label ru-KZ official "Статья 15 пункт 4. При несоблюдении условия, предусмотренного пунктом 3 настоящей статьи, к договору применяется удержание части страховой премии в размере, определённом шкалой пункта 4";
+        when premium_retained_by_scale(contract, amount);
+        then scale_retention_applies(contract);
+    }
+
+    // §111: правило читает вывод поражаемого правила и потому само поражаемое
+    // — строгое было бы отклонено как поздний производитель (`LDC-E4103`).
+    rule PremiumRetainedIsScaleAmount(contract: InsuranceContract, amount: Money) defeasible {
+        label ru-KZ official "Статья 15 пункт 4. При несоблюдении условия, предусмотренного пунктом 3 настоящей статьи, страховщик имеет право на удержание части страховой премии в размере, определённом шкалой пункта 4";
+        when scale_retention_applies(contract);
+        when premium_retained_by_scale(contract, amount);
+        then premium_retained(contract, amount);
+    }
+
+    // Цель отмены беззначна; §95.3 выполняется самим
+    // `new_contract_with_same_insurer(contract)`.
+    rule NewContractWithSameInsurerDefeatsScale(contract: InsuranceContract)
+        defeater {
+        label ru-KZ official "Статья 15 пункты 3 и 4. Заключение нового договора с этим же страховщиком отводит применимость удержания по шкале пункта 4";
+        when new_contract_with_same_insurer(contract);
+        defeat scale_retention_applies(contract);
+    }
+
+    rule PremiumRetainedIsProRataAmount(contract: InsuranceContract, amount: Money) strict {
+        label ru-KZ official "Статья 15 пункт 3. При досрочном прекращении договора и заключении нового договора с этим же страховщиком удерживается часть страховой премии, рассчитанная по формуле пункта 3";
+        when premium_retained_pro_rata(contract, amount);
+        when new_contract_with_same_insurer(contract);
+        then premium_retained(contract, amount);
+    }
+
+    // ВОЗВРАЩАЕМАЯ ЧАСТЬ — РАЗНОСТЬ, И ЭТО НАЗВАНО ПРОЧТЕНИЕМ. Статья 15
+    // говорит только об УДЕРЖАНИИ; что остаток возвращается страхователю,
+    // установлено Гражданским кодексом, а не этим законом. Арифметика,
+    // однако, принадлежит статье 15 целиком: удержано `ЧСП` из `СП`, значит
+    // не удержано `СП - ЧСП`. Правило выводит именно эту величину и ничего не
+    // говорит о том, кому и в какой срок она передаётся, — см. отчёт наряда,
+    // «Открытые вопросы».
+    rule PremiumRefundedIsRemainder(
+        contract: InsuranceContract,
+        paid: Money,
+        retained: Money,
+    ) defeasible {
+        label ru-KZ official "Статья 15 пункты 3 и 4. Часть страховой премии, не удержанная страховщиком, составляет разность оплаченной страховой премии и удержанной её части";
+        when contract_terminated_early(contract);
+        when premium_paid_amount(contract, paid);
+        when premium_retained(contract, retained);
+        then premium_refunded(contract, paid - retained);
+    }
+}

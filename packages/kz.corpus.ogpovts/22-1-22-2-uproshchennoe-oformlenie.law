@@ -1,0 +1,501 @@
+// СТАТЬИ 22-1 И 22-2. ДЕЙСТВИЯ УЧАСТНИКОВ ПРИ ПРОИСШЕСТВИИ БЕЗ ПОСТРАДАВШИХ
+// И УПРОЩЁННЫЙ ПОРЯДОК УРЕГУЛИРОВАНИЯ.
+//
+// Две статьи в одном модуле потому, что у них ОДИН вход — происшествие, при
+// котором нет потерпевших с вредом жизни или здоровью, — и одна развилка:
+// оформить схему в органах внутренних дел (статья 22-1) либо составить
+// декларацию об упрощённом порядке (статья 22-2). Условие входа выведено
+// первой очередью модуля статьи 22 (`no_life_or_health_victims`,
+// `simplified_settlement_conditions_met`) и здесь ЧИТАЕТСЯ, а не заводится
+// заново.
+//
+// УЧАСТНИК ПРОИСШЕСТВИЯ — СВОЙ ТИП. Обе статьи возлагают обязанности и права
+// на «участников транспортного происшествия», а не на владельца, страхователя
+// или потерпевшего: участником может быть водитель, не являющийся ни тем, ни
+// другим. Назвать его `VehicleOwner` значило бы сузить норму до владельца.
+//
+// ЧТО ЭТОТ МОДУЛЬ НЕ ПЕРЕПИСЫВАЕТ. Пакет `kz.corpus.uproshchennoe_uregulirovanie`
+// (постановление АРРФР № 83) читает условие пункта 1 статьи 22-2 ФАКТОМ дела и
+// сам считает предел страховой суммы в сто МРП. Его нормы здесь не
+// повторяются: Закон предела не называет вовсе, он отсылает к нормативному
+// правовому акту уполномоченного органа (подпункт 4) пункта 1, пункты 4 и 7).
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ С ПРИЧИНОЙ:
+//
+//   статья 22-1 часть четвёртая — «Порядок составления и типовые формы схемы
+//              транспортного происшествия устанавливаются нормативным правовым
+//              актом Министерства внутренних дел Республики Казахстан по
+//              согласованию с уполномоченным органом». Делегирование: ни
+//              порядка, ни формы Закон не содержит, а акт МВД в корпусе
+//              отсутствует.
+//
+//   статья 22-2 пункт 4 — «Порядок и условия упрощённого порядка ..., форма
+//              декларации и требования к документам, прилагаемым к ней,
+//              определяются нормативным правовым актом уполномоченного
+//              органа». Делегирование; акт в корпусе есть
+//              (`kz.corpus.uproshchennoe_uregulirovanie`), и мост к нему
+//              записан в отчёте наряда.
+//
+//   статья 22-2 пункт 6 часть третья — «Порядок, условия, сроки осмотра
+//              страховщиком транспортных средств при упрощённом порядке ...
+//              определяются нормативным правовым актом уполномоченного
+//              органа». Делегирование: срока Закон не называет, и приписать
+//              его значило бы выдумать норму.
+//
+//   статья 22-2 пункт 7 часть первая — «Страховая выплата ... осуществляется
+//              страховщиком в порядке и сроки, определённые нормативным
+//              правовым актом уполномоченного органа». То же делегирование;
+//              общий пятнадцатидневный срок статьи 26 здесь не применяется, и
+//              подставить его было бы подменой нормы.
+//
+//   статья 22-2 пункт 9 — «имеет право обратного требования к страхователю
+//              (застрахованному) в пределах уплаченной суммы в соответствии
+//              со статьёй 28 настоящего Закона». Чистая отсылка внутрь акта:
+//              состав права обратного требования исчерпывается статьёй 28 и
+//              выведен правилом `InsurerHasRecourseAgainstInsured`
+//              (`28-29-regress-i-otkaz.law`). Второго правила с теми же
+//              посылками модуль не заводит.
+
+entity AccidentParticipant {
+    label ru-KZ official "участник транспортного происшествия";
+}
+
+pub relation accident_participant(accident: TrafficAccident, participant: AccidentParticipant)
+    kind empirical {
+    label ru-KZ official "лицо является участником названного транспортного происшествия";
+}
+
+// ============================================================================
+// Статья 22-1. Действия лиц при происшествии без пострадавших
+// ============================================================================
+
+// --- Часть первая: уведомление страховщиков ---------------------------------
+//
+// «ПРИ НАЛИЧИИ ВОЗМОЖНОСТИ» — УСЛОВИЕ НОРМЫ, А НЕ ОГОВОРКА ВЕЖЛИВОСТИ: без
+// возможности уведомить обязанности не возникает вовсе. Оно поэтому стоит
+// конъюнктом посылки, а не остаётся в тексте метки.
+//
+// ОКНО ОТКРЫТО: срока уведомления часть первая не называет. Следствие
+// названо вслух — такая обязанность бывает исполненной, но нарушенной по
+// сроку никогда.
+
+relation notification_possible(accident: TrafficAccident,
+        participant: AccidentParticipant) kind empirical {
+    label ru-KZ official "у участника транспортного происшествия имеется возможность уведомить страховщика о происшедшем";
+}
+relation participant_notified_insurer_of_accident(accident: TrafficAccident,
+        participant: AccidentParticipant) kind empirical {
+    label ru-KZ official "участник транспортного происшествия уведомил страховщика о происшедшем транспортном происшествии";
+}
+
+@source(LAW_446_ART22_1, quote = "В случае отсутствия потерпевших, которым причинен вред жизни, здоровью при совершении транспортного происшествия, его участники при наличии возможности должны уведомить страховщиков о происшедшем транспортном происшествии.")
+rule ParticipantMustNotifyInsurer(
+    accident: TrafficAccident,
+    participant: AccidentParticipant,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 22-1 часть первая. В случае отсутствия потерпевших, которым причинён вред жизни, здоровью при совершении транспортного происшествия, его участники при наличии возможности должны уведомить страховщиков о происшедшем транспортном происшествии";
+    when no_life_or_health_victims(accident);
+    when accident_participant(accident, participant);
+    when notification_possible(accident, participant);
+    when accident_insurer(accident, insurer);
+    then duty UvedomitStrakhovshchikaOProisshestviiUchastnikom {
+        bearer participant;
+        beneficiary insurer;
+        achieve participant_notified_insurer_of_accident(accident, participant)
+            during [@2026-07-23, infinity);
+    };
+}
+
+// --- Часть вторая: представитель страховщика на месте -----------------------
+
+relation insurer_representative_dispatched(accident: TrafficAccident, insurer: Insurer)
+    kind empirical {
+    label ru-KZ official "страховщик направил своего представителя на место транспортного происшествия";
+}
+
+@source(LAW_446_ART22_1, quote = "Страховщики вправе направить своих представителей на место транспортного происшествия.")
+rule InsurerMayDispatchRepresentative(accident: TrafficAccident, insurer: Insurer) strict {
+    label ru-KZ official "Статья 22-1 часть вторая. Страховщики вправе направить своих представителей на место транспортного происшествия";
+    when no_life_or_health_victims(accident);
+    when accident_insurer(accident, insurer);
+    then liberty NapravitPredstavitelyaNaMestoProisshestviya {
+        holder insurer;
+        action insurer_representative_dispatched(accident, insurer);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// --- Часть третья: самостоятельная схема при вреде до пятидесяти МРП --------
+//
+// ПЯТЬДЕСЯТ МРП — ЧИСЛО ЗАКОНА, и оно стоит кратностью, а не суммой в тенге:
+// тем же приёмом, что пределы статьи 24.
+//
+// ДЕНЬ ПОКАЗАТЕЛЯ ЗАКОН НЕ НАЗЫВАЕТ. Сравните со статьёй 24 пунктом 3, где
+// день назван прямо («на день осуществления страховой выплаты»). Молчание —
+// свойство текста, и прочтение принято минимальное и объявленное: показатель
+// года, к которому относится происшествие, выражен окном `effective`
+// правила-моста. Прочтение записано в отчёте наряда вопросом владельцу.
+// Отношение своё, а не `applicable_mrp` статьи 19 и не `payment_day_mrp`
+// статьи 24: у обоих метка называет ЧУЖОЙ повод применения показателя.
+
+relation accident_estimate_mrp(amount: Money) kind institutional {
+    label ru-KZ official "месячный расчётный показатель, применяемый к предполагаемому размеру вреда, причинённого имуществу (статья 22-1 часть третья)";
+}
+
+@source(LAW_446_ART22_1)
+rule AccidentEstimateMrp2026(amount: Money) strict {
+    label ru-KZ official "Статья 22-1 часть третья. К происшествиям 2026 года применяется месячный расчётный показатель, установленный законом о республиканском бюджете на 2026 – 2028 годы";
+    effective [@2026-01-01, @2027-01-01);
+    when kz.corpus.budget::mrp(2026, amount);
+    then accident_estimate_mrp(amount);
+}
+
+relation self_drawn_scheme_limit_multiple(multiple: Integer) kind institutional {
+    label ru-KZ official "предельный предполагаемый размер вреда, причинённого имуществу, при котором участники вправе самостоятельно составить схему происшествия, в месячных расчётных показателях (статья 22-1 часть третья)";
+}
+@source(LAW_446_ART22_1)
+assert self_drawn_scheme_limit_multiple(50);
+
+relation mutual_agreement_on_circumstances_and_harm(accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "участники транспортного происшествия достигли взаимного согласия в оценке обстоятельств случившегося и размере причинённого вреда имуществу";
+}
+relation estimated_property_harm(accident: TrafficAccident, amount: Money) kind empirical {
+    key(accident);
+    label ru-KZ official "предполагаемый размер вреда, причинённого имуществу в транспортном происшествии";
+}
+
+relation self_drawn_scheme_permitted(accident: TrafficAccident) kind institutional {
+    label ru-KZ official "участники транспортного происшествия вправе самостоятельно составить схему происшествия и, подписав её, прибыть на ближайший пост или в подразделение органов внутренних дел для его оформления";
+}
+relation scheme_drawn_signed_and_presented(accident: TrafficAccident,
+        participant: AccidentParticipant) kind empirical {
+    label ru-KZ official "участник самостоятельно составил схему происшествия, подписал её и прибыл на ближайший пост или в подразделение органов внутренних дел для оформления";
+}
+
+@source(LAW_446_ART22_1) {
+    rule SelfDrawnSchemePermitted(
+        accident: TrafficAccident,
+        estimated: Money,
+        multiple: Integer,
+        mrp: Money,
+    ) strict {
+        label ru-KZ official "Статья 22-1 часть третья. Участники транспортного происшествия по взаимному согласию в оценке обстоятельств случившегося и размере причинённого вреда имуществу, предполагаемый размер которого не должен превышать пятьдесят месячных расчётных показателей, вправе самостоятельно составить схему происшествия";
+        when no_life_or_health_victims(accident);
+        when mutual_agreement_on_circumstances_and_harm(accident);
+        when estimated_property_harm(accident, estimated);
+        when self_drawn_scheme_limit_multiple(multiple);
+        when accident_estimate_mrp(mrp);
+        when estimated <= mrp * multiple;
+        then self_drawn_scheme_permitted(accident);
+    }
+
+    rule ParticipantMayDrawSchemeHimself(
+        accident: TrafficAccident,
+        participant: AccidentParticipant,
+    ) strict {
+        label ru-KZ official "Статья 22-1 часть третья. Участники вправе самостоятельно составить схему происшествия и, подписав её, прибыть на ближайший пост или в подразделение органов внутренних дел для его оформления";
+        when self_drawn_scheme_permitted(accident);
+        when accident_participant(accident, participant);
+        then liberty SamostoyatelnoSostavitSkhemuProisshestviya {
+            holder participant;
+            action scheme_drawn_signed_and_presented(accident, participant);
+            window [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Статья 22-2. Упрощённый порядок урегулирования страхового случая
+// ============================================================================
+
+entity SimplifiedDeclaration {
+    label ru-KZ official "декларация об упрощённом порядке урегулирования страхового случая";
+}
+
+relation declaration_of_accident(declaration: SimplifiedDeclaration,
+        accident: TrafficAccident) kind empirical {
+    key(declaration);
+    label ru-KZ official "декларация составлена по названному транспортному происшествию";
+}
+
+// --- Пункт 2 часть первая: не покидать место до уведомления -----------------
+//
+// `prohibition` §128: «не должны покидать». Окно запрета начинается со дня
+// происшествия и не имеет конца в самом запрете — конец назван СОБЫТИЕМ
+// (получение уведомления), а не датой, и потому в окно не переводится.
+// Наступление события выражено посылкой отрицательной формы: пока уведомление
+// не получено, запрет стоит.
+
+relation database_notice_received(declaration: SimplifiedDeclaration) kind empirical {
+    label ru-KZ official "участники получили уведомление от организации по формированию и ведению базы данных о принятии страховщиком декларации";
+}
+relation accident_scene_left(accident: TrafficAccident,
+        participant: AccidentParticipant) kind empirical {
+    label ru-KZ official "участник покинул место транспортного происшествия";
+}
+
+@source(LAW_446_ART22_2, quote = "Участники транспортного происшествия не должны покидать место транспортного происшествия до получения ими уведомления от организации по формированию и ведению базы данных о принятии страховщиком декларации.")
+rule ParticipantsMustNotLeaveSceneBeforeNotice(
+    declaration: SimplifiedDeclaration,
+    accident: TrafficAccident,
+    participant: AccidentParticipant,
+) strict {
+    label ru-KZ official "Статья 22-2 пункт 2. Участники транспортного происшествия не должны покидать место транспортного происшествия до получения ими уведомления от организации по формированию и ведению базы данных о принятии страховщиком декларации";
+    when declaration_of_accident(declaration, accident);
+    when accident_participant(accident, participant);
+    when not database_notice_received(declaration);
+    then prohibition PokidatMestoProisshestviyaDoUvedomleniya {
+        bearer participant;
+        action accident_scene_left(accident, participant);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// --- Пункт 2 части вторая и третья: недостаточные фотоматериалы -------------
+
+relation photographs_insufficient(declaration: SimplifiedDeclaration) kind empirical {
+    label ru-KZ official "приложенные участниками к декларации фотоматериалы не позволяют определить марку, модель, идентификационный номер, государственный регистрационный номерной знак транспортного средства, а также обстоятельства причинения вреда, характер и перечень видимых повреждений";
+}
+relation repeat_photographs_requested(declaration: SimplifiedDeclaration, insurer: Insurer)
+    kind empirical {
+    label ru-KZ official "страховщик запросил у участников транспортного происшествия повторное направление фотоматериалов";
+}
+relation declaration_refused_on_photograph_ground(declaration: SimplifiedDeclaration)
+    kind empirical {
+    label ru-KZ official "страховщик отказал в принятии декларации по основанию недостаточности приложенных фотоматериалов";
+}
+
+@source(LAW_446_ART22_2) {
+    rule InsurerMayRequestRepeatPhotographs(
+        declaration: SimplifiedDeclaration,
+        accident: TrafficAccident,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 22-2 пункт 2. Страховщик вправе запросить у участников транспортного происшествия повторное направление фотоматериалов с использованием информационной системы страховой компании и информационной системы организации по формированию и ведению базы данных либо другим доступным способом";
+        when declaration_of_accident(declaration, accident);
+        when photographs_insufficient(declaration);
+        when accident_insurer(accident, insurer);
+        then liberty ZaprositPovtornoeNapravlenieFotomaterialov {
+            holder insurer;
+            action repeat_photographs_requested(declaration, insurer);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Часть третья названа ЗАПРЕТОМ, и это прочтение, а не буквальный перенос:
+    // текст говорит «не являются основанием для отказа в принятии
+    // страховщиком декларации», то есть отнимает у страховщика именно это
+    // основание. Институциональный факт «основания нет» ничего бы не изменил
+    // в деле — запрет виден в позициях и адресован тому, кто решает.
+    rule PhotographInsufficiencyIsNotRefusalGround(
+        declaration: SimplifiedDeclaration,
+        accident: TrafficAccident,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 22-2 пункт 2. Обстоятельства, указанные в части второй настоящего пункта, не являются основанием для отказа в принятии страховщиком декларации";
+        when declaration_of_accident(declaration, accident);
+        when photographs_insufficient(declaration);
+        when accident_insurer(accident, insurer);
+        then prohibition OtkazatVPrinyatiiDeklaratsiiIzZaFotomaterialov {
+            bearer insurer;
+            action declaration_refused_on_photograph_ground(declaration);
+            window [@2026-07-23, infinity);
+        };
+    }
+}
+
+// --- Пункт 3: несогласие одного из участников → статья 25 -------------------
+
+relation participant_disagrees_with_simplified_settlement(accident: TrafficAccident,
+        participant: AccidentParticipant) kind empirical {
+    label ru-KZ official "участник транспортного происшествия не согласен с оформлением упрощённого порядка урегулирования страхового случая";
+}
+
+pub relation general_settlement_order_applies(accident: TrafficAccident) kind institutional {
+    label ru-KZ official "страховая выплата осуществляется в соответствии со статьёй 25 настоящего Закона";
+}
+
+@source(LAW_446_ART22_2, quote = "В случае несогласия одного из участников транспортного происшествия с оформлением упрощенного порядка урегулирования страхового случая страховая выплата осуществляется в соответствии со статьей 25 настоящего Закона.")
+rule DisagreementSendsCaseToGeneralOrder(
+    accident: TrafficAccident,
+    participant: AccidentParticipant,
+) strict {
+    label ru-KZ official "Статья 22-2 пункт 3. В случае несогласия одного из участников транспортного происшествия с оформлением упрощённого порядка урегулирования страхового случая страховая выплата осуществляется в соответствии со статьёй 25 настоящего Закона";
+    when accident_participant(accident, participant);
+    when participant_disagrees_with_simplified_settlement(accident, participant);
+    then general_settlement_order_applies(accident);
+}
+
+// --- Пункт 5: упрощённый порядок через прямое урегулирование ----------------
+
+relation no_disagreement_marked_in_declaration(declaration: SimplifiedDeclaration)
+    kind empirical {
+    label ru-KZ official "об отсутствии разногласий между участниками транспортного происшествия по страховому случаю сделана соответствующая отметка в декларации";
+}
+
+relation simplified_settlement_via_direct_settlement_available(accident: TrafficAccident)
+    kind institutional {
+    label ru-KZ official "упрощённый порядок урегулирования страхового случая может осуществляться посредством прямого урегулирования в порядке, определённом статьёй 26-1 настоящего Закона";
+}
+
+@source(LAW_446_ART22_2, quote = "Упрощенный порядок урегулирования страхового случая может осуществляться посредством прямого урегулирования в порядке, определенном статьей 26-1 настоящего Закона, при отсутствии разногласий между участниками транспортного происшествия по страховому случаю, о чем делается соответствующая отметка в декларации.")
+rule SimplifiedSettlementMayGoThroughDirectSettlement(
+    declaration: SimplifiedDeclaration,
+    accident: TrafficAccident,
+) strict {
+    label ru-KZ official "Статья 22-2 пункт 5. Упрощённый порядок урегулирования страхового случая может осуществляться посредством прямого урегулирования в порядке, определённом статьёй 26-1 настоящего Закона, при отсутствии разногласий между участниками транспортного происшествия по страховому случаю, о чём делается соответствующая отметка в декларации";
+    when declaration_of_accident(declaration, accident);
+    when simplified_settlement_conditions_met(accident);
+    when no_disagreement_marked_in_declaration(declaration);
+    then simplified_settlement_via_direct_settlement_available(accident);
+}
+
+// --- Пункт 6 части первая и вторая: осмотр и сохранение имущества -----------
+
+relation vehicles_inspection_conducted(accident: TrafficAccident, insurer: Insurer)
+    kind empirical {
+    label ru-KZ official "страховщик произвёл осмотр транспортных средств участников транспортного происшествия";
+}
+relation vehicles_inspection_demanded(accident: TrafficAccident, insurer: Insurer)
+    kind empirical {
+    label ru-KZ official "страховщик потребовал от участников предоставить транспортные средства для проведения осмотра";
+}
+relation vehicle_presented_for_inspection(accident: TrafficAccident,
+        participant: AccidentParticipant) kind empirical {
+    label ru-KZ official "участник предоставил транспортное средство для проведения осмотра";
+}
+relation damaged_property_altered(accident: TrafficAccident,
+        participant: AccidentParticipant) kind empirical {
+    label ru-KZ official "повреждённое имущество изменено по сравнению с состоянием, в каком оно находилось после транспортного происшествия";
+}
+relation accident_occurred_on(accident: TrafficAccident, day: Date) kind empirical {
+    key(accident);
+    label ru-KZ official "день совершения транспортного происшествия";
+}
+
+@source(LAW_446_ART22_2) {
+    rule InsurerMayInspectParticipantVehicles(
+        accident: TrafficAccident,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 22-2 пункт 6. Страховщик вправе произвести осмотр транспортных средств участников транспортного происшествия для установления факта и обстоятельств страхового случая и расчёта размера вреда";
+        when simplified_settlement_conditions_met(accident);
+        when accident_insurer(accident, insurer);
+        then liberty ProizvestiOsmotrTransportnykhSredstvUchastnikov {
+            holder insurer;
+            action vehicles_inspection_conducted(accident, insurer);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule ParticipantMustPresentVehicleForInspection(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        participant: AccidentParticipant,
+    ) strict {
+        label ru-KZ official "Статья 22-2 пункт 6. Участники транспортного происшествия по требованию страховщика обязаны предоставить транспортные средства для проведения осмотра";
+        when accident_participant(accident, participant);
+        when accident_insurer(accident, insurer);
+        when vehicles_inspection_demanded(accident, insurer);
+        then duty PredostavitTransportnoeSredstvoDlyaOsmotra {
+            bearer participant;
+            beneficiary insurer;
+            achieve vehicle_presented_for_inspection(accident, participant)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // ВТОРАЯ ОБЯЗАННОСТЬ ЧАСТИ ВТОРОЙ — ДЛЯЩАЯСЯ, и потому `maintain` §124.2, а
+    // не `achieve`: сохранять состояние имущества нельзя «однажды исполнить».
+    // Конец окна назван СОБЫТИЕМ («до осуществления страховой выплаты или
+    // направления страховщиком мотивированного отказа»), а не датой, и потому
+    // окно открыто, а наступление события остаётся входом дела.
+    rule ParticipantMustPreserveDamagedProperty(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        participant: AccidentParticipant,
+        day: Date,
+    ) strict {
+        label ru-KZ official "Статья 22-2 пункт 6. Участники транспортного происшествия обязаны сохранять повреждённое имущество в таком состоянии, в каком оно находилось после транспортного происшествия, до осуществления страховой выплаты или направления страховщиком мотивированного отказа";
+        when accident_participant(accident, participant);
+        when accident_insurer(accident, insurer);
+        when vehicles_inspection_demanded(accident, insurer);
+        when accident_occurred_on(accident, day);
+        then duty SokhranyatPovrezhdennoeImushchestvo {
+            bearer participant;
+            beneficiary insurer;
+            maintain not damaged_property_altered(accident, participant)
+                during [day, infinity);
+        };
+    }
+}
+
+// --- Пункт 7 часть вторая: обязательство исполнено, требований больше нет ---
+
+relation simplified_payment_made(accident: TrafficAccident, insurer: Insurer)
+    kind empirical {
+    label ru-KZ official "страховщик осуществил страховую выплату при упрощённом порядке урегулирования страхового случая";
+}
+relation insurer_obligation_duly_performed(accident: TrafficAccident, insurer: Insurer)
+    kind institutional {
+    label ru-KZ official "обязательство страховщика по осуществлению страховой выплаты считается исполненным надлежащим образом";
+}
+relation additional_claim_presented(accident: TrafficAccident, holder: Beneficiary)
+    kind empirical {
+    label ru-KZ official "выгодоприобретатель предъявил страховщику дополнительное требование о возмещении вреда в части, превышающей предельный размер страховой суммы по каждому отдельному страховому случаю при упрощённом порядке урегулирования";
+}
+
+@source(LAW_446_ART22_2) {
+    rule SimplifiedPaymentPerformsObligation(
+        accident: TrafficAccident,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 22-2 пункт 7. После осуществления страховой выплаты в соответствии с настоящей статьёй обязательство страховщика по осуществлению страховой выплаты считается исполненным надлежащим образом";
+        when simplified_settlement_conditions_met(accident);
+        when simplified_payment_made(accident, insurer);
+        then insurer_obligation_duly_performed(accident, insurer);
+    }
+
+    rule BeneficiaryMayNotClaimAboveSimplifiedLimit(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        holder: Beneficiary,
+    ) strict {
+        label ru-KZ official "Статья 22-2 пункт 7. Выгодоприобретатель не вправе предъявлять страховщику дополнительные требования о возмещении вреда в части, превышающей предельный размер страховой суммы по каждому отдельному страховому случаю при упрощённом порядке урегулирования страхового случая";
+        when insurer_obligation_duly_performed(accident, insurer);
+        when harm_assessment_applicant(accident, holder);
+        then prohibition PredyavlyatDopolnitelnyeTrebovaniyaSverkhPredela {
+            bearer holder;
+            beneficiary insurer;
+            action additional_claim_presented(accident, holder);
+            window [@2026-07-23, infinity);
+        };
+    }
+}
+
+// --- Пункт 8: право отказать -----------------------------------------------
+//
+// Первая ветвь («в случаях, установленных настоящим Законом») читает
+// `refusal_permitted` статьи 29 — там перечень оснований и закрыт пунктом 6
+// той же статьи. Вторая ветвь («и (или) иными законами Республики Казахстан»)
+// — отсылка к чужим актам и в срез не входит; она названа в отчёте наряда.
+
+@source(LAW_446_ART22_2, quote = "Страховщик имеет право отказать в осуществлении страховой выплаты в случаях, установленных настоящим Законом и (или) иными законами Республики Казахстан.")
+rule InsurerMayRefuseSimplifiedPayment(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 22-2 пункт 8. Страховщик имеет право отказать в осуществлении страховой выплаты в случаях, установленных настоящим Законом";
+    when simplified_settlement_conditions_met(accident);
+    when payment_claim_of(demand, accident, holder, insurer);
+    when refusal_permitted(demand);
+    then liberty OtkazatVVyplatePriUproshchennomPoryadke {
+        holder insurer;
+        action refusal_decision_dispatched(demand);
+        window [@2026-07-23, infinity);
+    };
+}

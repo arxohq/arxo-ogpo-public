@@ -1,0 +1,50 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// DECISION-0340: день выплаты влечёт факт исполнения. Делу предъявлен ТОЛЬКО день
+// выплаты `strakhovaya_vyplata_osushchestvlena`; обязанность статьи 26 пункта 1
+// читает `insurance_payment_made` и до решения оставалась UNDETERMINED.
+//
+// Документы получены 23.07.2026, срок — 13.08.2026 (расчёт в
+// `ogpo-26-granitsa-redaktsii.lawtest`); выплата 10.08.2026 — в окне.
+
+context profile KZ_OGPO_DEADLINES_26B {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-26-ispolnenie-iz-dnya-vyplaty" {
+    given {
+        context extends KZ_OGPO_DEADLINES_26B {
+            decision_time @2026-08-20T12:00:00+05:00;
+            knowledge_time @2026-08-20T12:00:00+05:00;
+            legal_time @2026-08-20;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "p26-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:p26"), entity_ref("urn:kz:ogpo:accident:p26"), entity_ref("urn:kz:ogpo:holder:p26"), entity_ref("urn:kz:ogpo:insurer:p26")) { origin case_input; }
+        assert "p26-a1": documents_received_on(entity_ref("urn:kz:ogpo:claim:p26"), @2026-07-23) { origin case_input; }
+        assert "p26-a2": strakhovaya_vyplata_osushchestvlena(entity_ref("urn:kz:ogpo:claim:p26"), @2026-08-10) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position("InsurerMustPayWithinTerm/duty/norm", SATISFIED);
+}
+
+test "urn:query:ogpo-26-bez-dnya-vyplaty-ne-ispolneno" {
+    given {
+        context extends KZ_OGPO_DEADLINES_26B {
+            decision_time @2026-08-05T12:00:00+05:00;
+            knowledge_time @2026-08-05T12:00:00+05:00;
+            legal_time @2026-08-05;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "p26-b0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:p26b"), entity_ref("urn:kz:ogpo:accident:p26b"), entity_ref("urn:kz:ogpo:holder:p26b"), entity_ref("urn:kz:ogpo:insurer:p26b")) { origin case_input; }
+        assert "p26-b1": documents_received_on(entity_ref("urn:kz:ogpo:claim:p26b"), @2026-07-23) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position("InsurerMustPayWithinTerm/duty/norm", ACTIVE);
+    expect not position("InsurerMustPayWithinTerm/duty/norm", SATISFIED);
+}

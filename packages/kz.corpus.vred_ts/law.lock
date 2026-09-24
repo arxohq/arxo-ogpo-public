@@ -1,0 +1,40 @@
+{
+  "dependencyEdges": [
+    {
+      "features": [],
+      "from": "kz.corpus.vred_ts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.clir.official_calendar"
+    }
+  ],
+  "languageSemantics": "law.core/0.2.0",
+  "lockVersion": "0.2",
+  "packages": [
+    {
+      "contentHash": "sha256:d5dd393f6b712104611798a39bb03c43da014f16c150c1b95c5a8f3587fc44d5",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.clir.official_calendar",
+      "namespace": "urn:kz:corpus:clir:official-calendar",
+      "version": "0.1.0"
+    }
+  ],
+  "resolutionHash": "sha256:89ffa2af0f09d1121d73a4d7f004551e9793d09e8296f7c5920dee5f66f5f190",
+  "resources": [
+    {
+      "capability": "law.calendar/0.1",
+      "contentHash": "sha256:d04f48761d98cdcf2a094cc728fd160fbc3b73e2eb5ebbed6743d17e976fe9c6",
+      "id": "urn:kz:corpus:clir:official-calendar#snapshot-2026",
+      "kind": "calendar-dataset",
+      "path": "resources/d04f48761d98cdcf-kz-official-2026.calendar.json"
+    }
+  ],
+  "root": {
+    "contentHash": "sha256:120248071f9e14fb0c56aca7a6135c1fc047affbbab6b795779645a28b35ee34",
+    "name": "kz.corpus.vred_ts",
+    "namespace": "urn:kz:corpus:clir:vred-ts",
+    "version": "0.1.0"
+  }
+}

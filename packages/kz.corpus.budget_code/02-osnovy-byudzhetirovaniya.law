@@ -1,0 +1,300 @@
+// РАЗДЕЛ 2. ОСНОВЫ БЮДЖЕТИРОВАНИЯ (главы 8–10, статьи 35–46).
+//
+// Выражено правилами: обязанность публикации документов бюджетного процесса
+// (ст. 40) — норма транспарентности, на которой стоит цель акта; персональная
+// ответственность за названные основания (ст. 41) — статья перечисляет
+// ОСНОВАНИЯ, а вид ответственности отсылает к другим законам, поэтому здесь
+// выводится наступление ответственности, а не её мера; обязанность
+// государственного аудита и мониторинга представлять результаты (ст. 44–45).
+//
+// ГРАНИЦЫ РАЗДЕЛА:
+//   - ст. 35, 38 (состав документов Системы государственного планирования) —
+//     перечень видов документов, чей порядок разработки установлен ИНЫМ
+//     актом (законодательство о государственном планировании); норм со
+//     своим условием и следствием в них нет;
+//   - сроки ст. 36 («не позднее 1 апреля», «не позднее 30 декабря»),
+//     ст. 37 и ст. 46 («не позднее 15 апреля») — КАЛЕНДАРНЫЕ ДАТЫ, а не
+//     длительности. Конструктора даты из года, месяца и дня в перечне
+//     исполнимых термов §258 нет (24 имени, ни один не строит дату из
+//     компонентов), поэтому «1 апреля года дела» из года не выводится.
+//     Граница языка названа замером, а не догадкой; сроки-ДЛИТЕЛЬНОСТИ того
+//     же раздела («в течение месяца», ст. 37) выражены;
+//   - ст. 39, 42 (общие положения о подотчётности и об управлении
+//     результатами) — программные статьи, задающие предмет главы;
+//   - ст. 43 (обзор расходов) — порядок проведения определяется центральным
+//     уполномоченным органом; в кодексе назван результат (выводы и
+//     рекомендации), и он выражен как предмет обязанности публикации ст. 40.
+
+
+// --- Ст. 40: публикация документов бюджетного процесса ----------------------
+// Статья устроена как каталог: двенадцать пунктов называют участника и
+// перечень документов, публикацию которых он обеспечивает. Норма у всех
+// одна — ОБЯЗАННОСТЬ публикации; каталог же есть закрытый перечень видов,
+// и он приходит фактом дела, а не переписывается двенадцатью правилами с
+// одинаковой головой.
+
+entity ProcessDocument {
+    label ru-KZ official "материал, информация либо документ бюджетного процесса";
+}
+
+relation publication_assigned(d: ProcessDocument, b: Body) kind institutional {
+    label ru-KZ official "публикация документа отнесена статьёй 40 настоящего Кодекса к обеспечению названного участника бюджетного процесса";
+}
+
+relation document_published(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ опубликован на официальном интернет-ресурсе и на интернет-портале открытых бюджетов";
+}
+
+relation state_secret_document(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ содержит сведения, составляющие государственную либо иную охраняемую законом тайну";
+}
+
+relation publication_required(d: ProcessDocument, b: Body) kind institutional {
+    label ru-KZ official "документ подлежит публикации названным участником бюджетного процесса";
+}
+
+// Изъятие ст. 4 п. 10 («за исключением сведений, составляющих государственную
+// или иную охраняемую законом тайну») снимает саму обязанность, поэтому оно
+// поставлено ДЕФИТЕРОМ над поражаемым выводом, а не гардом в теле: дефитер
+// над строгой головой мёртв и молчит.
+@source(BC_ART40)
+rule PublicationRequired(d: ProcessDocument, b: Body) defeasible {
+    when publication_assigned(d, b);
+    then publication_required(d, b);
+    label ru-KZ official "Статья 40 пункт 1. Материалы, информация и документы бюджетного процесса подлежат публикации участниками, указанными в настоящей статье";
+}
+
+@source(BC_ART4)
+rule SecretDocumentNotPublished(d: ProcessDocument, b: Body) defeater {
+    when publication_assigned(d, b);
+    when state_secret_document(d);
+    defeat publication_required(d, b);
+    label ru-KZ official "Статья 4 подпункт 10. Обязательное опубликование не распространяется на сведения, составляющие государственную или иную охраняемую законом тайну";
+}
+
+@source(BC_ART40)
+rule PublicationDuty(d: ProcessDocument, b: Body) defeasible {
+    when publication_required(d, b);
+    then duty PublishProcessDocument {
+        bearer b;
+        beneficiary b;
+        achieve document_published(d) during [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 40. Участник бюджетного процесса обеспечивает публикацию отнесённых к нему документов бюджетного процесса";
+}
+
+// --- Ст. 41: ответственность участников бюджетного процесса -----------------
+// Статья называет ОСНОВАНИЯ и адресует вид ответственности к другим законам
+// Республики Казахстан. Поэтому выводится наступление ответственности с
+// названным основанием, а мера остаётся за тем законом: перенести её сюда
+// значило бы перенести чужую норму через границу пакета.
+
+entity Ground {
+    label ru-KZ official "основание ответственности за нарушение бюджетного законодательства";
+}
+
+relation ground_established(g: Ground, b: Body) kind empirical {
+    label ru-KZ official "основание ответственности установлено в отношении названного лица";
+}
+
+relation ground_listed_in_article_41(g: Ground) kind institutional {
+    label ru-KZ official "основание названо статьёй 41 настоящего Кодекса";
+}
+
+relation liable_under_other_laws(b: Body, g: Ground) kind institutional {
+    label ru-KZ official "лицо несёт ответственность, установленную законами Республики Казахстан, по названному основанию";
+}
+
+@source(BC_ART41)
+rule LiabilityOnListedGround(g: Ground, b: Body) strict {
+    when ground_listed_in_article_41(g);
+    when ground_established(g, b);
+    then liable_under_other_laws(b, g);
+    label ru-KZ official "Статья 41. По основанию, названному настоящей статьёй, лицо несёт ответственность, установленную законами Республики Казахстан";
+}
+
+// Основание, статьёй 41 не названное, ответственности по этой статье не
+// влечёт: перечень оснований закрыт самой статьёй, и молчание о нём есть
+// установленное отрицание, а не пробел.
+relation ground_in_question(g: Ground) kind empirical {
+    label ru-KZ official "основание поставлено вопросом по настоящему делу";
+}
+
+closure Article41GroundsClosure {
+    label ru-KZ official "перечень оснований ответственности статьи 41 закрыт самой статьёй";
+    predicate ground_listed_in_article_41;
+    domain ground_in_question;
+    snapshot "urn:kz:corpus:clir:budget-code:snapshot:article-41-grounds";
+    complete_as_of @2025-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+relation liability_under_code_absent(b: Body, g: Ground) kind institutional {
+    label ru-KZ official "по названному основанию ответственность по статье 41 настоящего Кодекса не наступает";
+}
+
+@source(BC_ART41)
+rule NoLiabilityOnUnlistedGround(g: Ground, b: Body) strict {
+    when ground_established(g, b);
+    when not ground_listed_in_article_41(g);
+    then liability_under_code_absent(b, g);
+    label ru-KZ official "Статья 41. Основание, не названное настоящей статьёй, ответственности по ней не влечёт";
+}
+
+// --- Ст. 40: предмет публикации, названный ДРУГИМИ статьями ----------------
+// Второй проход (02.09.2026). Двадцать семь статей кодекса кончаются одной и
+// той же строкой — «подлежит публикации в соответствии со статьёй 40
+// настоящего Кодекса». Это НЕ границы: статья называет ПРЕДМЕТ публикации, а
+// статья 40 — участника, который её обеспечивает. Пересказать такую отсылку
+// меткой значило бы разрезать внутреннюю цепь акта на острова (правило 2
+// стаб-дисциплины: названная в метке отсылка обязана быть проводом).
+//
+// Провод устроен так: каждая из двадцати семи статей выводит `publication_subject`
+// из СВОЕГО вида документа (правило стои́т в модуле своего раздела и якорем
+// смотрит на свою статью), а следствие — здесь: предмет публикации, который
+// не опубликован, есть ПРОПУСК публикации. Следствие проверяемо и парно:
+// опубликованный документ пропуском не становится.
+//
+// Отрицание §70: «не опубликован» есть УСТАНОВЛЕННОЕ отсутствие публикации, а
+// не молчание дела — открытый мир отрицания из молчания не выводит.
+
+relation publication_subject(d: ProcessDocument) kind institutional {
+    label ru-KZ official "документ отнесён статьёй настоящего Кодекса к подлежащим публикации в соответствии со статьёй 40";
+}
+
+relation document_in_question(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ поставлен вопросом по настоящему делу";
+}
+
+closure DocumentPublishedClosure {
+    label ru-KZ official "перечень опубликованных документов бюджетного процесса по делу закрыт";
+    predicate document_published;
+    domain document_in_question;
+    snapshot "urn:kz:corpus:clir:budget-code:snapshot:published-documents";
+    complete_as_of @2025-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+relation publication_omitted(d: ProcessDocument) kind institutional {
+    label ru-KZ official "документ, подлежащий публикации, опубликован не был";
+}
+
+// Правило ПОРАЖАЕМОЕ, а не строгое: над строгой головой дефитер мёртв и
+// молчит, и изъятие тайны (ст. 4 подпункт 10) не сработало бы ни на одном
+// деле при полностью зелёной статике.
+@source(BC_ART40)
+rule PublicationOmitted(d: ProcessDocument) defeasible {
+    when publication_subject(d);
+    when document_in_question(d);
+    when not document_published(d);
+    then publication_omitted(d);
+    label ru-KZ official "Статья 40 пункт 1. Документ бюджетного процесса, отнесённый настоящим Кодексом к подлежащим публикации и не опубликованный, есть пропуск публикации";
+}
+
+// Изъятие ст. 4 подпункт 10 действует и здесь: сведения, составляющие
+// государственную или иную охраняемую законом тайну, публикации не подлежат,
+// и их отсутствие пропуском не является. Дефитер, а не гард: изъятие снимает
+// вывод, оставляя факты дела нетронутыми.
+@source(BC_ART4)
+rule SecretDocumentNotOmitted(d: ProcessDocument) defeater {
+    when publication_subject(d);
+    when state_secret_document(d);
+    defeat publication_omitted(d);
+    label ru-KZ official "Статья 4 подпункт 10. Сведения, составляющие государственную или иную охраняемую законом тайну, публикации не подлежат, и их неопубликование пропуском не является";
+}
+
+// --- Предметы публикации, названные статьями раздела 2 ---------------------
+
+relation state_body_development_plan(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является планом развития государственного органа, отчётом о его реализации либо сводной информацией о таких планах";
+}
+
+@source(BC_ART36)
+rule DevelopmentPlanIsPublicationSubject(d: ProcessDocument) strict {
+    when state_body_development_plan(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 36 пункт 14. План развития государственного органа, отчёт о его реализации, агрегированная сводная информация и консолидированный отчёт подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation region_development_plan(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является планом развития столицы, области, города республиканского значения, отчётом о его реализации либо консолидированным отчётом о таких планах";
+}
+
+@source(BC_ART37)
+rule RegionPlanIsPublicationSubject(d: ProcessDocument) strict {
+    when region_development_plan(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 37 пункт 14. План развития столицы, области, города республиканского значения, отчёт о его реализации и консолидированный отчёт подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation quasi_entity_plan_report(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является отчётностью по выполнению планов мероприятий и планов развития субъектов квазигосударственного сектора либо результатами их мониторинга и оценки";
+}
+
+@source(BC_ART38)
+rule QuasiEntityReportIsPublicationSubject(d: ProcessDocument) strict {
+    when quasi_entity_plan_report(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 38 пункты 6 и 8. Отчётность по выполнению планов субъектов квазигосударственного сектора и результаты их мониторинга и оценки подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation expenditure_review_conclusions(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является выводами и рекомендациями по итогам проведения обзора расходов";
+}
+
+@source(BC_ART43)
+rule ReviewConclusionsArePublicationSubject(d: ProcessDocument) strict {
+    when expenditure_review_conclusions(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 43. Выводы и рекомендации по итогам проведения обзора расходов подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation monitoring_results(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является результатами мониторинга";
+}
+
+@source(BC_ART45)
+rule MonitoringResultsArePublicationSubject(d: ProcessDocument) strict {
+    when monitoring_results(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 45. Результаты мониторинга подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation assessment_results(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является итогами оценки результатов";
+}
+
+@source(BC_ART46)
+rule AssessmentResultsArePublicationSubject(d: ProcessDocument) strict {
+    when assessment_results(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 46. Итоги оценки результатов подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+// --- Ст. 44: консультативная помощь при выявлении нарушений ----------------
+// Второй проход. Пункт 3 называет ДЕЙСТВИЕ службы внутреннего аудита при
+// названном условии, а не описывает её устройство: «в случае выявления
+// нарушений … осуществляют консультативную помощь в устранении нарушений».
+
+entity AuditService {
+    label ru-KZ official "служба внутреннего аудита государственного органа";
+}
+
+relation violation_detected(a: AuditService, d: ProcessDocument) kind empirical {
+    label ru-KZ official "выявлено нарушение требований бюджетного законодательства Республики Казахстан";
+}
+
+relation advisory_help_given(a: AuditService, d: ProcessDocument) kind empirical {
+    label ru-KZ official "оказана консультативная помощь в устранении нарушений и приведении в соответствие с бюджетным законодательством";
+}
+
+@source(BC_ART44)
+rule AdvisoryHelpDuty(a: AuditService, d: ProcessDocument) strict {
+    when violation_detected(a, d);
+    then duty GiveAdvisoryHelp {
+        bearer a;
+        beneficiary a;
+        achieve advisory_help_given(a, d) during [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 44 пункт 3. В случае выявления нарушений требований бюджетного законодательства службы внутреннего аудита осуществляют консультативную помощь в устранении нарушений и приведении в соответствие с бюджетным законодательством Республики Казахстан";
+}

@@ -1,0 +1,74 @@
+language "law.core" version "0.2";
+package vocab.vehicle version "0.1.0";
+namespace "urn:law:vocab:vehicle";
+
+// Словарь читается как факты: код категории, вложенность подкатегории и
+// категория вида — утверждения пакета, ключ каждого отношения — сама сущность.
+
+test "urn:query:vocab-vehicle:category-b-code" {
+    given {
+    }
+    evaluate truth(category_code(B, "B"));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+}
+
+test "urn:query:vocab-vehicle:d1-is-within-d" {
+    given {
+    }
+    evaluate truth(category_parent(D1, D));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+}
+
+test "urn:query:vocab-vehicle:passenger-car-is-category-b" {
+    given {
+    }
+    evaluate truth(kind_category(PASSENGER_CAR, B));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+}
+
+// Чужой код категории не приписан: словарь молчит, а не опровергает.
+test "urn:query:vocab-vehicle:foreign-code-is-unknown" {
+    given {
+    }
+    evaluate truth(category_code(B, "C"));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}
+
+// У трамвая буквенной категории источник не называет: словарь молчит и здесь.
+test "urn:query:vocab-vehicle:tram-has-no-category" {
+    given {
+    }
+    evaluate truth(kind_category(TRAM, B));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}
+
+// Вид конкретного транспортного средства — факт дела: отношение объявлено,
+// факт подаётся делом и читается как поданный.
+test "urn:query:vocab-vehicle:vehicle-kind-declared-only" {
+    given {
+        assert "assert-vehicle-kind": vehicle_kind(entity_ref("urn:test:vehicle:1"), BUS) {
+            origin case_input;
+        }
+    }
+    evaluate truth(vehicle_kind(entity_ref("urn:test:vehicle:1"), BUS));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+}
+
+// Сервис, показание и их доказательство — предъявленные факты дела. Словарь
+// не превращает их в «пройдено ТО» и не выбирает интервал.
+test "urn:query:vocab-vehicle:service-event-keeps-evidence" {
+    given {
+        const s: ServiceEvent = entity_ref("urn:test:vehicle:service");
+        const e: vocab.maintenance::Evidence = entity_ref("urn:test:vehicle:evidence");
+        assert "service-proof": service_evidence(s, e) { origin case_input; }
+    }
+    evaluate truth(service_evidence(entity_ref("urn:test:vehicle:service"), entity_ref("urn:test:vehicle:evidence")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+}

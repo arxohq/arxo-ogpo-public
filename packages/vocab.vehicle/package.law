@@ -1,0 +1,86 @@
+// vocab.vehicle — словарь транспортных средств (DECISION-0139 §5).
+//
+// ЧТО ЭТО. Типы «транспортное средство», «вид транспортного средства» и
+// «категория транспортного средства» с конечными доменами видов (легковой,
+// автобус, грузовой, троллейбус, трамвай, мототранспорт, прицеп,
+// полуприцеп) и категорий (A, B, C, D, E и подкатегории C1, D1) с
+// атрибутами: буквенный код категории, вложенность подкатегории в категорию
+// и категория, к которой классификация относит вид. Ни одного правила, ни
+// одной нормы: словарь ничего не выводит; он даёт актам общий тип вместо
+// собственного `entity Vehicle` в каждом (ОГПО ВТС, ПДД, КоАП, УК) и общую
+// константу вместо строки там, где акт называет вид или категорию как
+// значение.
+//
+// ЧЕГО ЗДЕСЬ НЕТ И НЕ БУДЕТ. Юрисдикции, источника права, редакций,
+// `@source`-якорей (тот же довод, что у `calc.*`, DECISION-0123 §2). Какое
+// транспортное средство какого вида — факт дела; коэффициент по типу ТС,
+// порог полной массы, число мест, с какого возраста и стажа допускают к
+// категории — нормы предметных актов. Срез вида, нужный одному акту
+// (автобусы до 16 мест и свыше у статьи 19 ОГПО), остаётся перечислением
+// внутри акта (§38): порог 16 — норма страхового закона, не свойство вида.
+//
+// ГРАНИЦА ДОМЕНА. В домен входят только виды и категории, названия которых
+// подтверждены закреплёнными байтами корпуса (статья 19 пункт 6 Закона
+// РК № 446-II об ОГПО ВТС — столбец «Классификация в соответствии с НПА
+// МВД»; ПДД РК и Закон о правах пассажиров — подкатегории C1, D1). Полный
+// перечень категорий закона о дорожном движении (A1, B1, BE, CE, DE, Tm,
+// Tb) в дерево не закреплён и до закрепления в словарь не входит: число из
+// памяти в данных недопустимо так же, как в пакете данных корпуса.
+
+language "law.core" version "0.2";
+package vocab.vehicle version "0.1.0";
+namespace "urn:law:vocab:vehicle";
+import vocab.maintenance version "0.1.0";
+
+pub entity Vehicle {
+    label ru official "транспортное средство";
+    label en official "vehicle";
+    label kk official "көлік құралы";
+}
+
+pub entity Kind {
+    label ru official "вид транспортного средства (легковой автомобиль, автобус, грузовой автомобиль, троллейбус, трамвай, мототранспорт, прицеп, полуприцеп)";
+    label en official "vehicle kind (passenger car, bus, freight vehicle, trolleybus, tram, motor vehicle, trailer, semi-trailer)";
+    label kk official "көлік құралының түрі (жеңіл автомобиль, автобус, жүк автомобилі, троллейбус, трамвай, мотокөлік, тіркеме, жартылай тіркеме)";
+}
+
+pub entity Category {
+    label ru official "категория или подкатегория транспортного средства по буквенной классификации (A, B, C, D, E, C1, D1)";
+    label en official "vehicle category or subcategory by letter classification (A, B, C, D, E, C1, D1)";
+    label kk official "әріптік жіктеу бойынша көлік құралының санаты немесе қосалқы санаты (A, B, C, D, E, C1, D1)";
+}
+
+pub relation category_code(category: Category, code: Text) kind institutional {
+    key(category);
+    label ru official "буквенный код категории транспортного средства";
+    label en official "letter code of the vehicle category";
+    label kk official "көлік құралы санатының әріптік коды";
+}
+
+pub relation category_parent(subcategory: Category, parent: Category) kind institutional {
+    key(subcategory);
+    label ru official "категория, в которую входит подкатегория";
+    label en official "category that contains the subcategory";
+    label kk official "қосалқы санат кіретін санат";
+}
+
+pub relation kind_category(kind: Kind, category: Category) kind institutional {
+    key(kind);
+    label ru official "категория, к которой классификация относит вид транспортного средства";
+    label en official "category to which the classification assigns the vehicle kind";
+    label kk official "жіктеу көлік құралының түрін жатқызатын санат";
+}
+
+pub relation vehicle_kind(vehicle: Vehicle, kind: Kind) kind empirical {
+    key(vehicle);
+    label ru official "вид конкретного транспортного средства (факт дела, словарь его не утверждает)";
+    label en official "kind of a particular vehicle (case fact, not asserted by the vocabulary)";
+    label kk official "нақты көлік құралының түрі (іс фактісі, сөздік оны бекітпейді)";
+}
+
+pub relation vehicle_category(vehicle: Vehicle, category: Category) kind empirical {
+    key(vehicle);
+    label ru official "категория конкретного транспортного средства (факт дела, словарь его не утверждает)";
+    label en official "category of a particular vehicle (case fact, not asserted by the vocabulary)";
+    label kk official "нақты көлік құралының санаты (іс фактісі, сөздік оны бекітпейді)";
+}

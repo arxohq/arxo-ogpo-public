@@ -1,0 +1,39 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// ПОРОЖДЁН tools/foreign_premium.py --emit из tools/foreign-premium-cases.json —
+// не править руками. Ожидание выведено НЕЗАВИСИМОЙ моделью инструмента по
+// закреплённым текстам (ст. 19 Закона № 446-II, Правила № 140, постановление
+// АРРФР № 72), а не снято с ответа движка; чужие ответы и их квалификация —
+// tests/foreign/REPORT.md.
+//
+// Дело zko-truck-23-1-old-kM2: Западно-Казахстанская область, грузовой, 23 года / стаж 1, выпуск 2016, класс М2
+
+test "urn:query:ogpo-chuzhoy-zko-truck-23-1-old-kM2" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "f0": territory_basis(entity_ref("urn:kz:ogpo:contract:foreign-zko-truck-23-1-old-kM2"), CityOfOblastSignificance) { origin case_input; }
+        assert "f1": registration_territory(entity_ref("urn:kz:ogpo:contract:foreign-zko-truck-23-1-old-kM2"), WestKazakhstanOblast) { origin case_input; }
+        assert "f2": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:foreign-zko-truck-23-1-old-kM2"), FreightVehicle) { origin case_input; }
+        assert "f3": insured_kind_of(entity_ref("urn:kz:ogpo:contract:foreign-zko-truck-23-1-old-kM2"), NaturalPerson) { origin case_input; }
+        assert "f4": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:foreign-zko-truck-23-1-old-kM2"), 10) { origin case_input; }
+        assert "f5": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(10) { origin case_input; }
+        assert "f6": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:foreign-zko-truck-23-1-old-kM2"), entity_ref("urn:kz:bm:ogpo:foreign-zko-truck-23-1-old-kM2")) { origin case_input; }
+        assert "f7": insured_age_years(entity_ref("urn:kz:ogpo:contract:foreign-zko-truck-23-1-old-kM2"), 23) { origin case_input; }
+        assert "f8": driving_experience_years(entity_ref("urn:kz:ogpo:contract:foreign-zko-truck-23-1-old-kM2"), 1) { origin case_input; }
+        assert "f9": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(23, 1) { origin case_input; }
+        assert "f10": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:foreign-zko-truck-23-1-old-kM2"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "f11": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:foreign-zko-truck-23-1-old-kM2"), kz.corpus.bonus_malus::KlassM2) { origin case_input; }
+        assert "f12": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:foreign-zko-truck-23-1-old-kM2"), 269) { origin case_input; }
+    }
+    evaluate truth(annual_premium_calculated(entity_ref("urn:kz:ogpo:contract:foreign-zko-truck-23-1-old-kM2"), 192845.283956325 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

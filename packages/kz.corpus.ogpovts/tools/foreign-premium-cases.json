@@ -1,0 +1,943 @@
+{
+  "$comment": "Чужие дела годовой премии ОГПО ВТС. Входы в терминах закона (territory, basis, vehicle, insured, age, experience, operation_term, bonus_malus) и те же входы в терминах калькулятора (calk — calk.kz, calculators — calculators.kz; null — калькулятор такого дела не вводит). theirs пишет --snapshot прогоном их закреплённого кода, ours — --expect независимой моделью; rationale — автор. Срок эксплуатации у calk.kz — 2026 минус год выпуска; в деле закона он подан полными годами той же величины.",
+  "format": "law.foreign-cases/ogpo-premium/0.1",
+  "sources": {
+    "calk": {
+      "url": "https://calk.kz/calculator/insurance-premium/",
+      "retrieved": "2026-09-14",
+      "files": [
+        "tests/foreign/calk-kz/calk.html",
+        "tests/foreign/calk-kz/ogpoCoefficients-CWHGjXpF.js",
+        "tests/foreign/calk-kz/InsuranceCalculator-DVKEHrs5.js"
+      ]
+    },
+    "calculators": {
+      "url": "https://calculators.kz/auto/insurance/",
+      "retrieved": "2026-09-14",
+      "files": [
+        "tests/foreign/calculators-kz/insurance.html"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "almaty-car-30-5-k3",
+      "rationale": "пример самой страницы calk.kz: г. Алматы, легковой, 30 лет / стаж 5, выпуск 2020, класс 3",
+      "legal_year": 2026,
+      "territory": "Almaty",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 30,
+      "experience": 5,
+      "operation_term": 6,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass3"
+      },
+      "calk": {
+        "region": "almaty-city",
+        "settlement": "city",
+        "vehicle": "passenger-car",
+        "year": "2020",
+        "drivers": [
+          [
+            30,
+            5
+          ]
+        ],
+        "klass": "3"
+      },
+      "calculators": {
+        "insYear": "2026",
+        "insRegion": "almaty",
+        "vType": "2.09",
+        "vAgeExp": "1.0",
+        "vBM": "1.0",
+        "vAge7": false
+      },
+      "theirs": {
+        "calk": {
+          "premium": 36094,
+          "factors": {
+            "S": 2.1016,
+            "I": 1,
+            "O": 2.09,
+            "b": 1,
+            "_": 1,
+            "q": 1
+          }
+        },
+        "calculators": {
+          "premium": 36094,
+          "shown": "36 094 ₸",
+          "region_factor": "2.10"
+        }
+      },
+      "ours": "36094.08682"
+    },
+    {
+      "id": "astana-car-24-1-old-k3",
+      "rationale": "г. Астана, легковой, 24 года / стаж 1 (оба признака пункта 7), выпуск 2015 — срок эксплуатации 11 лет",
+      "legal_year": 2026,
+      "territory": "Astana",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 24,
+      "experience": 1,
+      "operation_term": 11,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass3"
+      },
+      "calk": {
+        "region": "astana-city",
+        "settlement": "city",
+        "vehicle": "passenger-car",
+        "year": "2015",
+        "drivers": [
+          [
+            24,
+            1
+          ]
+        ],
+        "klass": "3"
+      },
+      "calculators": {
+        "insYear": "2026",
+        "insRegion": "astana",
+        "vType": "2.09",
+        "vAgeExp": "1.1",
+        "vBM": "1.0",
+        "vAge7": true
+      },
+      "theirs": {
+        "calk": {
+          "premium": 65835,
+          "factors": {
+            "S": 3.168,
+            "I": 1,
+            "O": 2.09,
+            "b": 1.1,
+            "_": 1.1,
+            "q": 1
+          }
+        },
+        "calculators": {
+          "premium": 65835,
+          "shown": "65 835 ₸",
+          "region_factor": "3.17"
+        }
+      },
+      "ours": "65834.954856"
+    },
+    {
+      "id": "almaty-oblast-village-car-40-10-k13",
+      "rationale": "Алматинская область, иной населённый пункт (п. 4, 0,8), легковой, 40 / 10, выпуск 2019 — ровно 7 лет, класс 13",
+      "legal_year": 2026,
+      "territory": "AlmatyOblast",
+      "basis": "OtherSettlement",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 40,
+      "experience": 10,
+      "operation_term": 7,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass13"
+      },
+      "calk": {
+        "region": "almaty-region",
+        "settlement": "other",
+        "vehicle": "passenger-car",
+        "year": "2019",
+        "drivers": [
+          [
+            40,
+            10
+          ]
+        ],
+        "klass": "13"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 17609,
+          "factors": {
+            "S": 2.5632,
+            "I": 0.8,
+            "O": 2.09,
+            "b": 1,
+            "_": 1,
+            "q": 0.5
+          }
+        }
+      },
+      "ours": "17608.748256"
+    },
+    {
+      "id": "zhambyl-truck-45-20-k5",
+      "rationale": "Жамбылская область, грузовой свыше 3500 кг, 45 / 20, выпуск 2010, класс 5",
+      "legal_year": 2026,
+      "territory": "ZhambylOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "FreightVehicle",
+      "insured": "NaturalPerson",
+      "age": 45,
+      "experience": 20,
+      "operation_term": 16,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass5"
+      },
+      "calk": {
+        "region": "zhambyl-region",
+        "settlement": "city",
+        "vehicle": "truck",
+        "year": "2010",
+        "drivers": [
+          [
+            45,
+            20
+          ]
+        ],
+        "klass": "5"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 56339,
+          "factors": {
+            "S": 1.74,
+            "I": 1,
+            "O": 3.98,
+            "b": 1,
+            "_": 1.1,
+            "q": 0.9
+          }
+        }
+      },
+      "ours": "56338.75269"
+    },
+    {
+      "id": "kyzylorda-bus16-35-8-kM",
+      "rationale": "Кызылординская область, автобус до 16 мест, 35 / 8, выпуск 2022, класс М",
+      "legal_year": 2026,
+      "territory": "KyzylordaOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "BusUpToSixteenSeats",
+      "insured": "NaturalPerson",
+      "age": 35,
+      "experience": 8,
+      "operation_term": 4,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "KlassM"
+      },
+      "calk": {
+        "region": "kyzylorda-region",
+        "settlement": "city",
+        "vehicle": "bus-up-to-16",
+        "year": "2022",
+        "drivers": [
+          [
+            35,
+            8
+          ]
+        ],
+        "klass": "M"
+      },
+      "calculators": {
+        "insYear": "2026",
+        "insRegion": "kyzylorda",
+        "vType": "3.26",
+        "vAgeExp": "1.0",
+        "vBM": "2.45",
+        "vAge7": false
+      },
+      "theirs": {
+        "calk": {
+          "premium": 132349,
+          "factors": {
+            "S": 2.0165,
+            "I": 1,
+            "O": 3.26,
+            "b": 1,
+            "_": 1,
+            "q": 2.45
+          }
+        },
+        "calculators": {
+          "premium": 132349,
+          "shown": "132 349 ₸",
+          "region_factor": "2.02"
+        }
+      },
+      "ours": "132349.29234625"
+    },
+    {
+      "id": "shymkent-bus-over16-50-25-old-k3",
+      "rationale": "г. Шымкент, автобус свыше 16 мест, 50 / 25, выпуск 2012, класс 3",
+      "legal_year": 2026,
+      "territory": "Shymkent",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "BusOverSixteenSeats",
+      "insured": "NaturalPerson",
+      "age": 50,
+      "experience": 25,
+      "operation_term": 14,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass3"
+      },
+      "calk": {
+        "region": "shymkent-city",
+        "settlement": "city",
+        "vehicle": "bus-over-16",
+        "year": "2012",
+        "drivers": [
+          [
+            50,
+            25
+          ]
+        ],
+        "klass": "3"
+      },
+      "calculators": {
+        "insYear": "2026",
+        "insRegion": "shymkent",
+        "vType": "3.45",
+        "vAgeExp": "1.0",
+        "vBM": "1.0",
+        "vAge7": true
+      },
+      "theirs": {
+        "calk": {
+          "premium": 50711,
+          "factors": {
+            "S": 1.6261,
+            "I": 1,
+            "O": 3.45,
+            "b": 1,
+            "_": 1.1,
+            "q": 1
+          }
+        },
+        "calculators": {
+          "premium": 50711,
+          "shown": "50 711 ₸",
+          "region_factor": "1.63"
+        }
+      },
+      "ours": "50710.59926625"
+    },
+    {
+      "id": "atyrau-moto-22-3-k3",
+      "rationale": "Атырауская область, мототранспорт, 22 года / стаж 3 (молодой, стаж более двух лет), выпуск 2024, класс 3",
+      "legal_year": 2026,
+      "territory": "AtyrauOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "MotorVehicle",
+      "insured": "NaturalPerson",
+      "age": 22,
+      "experience": 3,
+      "operation_term": 2,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass3"
+      },
+      "calk": {
+        "region": "atyrau-region",
+        "settlement": "city",
+        "vehicle": "motorcycle",
+        "year": "2024",
+        "drivers": [
+          [
+            22,
+            3
+          ]
+        ],
+        "klass": "3"
+      },
+      "calculators": {
+        "insYear": "2026",
+        "insRegion": "atyrau",
+        "vType": "1.0",
+        "vAgeExp": "1.05",
+        "vBM": "1.0",
+        "vAge7": false
+      },
+      "theirs": {
+        "calk": {
+          "premium": 11141,
+          "factors": {
+            "S": 1.2912,
+            "I": 1,
+            "O": 1,
+            "b": 1.05,
+            "_": 1,
+            "q": 1
+          }
+        },
+        "calculators": {
+          "premium": 11141,
+          "shown": "11 141 ₸",
+          "region_factor": "1.29"
+        }
+      },
+      "ours": "11140.9578"
+    },
+    {
+      "id": "vko-trailer-60-30-old-k13",
+      "rationale": "Восточно-Казахстанская область, прицеп, 60 / 30, выпуск 2000, класс 13",
+      "legal_year": 2026,
+      "territory": "EastKazakhstanOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "Trailer",
+      "insured": "NaturalPerson",
+      "age": 60,
+      "experience": 30,
+      "operation_term": 26,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass13"
+      },
+      "calk": {
+        "region": "east-kazakhstan",
+        "settlement": "city",
+        "vehicle": "trailer",
+        "year": "2000",
+        "drivers": [
+          [
+            60,
+            30
+          ]
+        ],
+        "klass": "13"
+      },
+      "calculators": {
+        "insYear": "2026",
+        "insRegion": "vko",
+        "vType": "1.0",
+        "vAgeExp": "1.0",
+        "vBM": "0.5",
+        "vAge7": true
+      },
+      "theirs": {
+        "calk": {
+          "premium": 6378,
+          "factors": {
+            "S": 1.4112,
+            "I": 1,
+            "O": 1,
+            "b": 1,
+            "_": 1.1,
+            "q": 0.5
+          }
+        },
+        "calculators": {
+          "premium": 6378,
+          "shown": "6 378 ₸",
+          "region_factor": "1.41"
+        }
+      },
+      "ours": "6378.0948"
+    },
+    {
+      "id": "karaganda-village-tram-40-10-k0",
+      "rationale": "Карагандинская область, иной населённый пункт, троллейбус/трамвай, 40 / 10, выпуск 2018 — 8 лет, первая строка «свыше 7», класс 0",
+      "legal_year": 2026,
+      "territory": "KaragandaOblast",
+      "basis": "OtherSettlement",
+      "vehicle": "TrolleybusOrTram",
+      "insured": "NaturalPerson",
+      "age": 40,
+      "experience": 10,
+      "operation_term": 8,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass0"
+      },
+      "calk": {
+        "region": "karaganda-region",
+        "settlement": "other",
+        "vehicle": "trolleybus-tram",
+        "year": "2018",
+        "drivers": [
+          [
+            40,
+            10
+          ]
+        ],
+        "klass": "0"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 63563,
+          "factors": {
+            "S": 1.6402,
+            "I": 0.8,
+            "O": 2.33,
+            "b": 1,
+            "_": 1.1,
+            "q": 2.3
+          }
+        }
+      },
+      "ours": "63562.78967852"
+    },
+    {
+      "id": "kostanay-car-25-2-k3",
+      "rationale": "Костанайская область, легковой, 25 лет / стаж РОВНО 2 года — строки пункта 7 для него нет",
+      "legal_year": 2026,
+      "territory": "KostanayOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 25,
+      "experience": 2,
+      "operation_term": 5,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass3"
+      },
+      "calk": {
+        "region": "kostanay-region",
+        "settlement": "city",
+        "vehicle": "passenger-car",
+        "year": "2021",
+        "drivers": [
+          [
+            25,
+            2
+          ]
+        ],
+        "klass": "3"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 37174,
+          "factors": {
+            "S": 2.1645,
+            "I": 1,
+            "O": 2.09,
+            "b": 1,
+            "_": 1,
+            "q": 1
+          }
+        }
+      },
+      "ours": null
+    },
+    {
+      "id": "pavlodar-car-30-5-first",
+      "rationale": "Павлодарская область, легковой, 30 / 5, выпуск 2019, договор впервые (п. 4 Правил № 140: класс 3 с повышением на 20 %)",
+      "legal_year": 2026,
+      "territory": "PavlodarOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 30,
+      "experience": 5,
+      "operation_term": 7,
+      "bonus_malus": {
+        "kind": "first"
+      },
+      "calk": {
+        "region": "pavlodar-region",
+        "settlement": "city",
+        "vehicle": "passenger-car",
+        "year": "2019",
+        "drivers": [
+          [
+            30,
+            5
+          ]
+        ],
+        "klass": "3first"
+      },
+      "calculators": {
+        "insYear": "2026",
+        "insRegion": "pavlodar",
+        "vType": "2.09",
+        "vAgeExp": "1.0",
+        "vBM": "1.8",
+        "vAge7": false
+      },
+      "theirs": {
+        "calk": {
+          "premium": 27547,
+          "factors": {
+            "S": 1.3366,
+            "I": 1,
+            "O": 2.09,
+            "b": 1,
+            "_": 1,
+            "q": 1.2
+          }
+        },
+        "calculators": {
+          "premium": 41320,
+          "shown": "41 320 ₸",
+          "region_factor": "1.34"
+        }
+      },
+      "ours": "27546.644334"
+    },
+    {
+      "id": "akmola-taxi-legal-entity",
+      "rationale": "Акмолинская область, легковой такси юридического лица (п. 8 ст. 19 — 1,2; п. 9 Правил № 140 — класс 3 с повышением на 80 %), выпуск 2021; calk.kz требует водителя — подан 30 / 5",
+      "legal_year": 2026,
+      "territory": "AkmolaOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "PassengerCar",
+      "insured": "LegalEntity",
+      "age": null,
+      "experience": null,
+      "operation_term": 5,
+      "bonus_malus": {
+        "kind": "taxi_legal"
+      },
+      "calk": {
+        "region": "akmola-region",
+        "settlement": "city",
+        "vehicle": "taxi",
+        "year": "2021",
+        "drivers": [
+          [
+            30,
+            5
+          ]
+        ],
+        "klass": "3taxi"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 44071,
+          "factors": {
+            "S": 1.4256,
+            "I": 1,
+            "O": 2.09,
+            "b": 1,
+            "_": 1,
+            "q": 1.8
+          }
+        }
+      },
+      "ours": "52885.6000992"
+    },
+    {
+      "id": "ulytau-car-19-0-new-k3",
+      "rationale": "Улытауская область, легковой, 19 лет / стаж 0, выпуск 2026, класс 3",
+      "legal_year": 2026,
+      "territory": "UlytauOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 19,
+      "experience": 0,
+      "operation_term": 0,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass3"
+      },
+      "calk": {
+        "region": "ulytau-region",
+        "settlement": "city",
+        "vehicle": "passenger-car",
+        "year": "2026",
+        "drivers": [
+          [
+            19,
+            0
+          ]
+        ],
+        "klass": "3"
+      },
+      "calculators": {
+        "insYear": "2026",
+        "insRegion": "ulytau",
+        "vType": "2.09",
+        "vAgeExp": "1.1",
+        "vBM": "1.0",
+        "vAge7": false
+      },
+      "theirs": {
+        "calk": {
+          "premium": 25997,
+          "factors": {
+            "S": 1.3761,
+            "I": 1,
+            "O": 2.09,
+            "b": 1.1,
+            "_": 1,
+            "q": 1
+          }
+        },
+        "calculators": {
+          "premium": 25997,
+          "shown": "25 997 ₸",
+          "region_factor": "1.38"
+        }
+      },
+      "ours": "25997.32592325"
+    },
+    {
+      "id": "mangystau-village-bus16-33-12-k8",
+      "rationale": "Мангистауская область, иной населённый пункт, автобус до 16 мест, 33 / 12, выпуск 2017 — 9 лет, класс 8",
+      "legal_year": 2026,
+      "territory": "MangistauOblast",
+      "basis": "OtherSettlement",
+      "vehicle": "BusUpToSixteenSeats",
+      "insured": "NaturalPerson",
+      "age": 33,
+      "experience": 12,
+      "operation_term": 9,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass8"
+      },
+      "calk": {
+        "region": "mangystau-region",
+        "settlement": "other",
+        "vehicle": "bus-up-to-16",
+        "year": "2017",
+        "drivers": [
+          [
+            33,
+            12
+          ]
+        ],
+        "klass": "8"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 16063,
+          "factors": {
+            "S": 0.9085,
+            "I": 0.8,
+            "O": 3.26,
+            "b": 1,
+            "_": 1.1,
+            "q": 0.75
+          }
+        }
+      },
+      "ours": "16062.9822705"
+    },
+    {
+      "id": "zko-truck-23-1-old-kM2",
+      "rationale": "Западно-Казахстанская область, грузовой, 23 года / стаж 1, выпуск 2016, класс М2",
+      "legal_year": 2026,
+      "territory": "WestKazakhstanOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "FreightVehicle",
+      "insured": "NaturalPerson",
+      "age": 23,
+      "experience": 1,
+      "operation_term": 10,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "KlassM2"
+      },
+      "calk": {
+        "region": "west-kazakhstan",
+        "settlement": "city",
+        "vehicle": "truck",
+        "year": "2016",
+        "drivers": [
+          [
+            23,
+            1
+          ]
+        ],
+        "klass": "M2"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 192845,
+          "factors": {
+            "S": 1.3923,
+            "I": 1,
+            "O": 3.98,
+            "b": 1.1,
+            "_": 1.1,
+            "q": 3.5
+          }
+        }
+      },
+      "ours": "192845.283956325"
+    },
+    {
+      "id": "sko-car-45-3-k10",
+      "rationale": "Северо-Казахстанская область, легковой, 45 / 3, выпуск 2023, класс 10",
+      "legal_year": 2026,
+      "territory": "NorthKazakhstanOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 45,
+      "experience": 3,
+      "operation_term": 3,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass10"
+      },
+      "calk": {
+        "region": "north-kazakhstan",
+        "settlement": "city",
+        "vehicle": "passenger-car",
+        "year": "2023",
+        "drivers": [
+          [
+            45,
+            3
+          ]
+        ],
+        "klass": "10"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 9948,
+          "factors": {
+            "S": 0.8911,
+            "I": 1,
+            "O": 2.09,
+            "b": 1,
+            "_": 1,
+            "q": 0.65
+          }
+        }
+      },
+      "ours": "9947.771458625"
+    },
+    {
+      "id": "turkestan-village-car-28-1-old-k2",
+      "rationale": "Туркестанская область, иной населённый пункт, легковой, 28 лет / стаж 1, выпуск 2011, класс 2",
+      "legal_year": 2026,
+      "territory": "TurkestanOblast",
+      "basis": "OtherSettlement",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 28,
+      "experience": 1,
+      "operation_term": 15,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass2"
+      },
+      "calk": {
+        "region": "turkestan-region",
+        "settlement": "other",
+        "vehicle": "passenger-car",
+        "year": "2011",
+        "drivers": [
+          [
+            28,
+            1
+          ]
+        ],
+        "klass": "2"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 37922,
+          "factors": {
+            "S": 1.7069,
+            "I": 0.8,
+            "O": 2.09,
+            "b": 1.05,
+            "_": 1.1,
+            "q": 1.4
+          }
+        }
+      },
+      "ours": "37922.248882518"
+    },
+    {
+      "id": "abay-light-truck-38-15-old-k4",
+      "rationale": "Абайская область, грузовой до 3500 кг — строка «Легковые» пункта 6 по классификации «В», 38 / 15, выпуск 2015, класс 4",
+      "legal_year": 2026,
+      "territory": "AbayOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 38,
+      "experience": 15,
+      "operation_term": 11,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass4"
+      },
+      "calk": {
+        "region": "abay-region",
+        "settlement": "city",
+        "vehicle": "light-truck",
+        "year": "2015",
+        "drivers": [
+          [
+            38,
+            15
+          ]
+        ],
+        "klass": "4"
+      },
+      "calculators": null,
+      "theirs": {
+        "calk": {
+          "premium": 28142,
+          "factors": {
+            "S": 1.568,
+            "I": 1,
+            "O": 2.09,
+            "b": 1,
+            "_": 1.1,
+            "q": 0.95
+          }
+        }
+      },
+      "ours": "28141.571612"
+    },
+    {
+      "id": "aktobe-car-30-5-k3-year-2025",
+      "rationale": "Актюбинская область, легковой, 30 / 5, класс 3, год страхования 2025 — вне закреплённой редакции закона (в силе с 31.08.2026)",
+      "legal_year": 2025,
+      "territory": "AktobeOblast",
+      "basis": "CityOfOblastSignificance",
+      "vehicle": "PassengerCar",
+      "insured": "NaturalPerson",
+      "age": 30,
+      "experience": 5,
+      "operation_term": 3,
+      "bonus_malus": {
+        "kind": "ordinary",
+        "klass": "Klass3"
+      },
+      "calk": null,
+      "calculators": {
+        "insYear": "2025",
+        "insRegion": "aktobe",
+        "vType": "2.09",
+        "vAgeExp": "1.0",
+        "vBM": "1.0",
+        "vAge7": false
+      },
+      "theirs": {
+        "calculators": {
+          "premium": 20446,
+          "shown": "20 446 ₸",
+          "region_factor": "1.31"
+        }
+      },
+      "ours": null
+    }
+  ]
+}

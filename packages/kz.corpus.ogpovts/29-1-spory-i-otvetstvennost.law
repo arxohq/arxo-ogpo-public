@@ -1,0 +1,299 @@
+// СТАТЬИ 29-1, 30 И 31. СПОРЫ И ОТВЕТСТВЕННОСТЬ.
+//
+// Три статьи заключительной главы стоят в одном модуле потому, что говорят об
+// одном: что происходит, когда стороны не сошлись. Исполнимая норма здесь
+// одна — статья 29-1: три письменных пути страхователя (потерпевшего,
+// выгодоприобретателя) и два срока страховщика. Статьи 30 и 31 исполнимой
+// нормы не содержат вовсе и объявлены границами с причиной (ниже).
+//
+// РЕДАКЦИЯ. `sources.law` предупреждает: «Статья 29-1 предусматривается в
+// редакции Закона РК от 16.01.2026 № 259-VIII (вводится в действие с
+// 01.01.2027)». Закреплённая редакция пакета — состояние портала от 23 июля 2026 года, и
+// формализуется ДЕЙСТВУЮЩИЙ текст. Будущая редакция — вторая редакция акта, а
+// не второе окно у этих правил.
+//
+// СРОКИ В РАБОЧИХ ДНЯХ — единица взята из текста («в течение пяти рабочих
+// дней», «в течение трёх рабочих дней»), и дневная единица §86 читает снимок
+// официального календаря §85: дело обязано его назвать.
+//
+// СТРАХОВОЙ ОМБУДСМАН — СВОЙ ТИП, А НЕ ЗАИМСТВОВАННЫЙ. У соседа
+// `kz.corpus.vred_ts` тип `StrakhovoyOmbudsman` есть (пункт 11 Правил, где
+// омбудсман обязан обеспечить возможность расчёта износа), но он не объявлен
+// `pub` и через границу пакета не виден. С 13.09.2026 такой тип есть и у
+// `kz.corpus.insurance` — владельца норм об институте (глава 8-1), и именно
+// он в конечном счёте должен стать общим. Слияние трёх типов в один —
+// отдельная работа с пересборкой обоих пакетов; долг записан в отчёте наряда
+// и в DECISION-0205 §7 (критерий К9).
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ С ПРИЧИНОЙ:
+//
+//   статья 29-1 пункт 1 абзац третий, хвост — «с учётом особенностей,
+//              предусмотренных Законом Республики Казахстан "О страховой
+//              деятельности"». Отсылка к чужому акту: сами особенности здесь
+//              не пересказываются — и это верно по-прежнему. НЕВЕРНОЙ была
+//              прежняя ПРИЧИНА («этого закона в корпусе нет»): закон в корпусе
+//              есть — `kz.corpus.insurance`, Закон РК от 18.12.2000 № 126-II,
+//              байты закреплены на двух аутентичных языках, 286 фрагментов.
+//              Не было формализовано ровно то, к чему отсылка ведёт. С
+//              13.09.2026 (DECISION-0205) особенности выведены там:
+//              `vprave_obratitsya_k_ombudsmanu` (статья 86 пункт 1 — два круга
+//              заявителей с разным объёмом права и предел в десять тысяч МРП),
+//              `reshenie_obyazatelno_dlya_strakhovoy_organizatsii` и
+//              `vprave_obratitsya_v_sud` (статья 90 — обязательность решения,
+//              разная для двух сторон, и путь в суд после его получения).
+//              Здешняя норма остаётся здешней: статья 29-1 даёт СВОБОДУ
+//              обратиться, а статья 86 говорит, у кого она есть.
+//
+//   статья 30 целиком — «Споры, вытекающие из договора обязательного
+//              страхования ответственности владельцев транспортных средств,
+//              рассматриваются в порядке, установленном законодательством
+//              Республики Казахстан». Чистая отсылка: ни условия, ни
+//              последствия статья не содержит, порядок рассмотрения —
+//              процессуальное законодательство.
+//
+//   статья 31 целиком — «Лица, виновные в нарушении законодательства
+//              Республики Казахстан об обязательном страховании ..., несут
+//              ответственность, предусмотренную законами Республики
+//              Казахстан». Чистая отсылка: ни состава, ни санкции этот Закон
+//              не устанавливает.
+
+entity InsuranceDispute {
+    label ru-KZ official "спор, возникающий из договора обязательного страхования ответственности владельцев транспортных средств";
+}
+
+entity InsuranceOmbudsman {
+    label ru-KZ official "страховой омбудсман";
+}
+
+pub relation dispute_from_contract(dispute: InsuranceDispute, contract: InsuranceContract,
+        claimant: Beneficiary) kind empirical {
+    key(dispute);
+    label ru-KZ official "спор возник из названного договора обязательного страхования, и его заявляет страхователь (потерпевший, выгодоприобретатель)";
+}
+relation dispute_insurer(dispute: InsuranceDispute, insurer: Insurer) kind empirical {
+    label ru-KZ official "страховщик по договору, из которого возник спор";
+}
+
+// ============================================================================
+// Пункт 1: три письменных пути
+// ============================================================================
+//
+// ТРИ ПРАВИЛА, А НЕ ОДНО С ДИЗЪЮНКЦИЕЙ. Текст перечисляет пути через «либо» и
+// «или» (§206), и они не равнозначны: заявление страховщику остаётся у самого
+// страховщика, обращение к омбудсману идёт во внесудебную процедуру, суд —
+// третий путь. Слить их в одно правило значило бы стереть, куда ушло дело.
+//
+// «В ПИСЬМЕННОЙ ФОРМЕ» — требование к самому действию, и потому оно стоит в
+// названии действия каждой позиции, а не отдельной посылкой.
+
+relation written_application_sent_to_insurer(dispute: InsuranceDispute) kind empirical {
+    label ru-KZ official "страхователь (потерпевший, выгодоприобретатель) направил страховщику письменное заявление с указанием требований и приложением документов, подтверждающих его требования";
+}
+relation written_application_sent_to_ombudsman(dispute: InsuranceDispute) kind empirical {
+    label ru-KZ official "страхователь (потерпевший, выгодоприобретатель) направил письменное заявление страховому омбудсману";
+}
+relation court_application_filed(dispute: InsuranceDispute) kind empirical {
+    label ru-KZ official "страхователь (потерпевший, выгодоприобретатель) обратился в суд для урегулирования спора, возникающего из договора обязательного страхования";
+}
+
+@source(LAW_446_ART29_1) {
+    rule ClaimantMayApplyToInsurer(
+        dispute: InsuranceDispute,
+        contract: InsuranceContract,
+        claimant: Beneficiary,
+    ) strict {
+        label ru-KZ official "Статья 29-1 пункт 1. При наличии спора, возникающего из договора обязательного страхования ответственности владельцев транспортных средств, страхователь (потерпевший, выгодоприобретатель) вправе в письменной форме направить страховщику заявление с указанием требований и приложением документов, подтверждающих его требования";
+        when dispute_from_contract(dispute, contract, claimant);
+        then liberty NapravitZayavlenieStrakhovshchiku {
+            holder claimant;
+            action written_application_sent_to_insurer(dispute);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule ClaimantMayApplyToOmbudsman(
+        dispute: InsuranceDispute,
+        contract: InsuranceContract,
+        claimant: Beneficiary,
+    ) strict {
+        label ru-KZ official "Статья 29-1 пункт 1. Страхователь (потерпевший, выгодоприобретатель) вправе в письменной форме направить заявление страховому омбудсману для урегулирования споров, возникающих из договора обязательного страхования ответственности владельцев транспортных средств";
+        when dispute_from_contract(dispute, contract, claimant);
+        then liberty NapravitZayavlenieOmbudsmanu {
+            holder claimant;
+            action written_application_sent_to_ombudsman(dispute);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule ClaimantMayApplyToCourt(
+        dispute: InsuranceDispute,
+        contract: InsuranceContract,
+        claimant: Beneficiary,
+    ) strict {
+        label ru-KZ official "Статья 29-1 пункт 1. Страхователь (потерпевший, выгодоприобретатель) вправе в письменной форме обратиться в суд для урегулирования споров, возникающих из договора обязательного страхования ответственности владельцев транспортных средств";
+        when dispute_from_contract(dispute, contract, claimant);
+        then liberty ObratitsyaVSud {
+            holder claimant;
+            action court_application_filed(dispute);
+            window [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Пункт 2: пять рабочих дней на письменный ответ
+// ============================================================================
+
+relation dispute_application_received_by_insurer_on(dispute: InsuranceDispute, day: Date)
+    kind empirical {
+    key(dispute);
+    label ru-KZ official "день получения страховщиком заявления страхователя (потерпевшего, выгодоприобретателя)";
+}
+relation dispute_reply_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок рассмотрения заявления и предоставления письменного ответа (статья 29-1 пункт 2)";
+}
+@source(LAW_446_ART29_1)
+assert dispute_reply_term(5 business_day);
+
+relation dispute_reply_due_day(dispute: InsuranceDispute, day: Date) kind institutional {
+    label ru-KZ official "день истечения пятидневного срока предоставления письменного ответа по спору";
+}
+relation dispute_written_reply_provided(dispute: InsuranceDispute) kind empirical {
+    label ru-KZ official "страховщик рассмотрел заявление и предоставил письменный ответ с указанием дальнейшего порядка урегулирования спора";
+}
+
+@source(LAW_446_ART29_1) {
+    rule DisputeReplyDueDay(dispute: InsuranceDispute, received: Date, term: Quantity)
+        strict {
+        label ru-KZ official "Статья 29-1 пункт 2. Срок предоставления письменного ответа истекает на пятый рабочий день со дня получения страховщиком заявления";
+        when dispute_application_received_by_insurer_on(dispute, received);
+        when dispute_reply_term(term);
+        then dispute_reply_due_day(dispute, add_business_days(received, term));
+    }
+
+    // BEGIN GENERATED InsurerMustReplyToDisputeApplication (deontic-window)
+    rule InsurerMustReplyToDisputeApplication(
+        dispute: InsuranceDispute,
+        contract: InsuranceContract,
+        claimant: Beneficiary,
+        insurer: Insurer,
+        received: Date,
+        due: Date,
+    ) strict {
+        label ru-KZ official "Статья 29-1 пункт 2. Страховщик при получении от страхователя (потерпевшего, выгодоприобретателя) заявления в течение пяти рабочих дней рассматривает и предоставляет письменный ответ с указанием дальнейшего порядка урегулирования спора";
+        when dispute_from_contract(dispute, contract, claimant);
+        when dispute_insurer(dispute, insurer);
+        when written_application_sent_to_insurer(dispute);
+        when dispute_application_received_by_insurer_on(dispute, received);
+        when dispute_reply_due_day(dispute, due);
+        then duty RassmotretZayavlenieIOtvetitVSrok {
+            bearer insurer;
+            beneficiary claimant;
+            achieve dispute_written_reply_provided(dispute) during [received, due];
+        };
+    }
+    // END GENERATED InsurerMustReplyToDisputeApplication
+}
+
+// ============================================================================
+// Пункт 3: три рабочих дня на документы по запросу
+// ============================================================================
+//
+// ОБЯЗАННОСТЬ ВОЗНИКАЕТ ОТ ЗАПРОСА, А НЕ ОТ ОБРАЩЕНИЯ К ОМБУДСМАНУ. Обращение
+// — условие («в случае обращения ... к страховому омбудсману»), запрос —
+// основание, и срок считается «с даты получения запроса», а не с даты
+// обращения. Три лица вправе запросить (страхователь, потерпевший
+// (выгодоприобретатель), сам омбудсман), но обязанность у страховщика одна и
+// исполнение у неё одно, поэтому личность запросившего остаётся входом дела.
+
+relation ombudsman_of_dispute(dispute: InsuranceDispute, ombudsman: InsuranceOmbudsman)
+    kind empirical {
+    label ru-KZ official "страховой омбудсман, к которому обратился страхователь (потерпевший, выгодоприобретатель)";
+}
+relation dispute_documents_request_received_on(dispute: InsuranceDispute, day: Date)
+    kind empirical {
+    key(dispute);
+    label ru-KZ official "дата получения страховщиком запроса о представлении документов, относящихся к рассмотрению и разрешению спора";
+}
+relation dispute_documents_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок представления страховщиком документов, относящихся к рассмотрению и разрешению спора (статья 29-1 пункт 3)";
+}
+@source(LAW_446_ART29_1)
+assert dispute_documents_term(3 business_day);
+
+relation dispute_documents_due_day(dispute: InsuranceDispute, day: Date) kind institutional {
+    label ru-KZ official "день истечения трёхдневного срока представления документов по спору";
+}
+relation dispute_documents_submitted(dispute: InsuranceDispute) kind empirical {
+    label ru-KZ official "страховщик представил документы, относящиеся к рассмотрению и разрешению спора";
+}
+
+@source(LAW_446_ART29_1) {
+    rule DisputeDocumentsDueDay(dispute: InsuranceDispute, received: Date, term: Quantity)
+        strict {
+        label ru-KZ official "Статья 29-1 пункт 3. Срок представления документов истекает на третий рабочий день с даты получения запроса";
+        when dispute_documents_request_received_on(dispute, received);
+        when dispute_documents_term(term);
+        then dispute_documents_due_day(dispute, add_business_days(received, term));
+    }
+
+    // BEGIN GENERATED InsurerMustSubmitDisputeDocuments (deontic-window)
+    rule InsurerMustSubmitDisputeDocuments(
+        dispute: InsuranceDispute,
+        contract: InsuranceContract,
+        claimant: Beneficiary,
+        insurer: Insurer,
+        ombudsman: InsuranceOmbudsman,
+        received: Date,
+        due: Date,
+    ) strict {
+        label ru-KZ official "Статья 29-1 пункт 3. В случае обращения страхователя (потерпевшего, выгодоприобретателя) к страховому омбудсману страховщик обязан по запросу страхователя, потерпевшего (выгодоприобретателя), страхового омбудсмана представить документы, относящиеся к рассмотрению и разрешению спора, в течение трёх рабочих дней с даты получения запроса";
+        when dispute_from_contract(dispute, contract, claimant);
+        when dispute_insurer(dispute, insurer);
+        when written_application_sent_to_ombudsman(dispute);
+        when ombudsman_of_dispute(dispute, ombudsman);
+        when dispute_documents_request_received_on(dispute, received);
+        when dispute_documents_due_day(dispute, due);
+        then duty PredstavitDokumentyPoSporu {
+            bearer insurer;
+            beneficiary claimant;
+            achieve dispute_documents_submitted(dispute) during [received, due];
+        };
+    }
+    // END GENERATED InsurerMustSubmitDisputeDocuments
+}
+
+// ============================================================================
+// Статья 22-2 пункт 10: несогласие с упрощённым порядком ведёт в статью 29-1
+// ============================================================================
+//
+// Правило стоит ЗДЕСЬ, а не в модуле статей 22-1 и 22-2, потому что его голова
+// принадлежит спору, а якорь — статье 22-2: пункт 10 не создаёт нового права,
+// он направляет дело в уже выведенные пути пункта 1 статьи 29-1.
+
+relation disagreement_with_simplified_procedure_or_effects(accident: TrafficAccident,
+        claimant: Beneficiary) kind empirical {
+    label ru-KZ official "страхователь (потерпевший, выгодоприобретатель) не согласен с процедурой и последствиями упрощённого порядка урегулирования страхового случая";
+}
+relation dispute_of_accident(dispute: InsuranceDispute, accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "спор заявлен по названному транспортному происшествию";
+}
+relation dispute_may_be_settled_under_article_29_1(dispute: InsuranceDispute)
+    kind institutional {
+    label ru-KZ official "страхователь (потерпевший, выгодоприобретатель) вправе урегулировать спор в соответствии со статьёй 29-1 настоящего Закона";
+}
+
+@source(LAW_446_ART22_2, quote = "В случае несогласия с процедурой и последствиями упрощенного порядка урегулирования страхового случая страхователь (потерпевший, выгодоприобретатель) вправе урегулировать спор в соответствии со статьей 29-1 настоящего Закона.")
+rule DisagreementWithSimplifiedProcedureOpensDispute(
+    dispute: InsuranceDispute,
+    accident: TrafficAccident,
+    contract: InsuranceContract,
+    claimant: Beneficiary,
+) strict {
+    label ru-KZ official "Статья 22-2 пункт 10. В случае несогласия с процедурой и последствиями упрощённого порядка урегулирования страхового случая страхователь (потерпевший, выгодоприобретатель) вправе урегулировать спор в соответствии со статьёй 29-1 настоящего Закона";
+    when dispute_of_accident(dispute, accident);
+    when dispute_from_contract(dispute, contract, claimant);
+    when disagreement_with_simplified_procedure_or_effects(accident, claimant);
+    then dispute_may_be_settled_under_article_29_1(dispute);
+}

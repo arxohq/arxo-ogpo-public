@@ -1,0 +1,2367 @@
+{
+  "$comment": "Каталог вопросов пакета (DECISION-0190, law.package-questions/0.1). Карточка — параметризованный шаблон запроса §172, а не ответ. Свидетельства — сценарии tests/, в том числе порождённые (tests/catalog): каждый выполняет посылки правила и спрашивает его вывод.",
+  "format": "law.package-questions/0.1",
+  "package": "kz.corpus.budget_code",
+  "tasks": [
+    {
+      "id": "bc-art1",
+      "title": "Статья 1. Бюджетное законодательство Республики Казахстан",
+      "source_units": [
+        "BC_ART1"
+      ]
+    },
+    {
+      "id": "bc-art101",
+      "title": "Статья 101. Общие положения об исполнении бюджета",
+      "source_units": [
+        "BC_ART101"
+      ]
+    },
+    {
+      "id": "bc-art102",
+      "title": "Статья 102. Особенности исполнения по деньгам от реализации государственными учреждениями товаров (работ, услуг), остающимся в их распоряжении",
+      "source_units": [
+        "BC_ART102"
+      ]
+    },
+    {
+      "id": "bc-art106",
+      "title": "Статья 106. Единый казначейский счет, контрольные счета наличности и счета государственных учреждений",
+      "source_units": [
+        "BC_ART106"
+      ]
+    },
+    {
+      "id": "bc-art110",
+      "title": "Статья 110. Осуществление платежей и переводов денег в национальной и иностранной валюте",
+      "source_units": [
+        "BC_ART110"
+      ]
+    },
+    {
+      "id": "bc-art111",
+      "title": "Статья 111. Приостановление регистрации гражданско-правовых сделок и проведения платежей и переводов денег",
+      "source_units": [
+        "BC_ART111"
+      ]
+    },
+    {
+      "id": "bc-art112",
+      "title": "Статья 112. Инкассовое распоряжение",
+      "source_units": [
+        "BC_ART112"
+      ]
+    },
+    {
+      "id": "bc-art113",
+      "title": "Статья 113. Управление ликвидностью",
+      "source_units": [
+        "BC_ART113"
+      ]
+    },
+    {
+      "id": "bc-art115",
+      "title": "Статья 115. Особенности использования и доиспользования бюджетных средств",
+      "source_units": [
+        "BC_ART115"
+      ]
+    },
+    {
+      "id": "bc-art116",
+      "title": "Статья 116. Остатки бюджетных средств",
+      "source_units": [
+        "BC_ART116"
+      ]
+    },
+    {
+      "id": "bc-art117",
+      "title": "Статья 117. Общие положения по бюджетному учету и бюджетной отчетности",
+      "source_units": [
+        "BC_ART117"
+      ]
+    },
+    {
+      "id": "bc-art118",
+      "title": "Статья 118. Виды бюджетной отчетности",
+      "source_units": [
+        "BC_ART118"
+      ]
+    },
+    {
+      "id": "bc-art129",
+      "title": "Статья 129. Цель, принципы и основные качественные характеристики бухгалтерского учета и финансовой отчетности",
+      "source_units": [
+        "BC_ART129"
+      ]
+    },
+    {
+      "id": "bc-art130",
+      "title": "Статья 130. Система бухгалтерского учета",
+      "source_units": [
+        "BC_ART130"
+      ]
+    },
+    {
+      "id": "bc-art132",
+      "title": "Статья 132. Представление финансовой отчетности",
+      "source_units": [
+        "BC_ART132"
+      ]
+    },
+    {
+      "id": "bc-art133",
+      "title": "Статья 133. Общие положения о консолидированной финансовой отчетности",
+      "source_units": [
+        "BC_ART133"
+      ]
+    },
+    {
+      "id": "bc-art136",
+      "title": "Статья 136. Общие положения об управлении долговыми обязательствами государственного сектора и заимствовании",
+      "source_units": [
+        "BC_ART136"
+      ]
+    },
+    {
+      "id": "bc-art138",
+      "title": "Статья 138. Государственный долг",
+      "source_units": [
+        "BC_ART138"
+      ]
+    },
+    {
+      "id": "bc-art14",
+      "title": "Статья 14. Виды бюджетных программ (подпрограмм)",
+      "source_units": [
+        "BC_ART14"
+      ]
+    },
+    {
+      "id": "bc-art141",
+      "title": "Статья 141. Гарантированный государством долг и государственная гарантия",
+      "source_units": [
+        "BC_ART141"
+      ]
+    },
+    {
+      "id": "bc-art144",
+      "title": "Статья 144. Исполнение государственной гарантии по поддержке экспорта и основания прекращения ее действия",
+      "source_units": [
+        "BC_ART144"
+      ]
+    },
+    {
+      "id": "bc-art144-2",
+      "title": "Статья 144-2. Исполнение государственной гарантии по поддержке частного предпринимательства",
+      "source_units": [
+        "BC_ART144_2"
+      ]
+    },
+    {
+      "id": "bc-art145",
+      "title": "Статья 145. Поручительство государства",
+      "source_units": [
+        "BC_ART145"
+      ]
+    },
+    {
+      "id": "bc-art146",
+      "title": "Статья 146. Долг субъектов квазигосударственного сектора и заимствование субъектами квазигосударственного сектора",
+      "source_units": [
+        "BC_ART146"
+      ]
+    },
+    {
+      "id": "bc-art148",
+      "title": "Статья 148. Общие положения о государственных инвестиционных проектах",
+      "source_units": [
+        "BC_ART148"
+      ]
+    },
+    {
+      "id": "bc-art149",
+      "title": "Статья 149. Планирование государственных инвестиционных проектов",
+      "source_units": [
+        "BC_ART149"
+      ]
+    },
+    {
+      "id": "bc-art150",
+      "title": "Статья 150. Корректировка утвержденных (уточненных) параметров государственных инвестиционных проектов",
+      "source_units": [
+        "BC_ART150"
+      ]
+    },
+    {
+      "id": "bc-art154",
+      "title": "Статья 154. Общие положения о бюджетном кредитовании",
+      "source_units": [
+        "BC_ART154"
+      ]
+    },
+    {
+      "id": "bc-art155",
+      "title": "Статья 155. Процедуры принятия решения о предоставлении бюджетного кредита",
+      "source_units": [
+        "BC_ART155"
+      ]
+    },
+    {
+      "id": "bc-art157",
+      "title": "Статья 157. Использование бюджетного кредита",
+      "source_units": [
+        "BC_ART157"
+      ]
+    },
+    {
+      "id": "bc-art160",
+      "title": "Статья 160. Прекращение требования кредитора по погашению бюджетного кредита и прекращение гарантии",
+      "source_units": [
+        "BC_ART160"
+      ]
+    },
+    {
+      "id": "bc-art162",
+      "title": "Статья 162. Мониторинг и учет бюджетных кредитов",
+      "source_units": [
+        "BC_ART162"
+      ]
+    },
+    {
+      "id": "bc-art165",
+      "title": "Статья 165. Привлечение связанных грантов",
+      "source_units": [
+        "BC_ART165"
+      ]
+    },
+    {
+      "id": "bc-art166",
+      "title": "Статья 166. Использование связанных грантов",
+      "source_units": [
+        "BC_ART166"
+      ]
+    },
+    {
+      "id": "bc-art17",
+      "title": "Статья 17. Особенности пилотных проектов в области бюджетных отношений",
+      "source_units": [
+        "BC_ART17"
+      ]
+    },
+    {
+      "id": "bc-art17-1",
+      "title": "Статья 17-1. Особенности государственного участия в урегулировании системно значимого банка",
+      "source_units": [
+        "BC_ART17_1"
+      ]
+    },
+    {
+      "id": "bc-art170",
+      "title": "Статья 170. Блочное бюджетирование",
+      "source_units": [
+        "BC_ART170"
+      ]
+    },
+    {
+      "id": "bc-art171",
+      "title": "Статья 171. Ответственность за нарушение бюджетного законодательства Республики Казахстан",
+      "source_units": [
+        "BC_ART171"
+      ]
+    },
+    {
+      "id": "bc-art18",
+      "title": "Статья 18. Общие положения о резервах",
+      "source_units": [
+        "BC_ART18"
+      ]
+    },
+    {
+      "id": "bc-art19",
+      "title": "Статья 19. Резерв на инициативы Президента Республики Казахстан",
+      "source_units": [
+        "BC_ART19"
+      ]
+    },
+    {
+      "id": "bc-art2",
+      "title": "Статья 2. Основные цель и задачи бюджетного законодательства Республики Казахстан и общие требования к получателям бюджетных средств",
+      "source_units": [
+        "BC_ART2"
+      ]
+    },
+    {
+      "id": "bc-art20",
+      "title": "Статья 20. Резервы Правительства Республики Казахстан и местных исполнительных органов",
+      "source_units": [
+        "BC_ART20"
+      ]
+    },
+    {
+      "id": "bc-art22",
+      "title": "Статья 22. Общие положения о распределении поступлений",
+      "source_units": [
+        "BC_ART22"
+      ]
+    },
+    {
+      "id": "bc-art29",
+      "title": "Статья 29. Общие положения о распределении расходов между уровнями бюджета",
+      "source_units": [
+        "BC_ART29"
+      ]
+    },
+    {
+      "id": "bc-art40",
+      "title": "Статья 40. Публикация и обсуждение документов бюджетного процесса",
+      "source_units": [
+        "BC_ART40"
+      ]
+    },
+    {
+      "id": "bc-art41",
+      "title": "Статья 41. Ответственность участников бюджетного процесса за нарушение бюджетного законодательства Республики Казахстан",
+      "source_units": [
+        "BC_ART41"
+      ]
+    },
+    {
+      "id": "bc-art44",
+      "title": "Статья 44. Государственный аудит и финансовый контроль",
+      "source_units": [
+        "BC_ART44"
+      ]
+    },
+    {
+      "id": "bc-art5",
+      "title": "Статья 5. Участники бюджетного процесса",
+      "source_units": [
+        "BC_ART5"
+      ]
+    },
+    {
+      "id": "bc-art55",
+      "title": "Статья 55. Внебюджетная деятельность государственных органов и государственных учреждений",
+      "source_units": [
+        "BC_ART55"
+      ]
+    },
+    {
+      "id": "bc-art56",
+      "title": "Статья 56. Общие положения об участии субъектов квазигосударственного сектора в бюджетном процессе",
+      "source_units": [
+        "BC_ART56"
+      ]
+    },
+    {
+      "id": "bc-art58",
+      "title": "Статья 58. Источники формирования Национального фонда Республики Казахстан",
+      "source_units": [
+        "BC_ART58"
+      ]
+    },
+    {
+      "id": "bc-art59",
+      "title": "Статья 59. Использование Национального фонда Республики Казахстан",
+      "source_units": [
+        "BC_ART59"
+      ]
+    },
+    {
+      "id": "bc-art73",
+      "title": "Статья 73. Процесс рассмотрения проектов нормативных правовых актов, влияющих на доходы и расходы бюджета",
+      "source_units": [
+        "BC_ART73"
+      ]
+    },
+    {
+      "id": "bc-art75",
+      "title": "Статья 75. Бюджетный запрос администратора бюджетных программ и порядок его рассмотрения",
+      "source_units": [
+        "BC_ART75"
+      ]
+    },
+    {
+      "id": "bc-art76",
+      "title": "Статья 76. Общие положения о межбюджетных отношениях",
+      "source_units": [
+        "BC_ART76"
+      ]
+    },
+    {
+      "id": "bc-art8",
+      "title": "Статья 8. Виды бюджета, используемые в качестве аналитической информации",
+      "source_units": [
+        "BC_ART8"
+      ]
+    },
+    {
+      "id": "bc-art82",
+      "title": "Статья 82. Разработка проекта решения областного маслихата об объемах трансфертов общего характера",
+      "source_units": [
+        "BC_ART82"
+      ]
+    },
+    {
+      "id": "bc-art83",
+      "title": "Статья 83. Целевые трансферты",
+      "source_units": [
+        "BC_ART83"
+      ]
+    },
+    {
+      "id": "bc-art94",
+      "title": "Статья 94. Общие положения об уточнении бюджета",
+      "source_units": [
+        "BC_ART94"
+      ]
+    },
+    {
+      "id": "bc-art95",
+      "title": "Статья 95. Уточнение республиканского бюджета",
+      "source_units": [
+        "BC_ART95"
+      ]
+    },
+    {
+      "id": "bc-art98",
+      "title": "Статья 98. Корректировка бюджета",
+      "source_units": [
+        "BC_ART98"
+      ]
+    },
+    {
+      "id": "bc-art99",
+      "title": "Статья 99. Основание для разработки, введения или прекращения действия чрезвычайного государственного бюджета",
+      "source_units": [
+        "BC_ART99"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "borrower-liable",
+      "task": "bc-art157",
+      "question": "Установлено ли по делу: заёмщик несёт ответственность в соответствии с законами Республики Казахстан и условиями кредитного договора?",
+      "kind": "truth",
+      "predicate": "borrower_liable",
+      "parameters": [
+        {
+          "name": "b",
+          "type": "Body",
+          "role": "bound"
+        },
+        {
+          "name": "c",
+          "type": "BudgetCredit",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(borrower_liable(<b>, <c>));",
+      "tests": [
+        "CATALOG-LIABILITYFORCREDITMISUSE"
+      ],
+      "source_units": [
+        "BC_ART157"
+      ]
+    },
+    {
+      "id": "budget-request-late",
+      "task": "bc-art75",
+      "question": "Установлено ли по делу: бюджетный запрос представлен с нарушением срока?",
+      "kind": "truth",
+      "predicate": "budget_request_late",
+      "parameters": [
+        {
+          "name": "a",
+          "type": "Administrator",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(budget_request_late(<a>));",
+      "tests": [
+        "CATALOG-BUDGETREQUESTLATE"
+      ],
+      "source_units": [
+        "BC_ART75"
+      ]
+    },
+    {
+      "id": "budget-request-timely",
+      "task": "bc-art75",
+      "question": "Установлено ли по делу: бюджетный запрос представлен в срок?",
+      "kind": "truth",
+      "predicate": "budget_request_timely",
+      "parameters": [
+        {
+          "name": "a",
+          "type": "Administrator",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(budget_request_timely(<a>));",
+      "tests": [
+        "CATALOG-BUDGETREQUESTTIMELY"
+      ],
+      "source_units": [
+        "BC_ART75"
+      ]
+    },
+    {
+      "id": "claim-terminated",
+      "task": "bc-art160",
+      "question": "Установлено ли по делу: требование кредитора по погашению бюджетного кредита прекращается?",
+      "kind": "truth",
+      "predicate": "claim_terminated",
+      "parameters": [
+        {
+          "name": "c",
+          "type": "BudgetCredit",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(claim_terminated(<c>));",
+      "tests": [
+        "CATALOG-CLAIMTERMINATEDBYLIQUIDATION"
+      ],
+      "source_units": [
+        "BC_ART160"
+      ]
+    },
+    {
+      "id": "clarification-request-late",
+      "task": "bc-art95",
+      "question": "Установлено ли по делу: бюджетный запрос при уточнении бюджета представлен с нарушением срока?",
+      "kind": "truth",
+      "predicate": "clarification_request_late",
+      "parameters": [
+        {
+          "name": "a",
+          "type": "Administrator",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(clarification_request_late(<a>));",
+      "tests": [
+        "CATALOG-CLARIFICATIONREQUESTLATE"
+      ],
+      "source_units": [
+        "BC_ART95"
+      ]
+    },
+    {
+      "id": "clarification-request-timely",
+      "task": "bc-art95",
+      "question": "Установлено ли по делу: бюджетный запрос при уточнении бюджета представлен в срок?",
+      "kind": "truth",
+      "predicate": "clarification_request_timely",
+      "parameters": [
+        {
+          "name": "a",
+          "type": "Administrator",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(clarification_request_timely(<a>));",
+      "tests": [
+        "CATALOG-CLARIFICATIONREQUESTTIMELY"
+      ],
+      "source_units": [
+        "BC_ART95"
+      ]
+    },
+    {
+      "id": "credit-conditions-met",
+      "task": "bc-art154",
+      "question": "Установлено ли по делу: условия предоставления бюджетного кредита, названные пунктом 5 статьи 154 настоящего Кодекса, соблюдены?",
+      "kind": "truth",
+      "predicate": "credit_conditions_met",
+      "parameters": [
+        {
+          "name": "c",
+          "type": "BudgetCredit",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(credit_conditions_met(<c>));",
+      "tests": [
+        "CATALOG-CREDITCONDITIONSMET"
+      ],
+      "source_units": [
+        "BC_ART154"
+      ]
+    },
+    {
+      "id": "credit-decision-may-proceed",
+      "task": "bc-art155",
+      "question": "Установлено ли по делу: принятие решения о предоставлении бюджетного кредита может быть продолжено?",
+      "kind": "truth",
+      "predicate": "credit_decision_may_proceed",
+      "parameters": [
+        {
+          "name": "c",
+          "type": "BudgetCredit",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(credit_decision_may_proceed(<c>));",
+      "tests": [
+        "CATALOG-CASHDEFICITCREDITNEEDSNOEXPEDIENCY"
+      ],
+      "source_units": [
+        "BC_ART155"
+      ]
+    },
+    {
+      "id": "credit-has-term-and-remuneration",
+      "task": "bc-art154",
+      "question": "Установлено ли по делу: бюджетный кредит имеет установленные срок и ставку вознаграждения?",
+      "kind": "truth",
+      "predicate": "credit_has_term_and_remuneration",
+      "parameters": [
+        {
+          "name": "c",
+          "type": "BudgetCredit",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(credit_has_term_and_remuneration(<c>));",
+      "tests": [
+        "CATALOG-CREDITHASTERMANDREMUNERATION"
+      ],
+      "source_units": [
+        "BC_ART154"
+      ]
+    },
+    {
+      "id": "credit-procedure-followed",
+      "task": "bc-art155",
+      "question": "Установлено ли по делу: решение о предоставлении бюджетного кредита прошло процедуру, названную статьёй 155 настоящего Кодекса?",
+      "kind": "truth",
+      "predicate": "credit_procedure_followed",
+      "parameters": [
+        {
+          "name": "c",
+          "type": "BudgetCredit",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(credit_procedure_followed(<c>));",
+      "tests": [
+        "CATALOG-CREDITPROCEDUREBYCASHDEFICITEXEMPTION"
+      ],
+      "source_units": [
+        "BC_ART155"
+      ]
+    },
+    {
+      "id": "credited-to-budget",
+      "task": "bc-art102",
+      "question": "Установлено ли по делу: деньги подлежат зачислению в соответствующий бюджет?",
+      "kind": "truth",
+      "predicate": "credited_to_budget",
+      "parameters": [
+        {
+          "name": "p",
+          "type": "SalesProceeds",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(credited_to_budget(<p>));",
+      "tests": [
+        "CATALOG-SALESPROCEEDSTOBUDGET"
+      ],
+      "source_units": [
+        "BC_ART102"
+      ]
+    },
+    {
+      "id": "credited-to-local-budget-in-full",
+      "task": "bc-art56",
+      "question": "Установлено ли по делу: поступление зачисляется в местный бюджет в полном объёме в номинальном выражении?",
+      "kind": "truth",
+      "predicate": "credited_to_local_budget_in_full",
+      "parameters": [
+        {
+          "name": "r",
+          "type": "PrivatisationReceipt",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(credited_to_local_budget_in_full(<r>));",
+      "tests": [
+        "CATALOG-COMMUNALPRIVATISATIONTOLOCALBUDGET"
+      ],
+      "source_units": [
+        "BC_ART56"
+      ]
+    },
+    {
+      "id": "credited-to-national-fund-in-full",
+      "task": "bc-art56",
+      "question": "Установлено ли по делу: поступление зачисляется в Национальный фонд Республики Казахстан в полном объёме в номинальном выражении?",
+      "kind": "truth",
+      "predicate": "credited_to_national_fund_in_full",
+      "parameters": [
+        {
+          "name": "r",
+          "type": "PrivatisationReceipt",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(credited_to_national_fund_in_full(<r>));",
+      "tests": [
+        "CATALOG-REPUBLICANPRIVATISATIONTONATIONALFUND"
+      ],
+      "source_units": [
+        "BC_ART56"
+      ]
+    },
+    {
+      "id": "cross-level-funded",
+      "task": "bc-art29",
+      "question": "Установлено ли по делу: расход финансируется из бюджета не своего уровня?",
+      "kind": "truth",
+      "predicate": "cross_level_funded",
+      "parameters": [
+        {
+          "name": "p",
+          "type": "BudgetProgramme",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(cross_level_funded(<p>));",
+      "tests": [
+        "CATALOG-CROSSLEVELFUNDEDPROJECTION"
+      ],
+      "source_units": [
+        "BC_ART29"
+      ]
+    },
+    {
+      "id": "disagreement-settled",
+      "task": "bc-art2",
+      "question": "Установлено ли по делу: разногласие по предложению урегулировано?",
+      "kind": "truth",
+      "predicate": "disagreement_settled",
+      "parameters": [
+        {
+          "name": "p",
+          "type": "Proposal",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(disagreement_settled(<p>));",
+      "tests": [
+        "CATALOG-DISAGREEMENTSETTLEDBYCOMMISSION"
+      ],
+      "source_units": [
+        "BC_ART2"
+      ]
+    },
+    {
+      "id": "emergency-budget-ground",
+      "task": "bc-art99",
+      "question": "Установлено ли по делу: имеется основание для введения чрезвычайного государственного бюджета?",
+      "kind": "truth",
+      "predicate": "emergency_budget_ground",
+      "parameters": [
+        {
+          "name": "b",
+          "type": "Budget",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(emergency_budget_ground(<b>));",
+      "tests": [
+        "CATALOG-EMERGENCYBUDGETGROUND"
+      ],
+      "source_units": [
+        "BC_ART99"
+      ]
+    },
+    {
+      "id": "fund-expenditure-lawful",
+      "task": "bc-art59",
+      "question": "Установлено ли по делу: расходование средств Национального фонда произведено по направлению, названному настоящим Кодексом?",
+      "kind": "truth",
+      "predicate": "fund_expenditure_lawful",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "FundExpenditure",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(fund_expenditure_lawful(<x>));",
+      "tests": [
+        "CATALOG-FUNDSPENTONGUARANTEEDTRANSFER"
+      ],
+      "source_units": [
+        "BC_ART59"
+      ]
+    },
+    {
+      "id": "grant-may-be-attracted",
+      "task": "bc-art165",
+      "question": "Установлено ли по делу: привлечение связанного гранта может быть продолжено?",
+      "kind": "truth",
+      "predicate": "grant_may_be_attracted",
+      "parameters": [
+        {
+          "name": "g",
+          "type": "Grant",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(grant_may_be_attracted(<g>));",
+      "tests": [
+        "CATALOG-GRANTATTRACTIONNEEDSEXPEDIENCY"
+      ],
+      "source_units": [
+        "BC_ART165"
+      ]
+    },
+    {
+      "id": "guarantee-must-be-performed",
+      "task": "bc-art144-2",
+      "question": "Установлено ли по делу: государственная гарантия подлежит исполнению?",
+      "kind": "truth",
+      "predicate": "guarantee_must_be_performed",
+      "parameters": [
+        {
+          "name": "g",
+          "type": "Guarantee",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(guarantee_must_be_performed(<g>));",
+      "tests": [
+        "CATALOG-ENTREPRENEURSHIPGUARANTEEMUSTBEPERFORMED"
+      ],
+      "source_units": [
+        "BC_ART144_2"
+      ]
+    },
+    {
+      "id": "inter-budget-relation-forbidden",
+      "task": "bc-art76",
+      "question": "Установлено ли по делу: межбюджетные взаимоотношения между названными бюджетами не допускаются?",
+      "kind": "truth",
+      "predicate": "inter_budget_relation_forbidden",
+      "parameters": [
+        {
+          "name": "a",
+          "type": "Budget",
+          "role": "bound"
+        },
+        {
+          "name": "b",
+          "type": "Budget",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(inter_budget_relation_forbidden(<a>, <b>));",
+      "tests": [
+        "CATALOG-NOREGIONALTORURALRELATION"
+      ],
+      "source_units": [
+        "BC_ART76"
+      ]
+    },
+    {
+      "id": "interim-period-lawful",
+      "task": "bc-art132",
+      "question": "Установлено ли по делу: установленная периодичность промежуточной финансовой отчётности отвечает нижней границе настоящего Кодекса?",
+      "kind": "truth",
+      "predicate": "interim_period_lawful",
+      "parameters": [
+        {
+          "name": "b",
+          "type": "Body",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(interim_period_lawful(<b>));",
+      "tests": [
+        "CATALOG-INTERIMREPORTINGPERIODLAWFUL"
+      ],
+      "source_units": [
+        "BC_ART132"
+      ]
+    },
+    {
+      "id": "interim-period-unlawful",
+      "task": "bc-art132",
+      "question": "Установлено ли по делу: установленная периодичность промежуточной финансовой отчётности реже одного раза в год и настоящему Кодексу не отвечает?",
+      "kind": "truth",
+      "predicate": "interim_period_unlawful",
+      "parameters": [
+        {
+          "name": "b",
+          "type": "Body",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(interim_period_unlawful(<b>));",
+      "tests": [
+        "CATALOG-INTERIMREPORTINGPERIODUNLAWFUL"
+      ],
+      "source_units": [
+        "BC_ART132"
+      ]
+    },
+    {
+      "id": "liability-arises",
+      "task": "bc-art171",
+      "question": "Установлено ли по делу: наступает ответственность, установленная законами Республики Казахстан?",
+      "kind": "truth",
+      "predicate": "liability_arises",
+      "parameters": [
+        {
+          "name": "b",
+          "type": "Body",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(liability_arises(<b>));",
+      "tests": [
+        "CATALOG-LIABILITYFORBUDGETLAWVIOLATION"
+      ],
+      "source_units": [
+        "BC_ART171"
+      ]
+    },
+    {
+      "id": "liable-under-other-laws",
+      "task": "bc-art41",
+      "question": "Установлено ли по делу: лицо несёт ответственность, установленную законами Республики Казахстан, по названному основанию?",
+      "kind": "truth",
+      "predicate": "liable_under_other_laws",
+      "parameters": [
+        {
+          "name": "b",
+          "type": "Body",
+          "role": "bound"
+        },
+        {
+          "name": "g",
+          "type": "Ground",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(liable_under_other_laws(<b>, <g>));",
+      "tests": [
+        "CATALOG-LIABILITYONLISTEDGROUND"
+      ],
+      "source_units": [
+        "BC_ART41"
+      ]
+    },
+    {
+      "id": "local-investment-project",
+      "task": "bc-art148",
+      "question": "Установлено ли по делу: государственный инвестиционный проект относится к местным?",
+      "kind": "truth",
+      "predicate": "local_investment_project",
+      "parameters": [
+        {
+          "name": "project",
+          "type": "InvestmentProject",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(local_investment_project(<project>));",
+      "tests": [
+        "CATALOG-LOCALBYBENEFICIARIES"
+      ],
+      "source_units": [
+        "BC_ART148"
+      ]
+    },
+    {
+      "id": "pilot-criteria-met",
+      "task": "bc-art17",
+      "question": "Установлено ли по делу: пилотный проект отвечает критериям пункта 2 статьи 17 настоящего Кодекса?",
+      "kind": "truth",
+      "predicate": "pilot_criteria_met",
+      "parameters": [
+        {
+          "name": "p",
+          "type": "BudgetProgramme",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(pilot_criteria_met(<p>));",
+      "tests": [
+        "CATALOG-PILOTCRITERIAMET"
+      ],
+      "source_units": [
+        "BC_ART17"
+      ]
+    },
+    {
+      "id": "placement-forbidden",
+      "task": "bc-art113",
+      "question": "Установлено ли по делу: размещение бюджетных денег на банковских счетах не допускается?",
+      "kind": "truth",
+      "predicate": "placement_forbidden",
+      "parameters": [
+        {
+          "name": "b",
+          "type": "Body",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(placement_forbidden(<b>));",
+      "tests": [
+        "CATALOG-BUDGETMONEYPLACEMENTFORBIDDEN"
+      ],
+      "source_units": [
+        "BC_ART113"
+      ]
+    },
+    {
+      "id": "publication-owed",
+      "task": "bc-art40",
+      "question": "Установлено ли по делу: документ бюджетного процесса подлежит публикации?",
+      "kind": "truth",
+      "predicate": "publication_owed",
+      "parameters": [
+        {
+          "name": "d",
+          "type": "ProcessDocument",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(publication_owed(<d>));",
+      "tests": [
+        "CATALOG-PUBLICATIONOWEDPROJECTION"
+      ],
+      "source_units": [
+        "BC_ART40"
+      ]
+    },
+    {
+      "id": "purpose-change-forbidden",
+      "task": "bc-art82",
+      "question": "Установлено ли по делу: целевое назначение объёмов трансфертов изменению не подлежит?",
+      "kind": "truth",
+      "predicate": "purpose_change_forbidden",
+      "parameters": [
+        {
+          "name": "t",
+          "type": "Transfer",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(purpose_change_forbidden(<t>));",
+      "tests": [
+        "CATALOG-TRANSFERPURPOSEUNCHANGEABLE"
+      ],
+      "source_units": [
+        "BC_ART82"
+      ]
+    },
+    {
+      "id": "registration-suspended",
+      "task": "bc-art111",
+      "question": "Установлено ли по делу: приём документов для регистрации гражданско-правовых сделок и проведения платежей приостанавливается?",
+      "kind": "truth",
+      "predicate": "registration_suspended",
+      "parameters": [
+        {
+          "name": "i",
+          "type": "Institution",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(registration_suspended(<i>));",
+      "tests": [
+        "CATALOG-SUSPENDBYARRESTORCOURTACT"
+      ],
+      "source_units": [
+        "BC_ART111"
+      ]
+    },
+    {
+      "id": "report-quality-met",
+      "task": "bc-art117",
+      "question": "Установлено ли по делу: бюджетная отчётность отвечает качественным характеристикам статьи 117?",
+      "kind": "truth",
+      "predicate": "report_quality_met",
+      "parameters": [
+        {
+          "name": "r",
+          "type": "Report",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(report_quality_met(<r>));",
+      "tests": [
+        "CATALOG-REPORTQUALITYMET"
+      ],
+      "source_units": [
+        "BC_ART117"
+      ]
+    },
+    {
+      "id": "republican-investment-project",
+      "task": "bc-art148",
+      "question": "Установлено ли по делу: государственный инвестиционный проект относится к республиканским?",
+      "kind": "truth",
+      "predicate": "republican_investment_project",
+      "parameters": [
+        {
+          "name": "project",
+          "type": "InvestmentProject",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(republican_investment_project(<project>));",
+      "tests": [
+        "CATALOG-REPUBLICANBYBENEFICIARIES"
+      ],
+      "source_units": [
+        "BC_ART148"
+      ]
+    },
+    {
+      "id": "reserve-size-assessed",
+      "task": "bc-art19",
+      "question": "Установлено ли по делу: объём резерва получил оценку по границам настоящего Кодекса?",
+      "kind": "truth",
+      "predicate": "reserve_size_assessed",
+      "parameters": [
+        {
+          "name": "r",
+          "type": "Reserve",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(reserve_size_assessed(<r>));",
+      "tests": [
+        "CATALOG-RESERVEASSESSEDBYCONFORMANCE"
+      ],
+      "source_units": [
+        "BC_ART19"
+      ]
+    },
+    {
+      "id": "return-timely",
+      "task": "bc-art115",
+      "question": "Установлено ли по делу: возврат средств произведён в срок?",
+      "kind": "truth",
+      "predicate": "return_timely",
+      "parameters": [
+        {
+          "name": "t",
+          "type": "Transfer",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(return_timely(<t>));",
+      "tests": [
+        "CATALOG-MISUSEDFUNDSRETURNTIMELY"
+      ],
+      "source_units": [
+        "BC_ART115"
+      ]
+    },
+    {
+      "id": "statements-on-special-basis",
+      "task": "bc-art129",
+      "question": "Установлено ли по делу: финансовая отчётность составляется по правилам, отличным от применяемых при непрерывности деятельности?",
+      "kind": "truth",
+      "predicate": "statements_on_special_basis",
+      "parameters": [
+        {
+          "name": "r",
+          "type": "Report",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(statements_on_special_basis(<r>));",
+      "tests": [
+        "CATALOG-STATEMENTSONSPECIALBASIS"
+      ],
+      "source_units": [
+        "BC_ART129"
+      ]
+    },
+    {
+      "id": "poziciya-adoptcostreimbursementact",
+      "task": "bc-art58",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 58 пункт 5. Принятие правовых актов в целях финансирования мероприятий и проектов с условием возмещения затрат организациям нефтяного сектора запрещается»?",
+      "kind": "positions",
+      "norms": [
+        "AdoptCostReimbursementAct"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(AdoptCostReimbursementAct, <статус>)",
+      "tests": [
+        "CATALOG-NOCOSTREIMBURSEMENTFOROILSECTOR"
+      ],
+      "source_units": [
+        "BC_ART58"
+      ]
+    },
+    {
+      "id": "poziciya-approveanalyticalbudget",
+      "task": "bc-art8",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 8 пункт 1. Утверждение бюджета, утверждению не подлежащего, настоящему Кодексу не отвечает»?",
+      "kind": "positions",
+      "norms": [
+        "ApproveAnalyticalBudget"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ApproveAnalyticalBudget, <статус>)",
+      "tests": [
+        "CATALOG-NOAPPROVALOFANALYTICALBUDGET"
+      ],
+      "source_units": [
+        "BC_ART8"
+      ]
+    },
+    {
+      "id": "poziciya-approvecentralsectoralproposal",
+      "task": "bc-art2",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 2 пункт 3 абзац четвёртый. Местным уполномоченным отраслевым органам запрещается согласовывать предложения центральных отраслевых органов об изменении расходов бюджета без согласования с местным уполномоченным органом по государственному планированию»?",
+      "kind": "positions",
+      "norms": [
+        "ApproveCentralSectoralProposal"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ApproveCentralSectoralProposal, <статус>)",
+      "tests": [
+        "CATALOG-PART-NOLOCALAPPROVALWITHOUTPLANNINGBODY"
+      ],
+      "source_units": [
+        "BC_ART2"
+      ]
+    },
+    {
+      "id": "poziciya-assumethirdpartyloanobligation",
+      "task": "bc-art138",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 138 пункт 4. Не допускается принятие местными исполнительными органами обязательств по займам за третьих лиц в любом виде и любой форме»?",
+      "kind": "positions",
+      "norms": [
+        "AssumeThirdPartyLoanObligation"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(AssumeThirdPartyLoanObligation, <статус>)",
+      "tests": [
+        "CATALOG-NOTHIRDPARTYLOANOBLIGATION"
+      ],
+      "source_units": [
+        "BC_ART138"
+      ]
+    },
+    {
+      "id": "poziciya-borrowexternallyoutsidelist",
+      "task": "bc-art146",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 146. Привлечение внешних займов субъектами квазигосударственного сектора, не включёнными в перечень, предусмотренный подпунктом 2) настоящего пункта, не допускается»?",
+      "kind": "positions",
+      "norms": [
+        "BorrowExternallyOutsideList"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(BorrowExternallyOutsideList, <статус>)",
+      "tests": [
+        "CATALOG-PART-NOEXTERNALBORROWINGOUTSIDELIST"
+      ],
+      "source_units": [
+        "BC_ART146"
+      ]
+    },
+    {
+      "id": "poziciya-carryovergovernmentreserve",
+      "task": "bc-art18",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 18 пункт 5. Не допускается доиспользование средств резерва Правительства Республики Казахстан в следующем финансовом году»?",
+      "kind": "positions",
+      "norms": [
+        "CarryOverGovernmentReserve"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(CarryOverGovernmentReserve, <статус>)",
+      "tests": [
+        "CATALOG-NOGOVERNMENTRESERVECARRYOVER"
+      ],
+      "source_units": [
+        "BC_ART18"
+      ]
+    },
+    {
+      "id": "poziciya-correctprojectinfourthquarter",
+      "task": "bc-art150",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 150. Не допускается корректировка в четвёртом квартале текущего финансового года государственных инвестиционных проектов, предусматривающих снижение показателей конечных результатов»?",
+      "kind": "positions",
+      "norms": [
+        "CorrectProjectInFourthQuarter"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(CorrectProjectInFourthQuarter, <статус>)",
+      "tests": [
+        "CATALOG-NOFOURTHQUARTERCORRECTION"
+      ],
+      "source_units": [
+        "BC_ART150"
+      ]
+    },
+    {
+      "id": "poziciya-declaregrantimports",
+      "task": "bc-art166",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 166 пункт 2 подпункт 4). Получатели связанных грантов обязаны своевременно осуществить таможенное декларирование при импорте товаров, закупаемых за счёт грантов»?",
+      "kind": "positions",
+      "norms": [
+        "DeclareGrantImports"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(DeclareGrantImports, <статус>)",
+      "tests": [
+        "CATALOG-GRANTCUSTOMSDUTY"
+      ],
+      "source_units": [
+        "BC_ART166"
+      ]
+    },
+    {
+      "id": "poziciya-depositreturnablebudgetfunds",
+      "task": "bc-art154",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 154 пункт 3 абзац третий. Запрещается размещать на депозитах и в других инструментах в банках второго уровня бюджетные средства, выданные на возвратной основе заёмщикам из республиканского и местного бюджетов»?",
+      "kind": "positions",
+      "norms": [
+        "DepositReturnableBudgetFunds"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(DepositReturnableBudgetFunds, <статус>)",
+      "tests": [
+        "CATALOG-NODEPOSITOFRETURNABLEFUNDS"
+      ],
+      "source_units": [
+        "BC_ART154"
+      ]
+    },
+    {
+      "id": "poziciya-developdesigndocsoutsidebudget",
+      "task": "bc-art149",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 149 пункт 6. Не допускается разработка проектно-сметной документации по государственным инвестиционным проектам, не включённым в республиканский или местный бюджет»?",
+      "kind": "positions",
+      "norms": [
+        "DevelopDesignDocsOutsideBudget"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(DevelopDesignDocsOutsideBudget, <статус>)",
+      "tests": [
+        "CATALOG-NODESIGNDOCSOUTSIDEBUDGET"
+      ],
+      "source_units": [
+        "BC_ART149"
+      ]
+    },
+    {
+      "id": "poziciya-developdesigndocsoutsideplan",
+      "task": "bc-art149",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 149 пункт 6. Не допускается разработка проектно-сметной документации по государственным инвестиционным проектам, не включённым в инвестиционный план»?",
+      "kind": "positions",
+      "norms": [
+        "DevelopDesignDocsOutsidePlan"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(DevelopDesignDocsOutsidePlan, <статус>)",
+      "tests": [
+        "CATALOG-NODESIGNDOCSOUTSIDEINVESTMENTPLAN"
+      ],
+      "source_units": [
+        "BC_ART149"
+      ]
+    },
+    {
+      "id": "poziciya-disposesharesbelowacquisition",
+      "task": "bc-art17-1",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 17-1 пункт 2. Не допускается отчуждение Правительством Республики Казахстан либо национальным управляющим холдингом акций системно значимого банка по стоимости ниже их приобретения с учётом целевых ориентиров по инфляции»?",
+      "kind": "positions",
+      "norms": [
+        "DisposeSharesBelowAcquisition"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(DisposeSharesBelowAcquisition, <статус>)",
+      "tests": [
+        "CATALOG-NODISPOSALBELOWACQUISITION"
+      ],
+      "source_units": [
+        "BC_ART17_1"
+      ]
+    },
+    {
+      "id": "poziciya-followreportingregulations",
+      "task": "bc-art118",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 118 пункт 5. Участники бюджетного процесса обязаны руководствоваться нормативными правовыми актами по составлению и представлению бюджетной отчётности»?",
+      "kind": "positions",
+      "norms": [
+        "FollowReportingRegulations"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(FollowReportingRegulations, <статус>)",
+      "tests": [
+        "CATALOG-BUDGETREPORTREGULATIONDUTY"
+      ],
+      "source_units": [
+        "BC_ART118"
+      ]
+    },
+    {
+      "id": "poziciya-fundexpenditurefromanotherlevel",
+      "task": "bc-art29",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 29 пункт 3. Не допускается финансирование расходов определённого уровня бюджета из других уровней бюджетов»?",
+      "kind": "positions",
+      "norms": [
+        "FundExpenditureFromAnotherLevel"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(FundExpenditureFromAnotherLevel, <статус>)",
+      "tests": [
+        "CATALOG-NOCROSSLEVELFUNDING"
+      ],
+      "source_units": [
+        "BC_ART29"
+      ]
+    },
+    {
+      "id": "poziciya-fundspecialfundexpenditurefromurgentreserve",
+      "task": "bc-art20",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 20 пункт 7 абзац третий. Не допускается финансирование из резерва на неотложные затраты расходов, финансируемых за счёт Специального государственного фонда»?",
+      "kind": "positions",
+      "norms": [
+        "FundSpecialFundExpenditureFromUrgentReserve"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(FundSpecialFundExpenditureFromUrgentReserve, <статус>)",
+      "tests": [
+        "CATALOG-NOURGENTRESERVEFORSPECIALFUNDEXPENDITURE"
+      ],
+      "source_units": [
+        "BC_ART20"
+      ]
+    },
+    {
+      "id": "poziciya-giveadvisoryhelp",
+      "task": "bc-art44",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 44 пункт 3. В случае выявления нарушений требований бюджетного законодательства службы внутреннего аудита осуществляют консультативную помощь в устранении нарушений и приведении в соответствие с бюджетным законодательством Республики Казахстан»?",
+      "kind": "positions",
+      "norms": [
+        "GiveAdvisoryHelp"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(GiveAdvisoryHelp, <статус>)",
+      "tests": [
+        "CATALOG-ADVISORYHELPDUTY"
+      ],
+      "source_units": [
+        "BC_ART44"
+      ]
+    },
+    {
+      "id": "poziciya-grantcreditforforbiddenpurpose",
+      "task": "bc-art154",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 154 пункт 3. Бюджетные кредиты не предоставляются на цели участия в уставных капиталах юридических лиц, покрытие убытков хозяйственной деятельности заёмщиков, оплату услуг поверенным (агентам)»?",
+      "kind": "positions",
+      "norms": [
+        "GrantCreditForForbiddenPurpose"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(GrantCreditForForbiddenPurpose, <статус>)",
+      "tests": [
+        "CATALOG-NOCREDITFORFORBIDDENPURPOSE"
+      ],
+      "source_units": [
+        "BC_ART154"
+      ]
+    },
+    {
+      "id": "poziciya-grantstateguarantee",
+      "task": "bc-art141",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 141 пункт 6. Исключительным правом предоставления государственных гарантий от имени Республики Казахстан по займам обладает Правительство Республики Казахстан»?",
+      "kind": "positions",
+      "norms": [
+        "GrantStateGuarantee"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(GrantStateGuarantee, <статус>)",
+      "tests": [
+        "CATALOG-EXCLUSIVEGUARANTEEPOWER"
+      ],
+      "source_units": [
+        "BC_ART141"
+      ]
+    },
+    {
+      "id": "poziciya-includeobligationinannualreport",
+      "task": "bc-art55",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 55 пункт 1 абзац третий. Уполномоченные органы обеспечивают включение результатов мониторинга и отчётности в годовой отчёт об исполнении соответствующего бюджета»?",
+      "kind": "positions",
+      "norms": [
+        "IncludeObligationInAnnualReport"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(IncludeObligationInAnnualReport, <статус>)",
+      "tests": [
+        "CATALOG-INCLUDEOBLIGATIONINANNUALREPORTDUTY"
+      ],
+      "source_units": [
+        "BC_ART55"
+      ]
+    },
+    {
+      "id": "poziciya-interfereinbudgetprocess",
+      "task": "bc-art76",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 76 пункт 4. Не допускается вмешательство Правительства и центральных государственных органов в бюджетный процесс нижестоящего уровня, за исключением случаев, предусмотренных настоящим Кодексом»?",
+      "kind": "positions",
+      "norms": [
+        "InterfereInBudgetProcess"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(InterfereInBudgetProcess, <статус>)",
+      "tests": [
+        "CATALOG-NOINTERFERENCEINLOWERBUDGETPROCESS"
+      ],
+      "source_units": [
+        "BC_ART76"
+      ]
+    },
+    {
+      "id": "poziciya-introduceduplicateprogramme",
+      "task": "bc-art14",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 14. Не допускается введение новой бюджетной программы, направленной на достижение цели, уже закреплённой за другой бюджетной программой»?",
+      "kind": "positions",
+      "norms": [
+        "IntroduceDuplicateProgramme"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(IntroduceDuplicateProgramme, <статус>)",
+      "tests": [
+        "CATALOG-NODUPLICATEPROGRAMME"
+      ],
+      "source_units": [
+        "BC_ART14"
+      ]
+    },
+    {
+      "id": "poziciya-issuecollectionorderontreasuryaccount",
+      "task": "bc-art112",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 112 пункт 2. Не допускается выставление инкассовых распоряжений на единый казначейский счёт и счета в иностранной валюте, открытые центральному уполномоченному органу по исполнению бюджета, специальные счета внешних займов и связанных грантов»?",
+      "kind": "positions",
+      "norms": [
+        "IssueCollectionOrderOnTreasuryAccount"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(IssueCollectionOrderOnTreasuryAccount, <статус>)",
+      "tests": [
+        "CATALOG-NOCOLLECTIONORDERONTREASURYACCOUNT"
+      ],
+      "source_units": [
+        "BC_ART112"
+      ]
+    },
+    {
+      "id": "poziciya-makeunregisteredpayment",
+      "task": "bc-art110",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 110 пункт 4. Не допускается проведение платежей и переводов денег государственных учреждений без зарегистрированной гражданско-правовой сделки по спецификам, для которых регистрация обязательна»?",
+      "kind": "positions",
+      "norms": [
+        "MakeUnregisteredPayment"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(MakeUnregisteredPayment, <статус>)",
+      "tests": [
+        "CATALOG-PART-NOPAYMENTWITHOUTREGISTEREDTRANSACTION"
+      ],
+      "source_units": [
+        "BC_ART110"
+      ]
+    },
+    {
+      "id": "poziciya-misuseguaranteedloan",
+      "task": "bc-art141",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 141 пункт 9. Запрещается использование средств гарантированного государством займа на цели, не предусмотренные условиями займа, а также на кредитование»?",
+      "kind": "positions",
+      "norms": [
+        "MisuseGuaranteedLoan"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(MisuseGuaranteedLoan, <статус>)",
+      "tests": [
+        "CATALOG-NOMISUSEOFGUARANTEEDLOAN"
+      ],
+      "source_units": [
+        "BC_ART141"
+      ]
+    },
+    {
+      "id": "poziciya-monitorobligation",
+      "task": "bc-art55",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 55 пункт 1 абзац второй. Уполномоченные органы обеспечивают мониторинг посредством формирования отчётности реализации запланированных мероприятий с указанием сумм»?",
+      "kind": "positions",
+      "norms": [
+        "MonitorObligation"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(MonitorObligation, <статус>)",
+      "tests": [
+        "CATALOG-MONITOREXTRABUDGETARYOBLIGATIONDUTY"
+      ],
+      "source_units": [
+        "BC_ART55"
+      ]
+    },
+    {
+      "id": "poziciya-obtainaccountingcertification",
+      "task": "bc-art130",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 130 пункт 6. В целях достоверного ведения бухгалтерского учёта и составления финансовой отчётности обязательной сертификации подлежат должностные лица, уполномоченные на их ведение»?",
+      "kind": "positions",
+      "norms": [
+        "ObtainAccountingCertification"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ObtainAccountingCertification, <статус>)",
+      "tests": [
+        "CATALOG-MANDATORYCERTIFICATIONDUTY"
+      ],
+      "source_units": [
+        "BC_ART130"
+      ]
+    },
+    {
+      "id": "poziciya-openaccountoutsidelist",
+      "task": "bc-art106",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 106. Открытие государственными учреждениями счетов в банках второго уровня, не предусмотренных частью первой пункта, в том числе на имя третьих лиц, не допускается»?",
+      "kind": "positions",
+      "norms": [
+        "OpenAccountOutsideList"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(OpenAccountOutsideList, <статус>)",
+      "tests": [
+        "CATALOG-NOACCOUNTOUTSIDELIST"
+      ],
+      "source_units": [
+        "BC_ART106"
+      ]
+    },
+    {
+      "id": "poziciya-participateinbankresolution",
+      "task": "bc-art17-1",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 17-1 пункт 1. Правительство Республики Казахстан вправе участвовать в урегулировании системно значимых банков в соответствии с банковским законодательством Республики Казахстан»?",
+      "kind": "positions",
+      "norms": [
+        "ParticipateInBankResolution"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ParticipateInBankResolution, <статус>)",
+      "tests": [
+        "CATALOG-SYSTEMICBANKRESOLUTIONLIBERTY"
+      ],
+      "source_units": [
+        "BC_ART17_1"
+      ]
+    },
+    {
+      "id": "poziciya-performgrantobligations",
+      "task": "bc-art166",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 166 пункт 2 подпункт 1). Получатели связанных грантов обязаны своевременно исполнять принятые на себя обязательства, предусмотренные соглашением о связанном гранте»?",
+      "kind": "positions",
+      "norms": [
+        "PerformGrantObligations"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(PerformGrantObligations, <статус>)",
+      "tests": [
+        "CATALOG-GRANTPERFORMOBLIGATIONSDUTY"
+      ],
+      "source_units": [
+        "BC_ART166"
+      ]
+    },
+    {
+      "id": "poziciya-placebudgetfundsondeposit",
+      "task": "bc-art5",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 5 пункт 4. Получателям бюджетных средств запрещается размещать бюджетные средства на депозитах и в иных финансовых инструментах ради получения вознаграждения»?",
+      "kind": "positions",
+      "norms": [
+        "PlaceBudgetFundsOnDeposit"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(PlaceBudgetFundsOnDeposit, <статус>)",
+      "tests": [
+        "CATALOG-NODEPOSITPLACEMENTOFBUDGETFUNDS"
+      ],
+      "source_units": [
+        "BC_ART5"
+      ]
+    },
+    {
+      "id": "poziciya-prepareconsolidatedreport",
+      "task": "bc-art133",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 133 пункт 2. Государственные учреждения и уполномоченные органы обязаны составлять годовую консолидированную финансовую отчётность в порядке, установленном центральным уполномоченным органом по исполнению бюджета»?",
+      "kind": "positions",
+      "norms": [
+        "PrepareConsolidatedReport"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(PrepareConsolidatedReport, <статус>)",
+      "tests": [
+        "CATALOG-CONSOLIDATEDREPORTDUTY"
+      ],
+      "source_units": [
+        "BC_ART133"
+      ]
+    },
+    {
+      "id": "poziciya-proposeexpenditureincreaseoutsideplanning",
+      "task": "bc-art2",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 2 пункт 3 абзац второй. Получателям бюджетных средств запрещается вносить предложения об увеличении расходов бюджета вне процесса планирования бюджета»?",
+      "kind": "positions",
+      "norms": [
+        "ProposeExpenditureIncreaseOutsidePlanning"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ProposeExpenditureIncreaseOutsidePlanning, <статус>)",
+      "tests": [
+        "CATALOG-NOEXPENDITUREINCREASEOUTSIDEPLANNING"
+      ],
+      "source_units": [
+        "BC_ART2"
+      ]
+    },
+    {
+      "id": "poziciya-proposetaskmechanismchange",
+      "task": "bc-art2",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 2 пункт 3 абзац третий. Получателям бюджетных средств запрещается вносить предложения об изменении механизмов выполнения задач бюджетного законодательства без согласования с уполномоченными органами»?",
+      "kind": "positions",
+      "norms": [
+        "ProposeTaskMechanismChange"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ProposeTaskMechanismChange, <статус>)",
+      "tests": [
+        "CATALOG-PART-NOTASKMECHANISMCHANGEWITHOUTAGREEMENT"
+      ],
+      "source_units": [
+        "BC_ART2"
+      ]
+    },
+    {
+      "id": "poziciya-publishobligationresults",
+      "task": "bc-art55",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 55 пункт 1 абзац четвёртый. Уполномоченные органы обеспечивают публикацию результатов мониторинга и отчётности на официальном интернет-ресурсе»?",
+      "kind": "positions",
+      "norms": [
+        "PublishObligationResults"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(PublishObligationResults, <статус>)",
+      "tests": [
+        "CATALOG-PUBLISHOBLIGATIONRESULTSDUTY"
+      ],
+      "source_units": [
+        "BC_ART55"
+      ]
+    },
+    {
+      "id": "poziciya-publishprocessdocument",
+      "task": "bc-art40",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 40. Участник бюджетного процесса обеспечивает публикацию отнесённых к нему документов бюджетного процесса»?",
+      "kind": "positions",
+      "norms": [
+        "PublishProcessDocument"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(PublishProcessDocument, <статус>)",
+      "tests": [
+        "CATALOG-PUBLICATIONDUTY"
+      ],
+      "source_units": [
+        "BC_ART40"
+      ]
+    },
+    {
+      "id": "poziciya-putgrantassetsonbalance",
+      "task": "bc-art166",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 166 пункт 2 подпункт 3). Получатели связанных грантов обязаны обеспечить постановку на баланс оборудования и материалов, приобретённых за счёт связанных грантов»?",
+      "kind": "positions",
+      "norms": [
+        "PutGrantAssetsOnBalance"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(PutGrantAssetsOnBalance, <статус>)",
+      "tests": [
+        "CATALOG-GRANTASSETSONBALANCEDUTY"
+      ],
+      "source_units": [
+        "BC_ART166"
+      ]
+    },
+    {
+      "id": "poziciya-redistributeloanorgrantfunds",
+      "task": "bc-art98",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 98 пункт 2 подпункт 2) абзац четвёртый. Не допускается перераспределение средств, направленных на использование займов и грантов»?",
+      "kind": "positions",
+      "norms": [
+        "RedistributeLoanOrGrantFunds"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(RedistributeLoanOrGrantFunds, <статус>)",
+      "tests": [
+        "CATALOG-NOREDISTRIBUTIONOFLOANORGRANTFUNDS"
+      ],
+      "source_units": [
+        "BC_ART98"
+      ]
+    },
+    {
+      "id": "poziciya-reducedevelopmenttransfer",
+      "task": "bc-art83",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 83 пункт 5. Не допускается уменьшение объёмов целевых трансфертов на развитие в связи с дополнительно полученными нижестоящими бюджетами доходами»?",
+      "kind": "positions",
+      "norms": [
+        "ReduceDevelopmentTransfer"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ReduceDevelopmentTransfer, <статус>)",
+      "tests": [
+        "CATALOG-NODEVELOPMENTTRANSFERREDUCTION"
+      ],
+      "source_units": [
+        "BC_ART83"
+      ]
+    },
+    {
+      "id": "poziciya-reduceprojectparameters",
+      "task": "bc-art150",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 150. Не допускается уменьшение сумм утверждённых (уточнённых) параметров местных государственных инвестиционных проектов, если такое уменьшение предполагает превышение тридцатипроцентного значения авансовой оплаты от суммы договора»?",
+      "kind": "positions",
+      "norms": [
+        "ReduceProjectParameters"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ReduceProjectParameters, <статус>)",
+      "tests": [
+        "CATALOG-NOREDUCTIONRAISINGADVANCESHARE"
+      ],
+      "source_units": [
+        "BC_ART150"
+      ]
+    },
+    {
+      "id": "poziciya-refuseloanobligation",
+      "task": "bc-art136",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 136 пункт 5. Не допускается односторонний отказ от исполнения обязательства по договору займа»?",
+      "kind": "positions",
+      "norms": [
+        "RefuseLoanObligation"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(RefuseLoanObligation, <статус>)",
+      "tests": [
+        "CATALOG-NOUNILATERALREFUSAL"
+      ],
+      "source_units": [
+        "BC_ART136"
+      ]
+    },
+    {
+      "id": "poziciya-registerbudgetcredit",
+      "task": "bc-art162",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 162 пункт 1. Бюджетные кредиты подлежат обязательной регистрации, учёту и мониторингу в порядке, установленном центральным уполномоченным органом по исполнению бюджета»?",
+      "kind": "positions",
+      "norms": [
+        "RegisterBudgetCredit"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(RegisterBudgetCredit, <статус>)",
+      "tests": [
+        "CATALOG-REGISTERCREDITDUTY"
+      ],
+      "source_units": [
+        "BC_ART162"
+      ]
+    },
+    {
+      "id": "poziciya-registersurety",
+      "task": "bc-art145",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 145 пункт 4. Предоставляемые поручительства государства и займы под поручительство государства подлежат регистрации и учёту в государственном казначействе»?",
+      "kind": "positions",
+      "norms": [
+        "RegisterSurety"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(RegisterSurety, <статус>)",
+      "tests": [
+        "CATALOG-REGISTERSURETYDUTY"
+      ],
+      "source_units": [
+        "BC_ART145"
+      ]
+    },
+    {
+      "id": "poziciya-reportgrantusage",
+      "task": "bc-art166",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 166 пункт 2 подпункт 5). Получатели связанных грантов обязаны ежемесячно предоставлять в уполномоченный орган по исполнению бюджета информацию об использовании связанных грантов»?",
+      "kind": "positions",
+      "norms": [
+        "ReportGrantUsage"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ReportGrantUsage, <статус>)",
+      "tests": [
+        "CATALOG-GRANTREPORTINGDUTY"
+      ],
+      "source_units": [
+        "BC_ART166"
+      ]
+    },
+    {
+      "id": "poziciya-returnguaranteefunds",
+      "task": "bc-art144",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 144 пункт 4 и статья 144-2 пункт 4. Средства, выделенные на исполнение обязательств по государственной гарантии, подлежат возврату в республиканский бюджет»?",
+      "kind": "positions",
+      "norms": [
+        "ReturnGuaranteeFunds"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(ReturnGuaranteeFunds, <статус>)",
+      "tests": [
+        "CATALOG-RETURNGUARANTEEFUNDSDUTY"
+      ],
+      "source_units": [
+        "BC_ART144"
+      ]
+    },
+    {
+      "id": "poziciya-runblockbudgetingpilot",
+      "task": "bc-art170",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 170. В целях совершенствования бюджетного законодательства Правительство Республики Казахстан вправе осуществлять реализацию пилотного проекта, предусматривающего блочное бюджетирование»?",
+      "kind": "positions",
+      "norms": [
+        "RunBlockBudgetingPilot"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(RunBlockBudgetingPilot, <статус>)",
+      "tests": [
+        "CATALOG-BLOCKBUDGETINGPILOTLIBERTY"
+      ],
+      "source_units": [
+        "BC_ART170"
+      ]
+    },
+    {
+      "id": "poziciya-setexpenditureleveloutsidecode",
+      "task": "bc-art29",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 29 пункт 2. Не допускается установление в иных законах Республики Казахстан, кроме настоящего Кодекса, уровня бюджета, за счёт которого финансируются расходы»?",
+      "kind": "positions",
+      "norms": [
+        "SetExpenditureLevelOutsideCode"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(SetExpenditureLevelOutsideCode, <статус>)",
+      "tests": [
+        "CATALOG-ONLYCODESETSEXPENDITURELEVEL"
+      ],
+      "source_units": [
+        "BC_ART29"
+      ]
+    },
+    {
+      "id": "poziciya-setrevenueleveloutsidecode",
+      "task": "bc-art22",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 22 пункт 2. Не допускается установление в иных законах Республики Казахстан, кроме настоящего Кодекса, уровня бюджета, в который зачисляются поступления»?",
+      "kind": "positions",
+      "norms": [
+        "SetRevenueLevelOutsideCode"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(SetRevenueLevelOutsideCode, <статус>)",
+      "tests": [
+        "CATALOG-ONLYCODESETSREVENUELEVEL"
+      ],
+      "source_units": [
+        "BC_ART22"
+      ]
+    },
+    {
+      "id": "poziciya-spendfordesignatedpurpose",
+      "task": "bc-art5",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 5 пункт 4. Получатели бюджетных средств обязаны расходовать бюджетные средства по целевому назначению»?",
+      "kind": "positions",
+      "norms": [
+        "SpendForDesignatedPurpose"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(SpendForDesignatedPurpose, <статус>)",
+      "tests": [
+        "CATALOG-SPENDFORDESIGNATEDPURPOSEDUTY"
+      ],
+      "source_units": [
+        "BC_ART5"
+      ]
+    },
+    {
+      "id": "poziciya-submitdraftwithoutconclusion",
+      "task": "bc-art73",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 73 пункт 1. Проекты законов, предусматривающие сокращение государственных доходов или увеличение государственных расходов, могут быть внесены в Курултай Республики Казахстан лишь при наличии положительного заключения Правительства Республики Казахстан»?",
+      "kind": "positions",
+      "norms": [
+        "SubmitDraftWithoutConclusion"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(SubmitDraftWithoutConclusion, <статус>)",
+      "tests": [
+        "CATALOG-PART-NOSUBMISSIONWITHOUTGOVERNMENTCONCLUSION"
+      ],
+      "source_units": [
+        "BC_ART73"
+      ]
+    },
+    {
+      "id": "poziciya-submitlocaldraftwithoutconclusion",
+      "task": "bc-art73",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 73 пункт 3. Проекты решений местных представительных органов, предусматривающие сокращение доходов местных бюджетов или увеличение расходов местных бюджетов, могут быть внесены на рассмотрение маслихатов лишь при наличии положительного заключения акима»?",
+      "kind": "positions",
+      "norms": [
+        "SubmitLocalDraftWithoutConclusion"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(SubmitLocalDraftWithoutConclusion, <статус>)",
+      "tests": [
+        "CATALOG-PART-NOLOCALSUBMISSIONWITHOUTAKIMCONCLUSION"
+      ],
+      "source_units": [
+        "BC_ART73"
+      ]
+    },
+    {
+      "id": "poziciya-suspendprogrammeoperations",
+      "task": "bc-art94",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 94 пункт 3. Уполномоченный орган по исполнению бюджета вправе приостановить операции по бюджетным программам, по которым принято решение о сокращении бюджетных средств»?",
+      "kind": "positions",
+      "norms": [
+        "SuspendProgrammeOperations"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(SuspendProgrammeOperations, <статус>)",
+      "tests": [
+        "CATALOG-SUSPENDOPERATIONSLIBERTY"
+      ],
+      "source_units": [
+        "BC_ART94"
+      ]
+    },
+    {
+      "id": "poziciya-transferbalancesoffbudget",
+      "task": "bc-art101",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 101 пункт 7. Не допускается перевод остатков бюджетных средств по бюджетным программам, образовавшихся на 31 декабря текущего финансового года, на аккредитивные и иные внебюджетные счета»?",
+      "kind": "positions",
+      "norms": [
+        "TransferBalancesOffBudget"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(TransferBalancesOffBudget, <статус>)",
+      "tests": [
+        "CATALOG-NOBALANCETRANSFERTOOFFBUDGETACCOUNTS"
+      ],
+      "source_units": [
+        "BC_ART101"
+      ]
+    },
+    {
+      "id": "poziciya-transferbetweencodes",
+      "task": "bc-art106",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 106. Перечисление денег с кода одного государственного учреждения на код другого государственного учреждения не допускается»?",
+      "kind": "positions",
+      "norms": [
+        "TransferBetweenCodes"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(TransferBetweenCodes, <статус>)",
+      "tests": [
+        "CATALOG-NOTRANSFERBETWEENINSTITUTIONCODES"
+      ],
+      "source_units": [
+        "BC_ART106"
+      ]
+    },
+    {
+      "id": "poziciya-transferdisposalproceeds",
+      "task": "bc-art1",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 17-1 пункт 1 подпункт 3). При отчуждении акций системно значимого банка полученные средства подлежат перечислению в республиканский бюджет»?",
+      "kind": "positions",
+      "norms": [
+        "TransferDisposalProceeds"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(TransferDisposalProceeds, <статус>)",
+      "tests": [
+        "CATALOG-NOPOS-TRANSFERDISPOSALPROCEEDS"
+      ],
+      "source_units": [
+        "BC_ART1"
+      ]
+    },
+    {
+      "id": "poziciya-usefutureyearappropriation",
+      "task": "bc-art101",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 101 пункт 8. При исполнении бюджета использование в текущем финансовом году бюджетных средств, предусмотренных во втором и (или) третьем финансовых годах планового периода, не допускается»?",
+      "kind": "positions",
+      "norms": [
+        "UseFutureYearAppropriation"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(UseFutureYearAppropriation, <статус>)",
+      "tests": [
+        "CATALOG-NOUSEOFFUTUREYEARAPPROPRIATIONS"
+      ],
+      "source_units": [
+        "BC_ART101"
+      ]
+    },
+    {
+      "id": "poziciya-usegrantforpurpose",
+      "task": "bc-art166",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 166 пункт 2 подпункт 2). Получатели связанных грантов обязаны обеспечить целевое и эффективное использование полученных связанных грантов»?",
+      "kind": "positions",
+      "norms": [
+        "UseGrantForPurpose"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(UseGrantForPurpose, <статус>)",
+      "tests": [
+        "CATALOG-GRANTPURPOSEDUTY"
+      ],
+      "source_units": [
+        "BC_ART166"
+      ]
+    },
+    {
+      "id": "poziciya-usetransferfordesignatedpurpose",
+      "task": "bc-art83",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 83 пункт 6. Целевые трансферты используются местными исполнительными органами только в соответствии с их целевым назначением»?",
+      "kind": "positions",
+      "norms": [
+        "UseTransferForDesignatedPurpose"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(UseTransferForDesignatedPurpose, <статус>)",
+      "tests": [
+        "CATALOG-TARGETEDTRANSFERPURPOSEDUTY"
+      ],
+      "source_units": [
+        "BC_ART83"
+      ]
+    },
+    {
+      "id": "poziciya-withdrawadditionallocalrevenue",
+      "task": "bc-art76",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 76 пункт 5. Не допускается изъятие доходов, дополнительно полученных в ходе исполнения местных бюджетов, в вышестоящий бюджет»?",
+      "kind": "positions",
+      "norms": [
+        "WithdrawAdditionalLocalRevenue"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(WithdrawAdditionalLocalRevenue, <статус>)",
+      "tests": [
+        "CATALOG-NOWITHDRAWALOFADDITIONALLOCALREVENUE"
+      ],
+      "source_units": [
+        "BC_ART76"
+      ]
+    },
+    {
+      "id": "poziciya-withdrawlocalbalance",
+      "task": "bc-art116",
+      "question": "Какие позиции действуют по делу и в каком статусе стоит «Статья 116 пункт 3. Изъятие остатка, изъятию не подлежащего, настоящим Кодексом не допускается»?",
+      "kind": "positions",
+      "norms": [
+        "WithdrawLocalBalance"
+      ],
+      "template": "evaluate positions(); — ожидаемая форма position(WithdrawLocalBalance, <статус>)",
+      "tests": [
+        "CATALOG-NOWITHDRAWALOFPROTECTEDBALANCE"
+      ],
+      "source_units": [
+        "BC_ART116"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "granica-01",
+      "task": "bc-art1",
+      "question": "Покрывает ли пакет весь акт — значит ли отсутствие карточки, что право молчит?",
+      "reason_kind": "not_formalized",
+      "limitation": "Правила заведены у 103 закреплённых фрагментов из 176: остальные закреплены байтами публикации, но исполняемых норм не несут. Отсутствие карточки означает «в модели нормы нет», а не «право молчит».",
+      "source_units": [
+        "BC_ART1"
+      ]
+    },
+    {
+      "id": "granica-02",
+      "task": "bc-art1",
+      "question": "Можно ли спросить вывод, у которого нет порождённого сценария?",
+      "reason_kind": "engine_limit",
+      "limitation": "29 выводов пакета остались без исполнимого свидетельства: их посылки содержат дизъюнкцию, текстовое значение или вызов терма, которых порождающий сценарий каталога не строит. Такие выводы записаны в internal и станут карточками вместе со сценариями, написанными руками.",
+      "source_units": [
+        "BC_ART1"
+      ]
+    },
+    {
+      "id": "granica-03",
+      "task": "bc-art1",
+      "question": "Все ли позиции пакета подтверждены сценарием?",
+      "reason_kind": "not_formalized",
+      "limitation": "1 норм пакета не подтверждены ни одним сценарием: их посылки порождающий сценарий не строит. Карточка positions у них есть, свидетельство — долг.",
+      "source_units": [
+        "BC_ART1"
+      ]
+    }
+  ],
+  "internal": [
+    {
+      "predicate": "capital_requirement_failed",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "debt_over_limit",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "debt_service_over_share",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "debt_service_within_share",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "debt_within_limit",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "dividend_standard_breached",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "dividend_standard_met",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "fiscal_rule_limit_exceeded",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "fiscal_rule_limit_respected",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "general_transfers_change_due",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "guarantee_fee_due",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "guarantee_performance_deadline",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "liability_under_code_absent",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "local_decision_deadline",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "payout_share_failed",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "payout_share_met",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "plan_balanced",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "plan_unbalanced",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "publication_omitted",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "redistribution_over_limit",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "redistribution_within_limit",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "reserve_measured",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "resolution_deadline",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "return_to_limits_deadline",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "special_guarantee_fee_due",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "surplus_use_breaches",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "surplus_use_conforms",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "transaction_over_plan",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "transaction_registrable",
+      "reason": "Вывод без исполнимого свидетельства: посылки правила содержат формы, которых порождённый сценарий не строит (дизъюнкция, текстовое значение или вызов терма). Карточка появится вместе со сценарием."
+    },
+    {
+      "predicate": "advance_over_thirty_percent",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (NoReductionRaisingAdvanceShare); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "balance_not_withdrawable",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (NoWithdrawalOfProtectedBalance); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "budget_law_violation",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (LiabilityForBudgetLawViolation); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "budget_request_deadline",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (BudgetRequestLate, BudgetRequestTimely); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "capital_requirement_met",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (GuaranteeRequirementsMet); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "clarification_request_deadline",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (ClarificationRequestLate, ClarificationRequestTimely); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "cross_level_funding",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (CrossLevelFundedProjection, NoCrossLevelFunding, ViolationByCrossLevelFunding); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "disposal_below_acquisition",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (NoDisposalBelowAcquisition); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "guarantee_granted",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "guarantee_requirements_met",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (ExclusiveGuaranteePower); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "not_subject_to_approval",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (NoApprovalOfAnalyticalBudget); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "not_subject_to_sequester",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (SequesterOfProtectedProgrammeUnlawful); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "payment_reduction_lawful",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (ApprovedReductionDefeatsBreach); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "publication_required",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (PublicationDuty, PublicationOwedProjection); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "publication_subject",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (PublicationOmitted, SecretDocumentNotOmitted); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "reserve_size_conforms",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (ReserveAssessedByConformance); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "reserve_size_violates_limits",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (ReserveAssessedByViolation); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "return_deadline",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (MisusedFundsReturnLate, MisusedFundsReturnTimely); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "return_late",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (ViolationByLateReturnOfMisusedFunds); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "sequester_unlawful",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (ViolationByUnlawfulSequester); самостоятельным вопросом к пакету он не является."
+    }
+  ]
+}

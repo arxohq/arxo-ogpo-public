@@ -1,0 +1,28 @@
+language "law.core" version "0.1";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Cl. 10 sub-cl. 2. Upper edge of the mileage threshold for a legal entity:
+// one kilometre over twenty thousand — the condition is not satisfied.
+test "urn:query:vred-t06" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "vred-t06-a0": detal_ts(d: entity_ref("urn:case:vred:detal-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "vred-t06-a1": detal_podlezhit_zamene(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "vred-t06-a2": vladelets_yuridicheskoe_litso(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "vred-t06-a3": nakhoditsya_na_garantiynom_obsluzhivanii(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "vred-t06-a4": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "vred-t06-a5": srednegodovoy_probeg(v: entity_ref("urn:case:vred:ts-1"), distance: 20001 km) { origin case_input; }
+    }
+
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:case:vred:detal-1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

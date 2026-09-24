@@ -1,0 +1,133 @@
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Deontic positions with an open window (cl. 2 and cl. 4-1) and the
+// maintenance duty (cl. 2, §124.2). Expectations follow §§122–137 and §124.2:
+// an achievement duty with an open window is satisfied and active, but never
+// becomes violated by deadline; for a maintenance duty a single counterexample
+// yields a violation, while the case being silent means active without
+// confirmed satisfaction.
+
+// Cl. 2: inspection at a service station was demanded on September 1 and
+// was carried out — the duty is satisfied.
+test "urn:query:vred-t17-a" {
+    given {
+        context {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t17a-a0": strakhovshchik_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), s: entity_ref("urn:case:vred:strakhovshchik-1")) { origin case_input; }
+        assert "t17a-a1": trebovanie_ob_osmotre_na_sto(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1"), day: @2026-09-01) { origin case_input; }
+        assert "t17a-a2": osmotr_proveden_na_sto(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(OsmotrNaStantsii, SATISFIED);
+    expect not position(OsmotrNaStantsii, VIOLATED);
+}
+
+// Cl. 2: inspection at the station was not carried out a month later — the
+// duty is active, but never becomes violated by deadline: the Rules do not name a deadline.
+test "urn:query:vred-t17-b" {
+    given {
+        context {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t17b-a0": strakhovshchik_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), s: entity_ref("urn:case:vred:strakhovshchik-1")) { origin case_input; }
+        assert "t17b-a1": trebovanie_ob_osmotre_na_sto(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1"), day: @2026-09-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(OsmotrNaStantsii, ACTIVE);
+    expect not position(OsmotrNaStantsii, VIOLATED);
+    expect not position(OsmotrNaStantsii, SATISFIED);
+}
+
+// Cl. 2: the property was altered after the application was filed — the
+// maintenance duty is violated (§124.2, counterexample); the opportunity for
+// assessment was provided — the second duty is satisfied.
+test "urn:query:vred-t17-c" {
+    given {
+        context {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t17c-a0": strakhovshchik_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), s: entity_ref("urn:case:vred:strakhovshchik-1")) { origin case_input; }
+        assert "t17c-a1": poterpevshiy_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1")) { origin case_input; }
+        assert "t17c-a2": zayavlenie_predstavleno_v_den(r: entity_ref("urn:case:vred:raschet-1"), day: @2026-09-01) { origin case_input; }
+        assert "t17c-a3": imushchestvo_izmeneno_posle_proisshestviya(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t17c-a4": vozmozhnost_rascheta_predostavlena(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SokhranitImushchestvo, VIOLATED);
+    expect position(PredostavitVozmozhnostRascheta, SATISFIED);
+    expect not position(PredostavitVozmozhnostRascheta, VIOLATED);
+}
+
+// Cl. 2: the case is silent on any alteration of the property — the
+// maintenance duty is active, and there is no full satisfaction without
+// certified completeness of observation (§124.2); the opportunity for
+// assessment was not provided — the duty is active and never becomes violated
+// by deadline (the window is open).
+test "urn:query:vred-t17-d" {
+    given {
+        context {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t17d-a0": strakhovshchik_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), s: entity_ref("urn:case:vred:strakhovshchik-1")) { origin case_input; }
+        assert "t17d-a1": poterpevshiy_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1")) { origin case_input; }
+        assert "t17d-a2": zayavlenie_predstavleno_v_den(r: entity_ref("urn:case:vred:raschet-1"), day: @2026-09-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SokhranitImushchestvo, ACTIVE);
+    expect not position(SokhranitImushchestvo, VIOLATED);
+    expect not position(SokhranitImushchestvo, SATISFIED);
+    expect position(PredostavitVozmozhnostRascheta, ACTIVE);
+    expect not position(PredostavitVozmozhnostRascheta, VIOLATED);
+}
+
+// Cl. 4-1: an appraiser was engaged, one appraiser was offered — the
+// choice is not ensured, the duty is active; two were offered — satisfied.
+test "urn:query:vred-t17-e" {
+    given {
+        context {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t17e-a0": otsenshchik_privlechen_po_dogovoru(s: entity_ref("urn:case:vred:strakhovshchik-1"), o: entity_ref("urn:case:vred:otsenshchik-1"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t17e-a1": poterpevshiy_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1")) { origin case_input; }
+        assert "t17e-a2": predlozheno_otsenshchikov(r: entity_ref("urn:case:vred:raschet-1"), n: 1) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredlozhitDvukhOtsenshchikov, ACTIVE);
+    expect not position(PredlozhitDvukhOtsenshchikov, SATISFIED);
+    expect not position(PredlozhitDvukhOtsenshchikov, VIOLATED);
+}
+
+test "urn:query:vred-t17-f" {
+    given {
+        context {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t17f-a0": otsenshchik_privlechen_po_dogovoru(s: entity_ref("urn:case:vred:strakhovshchik-1"), o: entity_ref("urn:case:vred:otsenshchik-1"), r: entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t17f-a1": poterpevshiy_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1")) { origin case_input; }
+        assert "t17f-a2": predlozheno_otsenshchikov(r: entity_ref("urn:case:vred:raschet-1"), n: 2) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredlozhitDvukhOtsenshchikov, SATISFIED);
+    expect not position(PredlozhitDvukhOtsenshchikov, VIOLATED);
+}

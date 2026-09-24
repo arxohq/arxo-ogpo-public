@@ -1,0 +1,321 @@
+// СТАТЬЯ 24 ПУНКТ 1 ПОДПУНКТ 3) И ПУНКТ 4 ЧАСТЬ ВТОРАЯ. ОБЩИЙ ПРЕДЕЛ НА ВСЕХ
+// ПОТЕРПЕВШИХ И СОРАЗМЕРНОЕ РАСПРЕДЕЛЕНИЕ.
+//
+// `24-predely-otvetstvennosti.law` взял из подпункта 3) первое утверждение
+// («шестьсот на каждого») и объявил границей два оставшихся, потому что оба
+// требуют АГРЕГАТА по множеству потерпевших одного происшествия. Модуль
+// снимает эту границу: агрегатов здесь два — число потерпевших, которым
+// причинён вред имуществу, и сумма причинённого им вреда.
+//
+// ТРИ УТВЕРЖДЕНИЯ ПОДПУНКТА 3) РАЗВЕДЕНЫ ПО ДВУМ ВЗАИМОИСКЛЮЧАЮЩИМ ВЕТВЯМ, а
+// не дефитером. Ветвь выбирается сравнением суммы вреда с общим пределом, и
+// обе стороны сравнения выводятся ПОЛОЖИТЕЛЬНО (`total <= limit` и
+// `total > limit`), поэтому ни отрицания, ни замыкания §70, ни поражаемого
+// слоя здесь не нужно. Это существенно: голову `insurance_payment_amount`
+// читает строгое правило статьи 22 пункта 4 (`InsurerPaysDeterminedHarmAmount`
+// в `22-strakhovoy-sluchay.law`), а строгое правило не может читать вывод
+// поражаемого (LDC-E4103 §111). Развести ветви дефитером значило бы уронить
+// соседний модуль.
+//
+// ПРИНЯТОЕ ПРОЧТЕНИЕ: ПРЕДЕЛ ШЕСТИСОТ МРП ДЕЙСТВУЕТ И В СОРАЗМЕРНОЙ ВЕТВИ.
+// Первое предложение подпункта 3) ставит его без условий («в размере
+// причиненного вреда, но не более 600 каждому потерпевшему»), а третье
+// предложение говорит только о СПОСОБЕ распределения и предела не отменяет.
+// Поэтому соразмерная выплата берётся минимумом с пределом потерпевшего.
+//
+// СЛЕДСТВИЕ ЭТОГО ПРОЧТЕНИЯ НАЗВАНО ВСЛУХ: при двух и трёх потерпевших
+// соразмерная доля общего предела (не менее 2000/3 ≈ 666 МРП у наибольшего)
+// всегда упирается в предел шестисот, и третье предложение подпункта 3)
+// начинает МЕНЯТЬ ответ только с четырёх потерпевших. Сценарии подобраны
+// именно так: OGPO-P24-3 — четыре потерпевших. Второе прочтение (в
+// соразмерной ветви предел шестисот не действует) даёт на том же деле другой
+// ответ и вынесено вопросом владельцу.
+//
+// ПУНКТ 4 ЧАСТЬ ВТОРАЯ. «Общая сумма страховой выплаты и компенсации
+// расходов не должна превышать предельный объем ответственности» — норма
+// НЕДЕРИВАЦИОННАЯ: она ничего не выводит, а запрещает состояние. Поэтому
+// форма — `constraint` §14, а не правило. Третье предложение части второй
+// («если расходы возникли в результате исполнения страхователем указаний
+// страховщика, они возмещаются в полном размере безотносительно к
+// предельному объему») выражено ДВУЗНАЧНЫМ признаком, а не отрицанием: у
+// расходов ровно два состояния, и оба входят посылкой литералом.
+
+
+// ============================================================================
+// Множество потерпевших, которым причинён вред имуществу
+// ============================================================================
+
+relation property_harm_victim(accident: TrafficAccident, victim: Victim)
+    kind institutional {
+    label ru-KZ official "потерпевший, имуществу которого причинён вред данным транспортным происшествием";
+}
+
+@source(LAW_446_ART24)
+rule PropertyHarmVictim(accident: TrafficAccident, victim: Victim, amount: Money) strict {
+    label ru-KZ official "Статья 24 пункт 1 подпункт 3). Потерпевшим, имуществу которого причинён вред, является тот, размер вреда имуществу которого определён";
+    when property_harm_amount(accident, victim, amount);
+    then property_harm_victim(accident, victim);
+}
+
+relation property_harm_victim_count(accident: TrafficAccident, victims: Integer)
+    kind institutional {
+    key(accident);
+    label ru-KZ official "число потерпевших, имуществу которых причинён вред одним транспортным происшествием";
+}
+
+// Свидетель непустоты в теле обязателен: агрегат без него сработал бы на
+// пустом множестве. У `count` пустой ответ — ноль, но связывать голову
+// всё равно нечем.
+@source(LAW_446_ART24)
+rule PropertyHarmVictimCount(accident: TrafficAccident, any_victim: Victim) strict {
+    label ru-KZ official "Статья 24 пункт 1 подпункт 3). Вред причинён одновременно имуществу названного числа потерпевших";
+    when property_harm_victim(accident, any_victim);
+    then property_harm_victim_count(accident,
+        (count distinct victim: Victim where property_harm_victim(accident, victim)));
+}
+
+relation property_harm_total(accident: TrafficAccident, amount: Money) kind institutional {
+    key(accident);
+    label ru-KZ official "общий размер вреда, причинённого имуществу всех потерпевших одним транспортным происшествием";
+}
+
+@source(LAW_446_ART24)
+rule PropertyHarmTotal(accident: TrafficAccident, any_victim: Victim, any_amount: Money) strict {
+    label ru-KZ official "Статья 24 пункт 1 подпункт 3). Размер вреда, причинённого имуществу двух и более потерпевших, есть сумма размеров вреда каждого из них";
+    when property_harm_amount(accident, any_victim, any_amount);
+    then property_harm_total(accident,
+        (sum all amount: Money for victim: Victim
+             where property_harm_amount(accident, victim, amount)));
+}
+
+// ============================================================================
+// Общий предел выплат всем потерпевшим
+// ============================================================================
+
+relation multi_victim_property_limit_multiple(multiple: Integer) kind institutional {
+    label ru-KZ official "общий размер страховых выплат всем потерпевшим при вреде, причинённом одновременно имуществу двух и более потерпевших, в месячных расчётных показателях (статья 24 пункт 1 подпункт 3))";
+}
+@source(LAW_446_ART24)
+assert multi_victim_property_limit_multiple(2000);
+
+relation multi_victim_property_total_limit(accident: TrafficAccident, amount: Money)
+    kind institutional {
+    key(accident);
+    label ru-KZ official "предельный объём ответственности страховщика по всем потерпевшим, имуществу которых причинён вред одним транспортным происшествием";
+}
+
+@source(LAW_446_ART24, quote = "При этом общий размер страховых выплат всем потерпевшим не может превышать 2000.")
+rule MultiVictimPropertyTotalLimit(
+    accident: TrafficAccident,
+    victims: Integer,
+    multiple: Integer,
+    mrp: Money,
+) strict {
+    label ru-KZ official "Статья 24 пункт 1 подпункт 3). При вреде, причинённом одновременно имуществу двух и более потерпевших, общий размер страховых выплат всем потерпевшим не может превышать две тысячи месячных расчётных показателей";
+    when property_harm_victim_count(accident, victims);
+    when victims >= 2;
+    when multi_victim_property_limit_multiple(multiple);
+    when payment_day_mrp(mrp);
+    then multi_victim_property_total_limit(accident, mrp * multiple);
+}
+
+// ============================================================================
+// Две взаимоисключающие ветви подпункта 3)
+// ============================================================================
+
+relation property_payment_by_own_limit(accident: TrafficAccident) kind institutional {
+    label ru-KZ official "страховая выплата за вред имуществу осуществляется каждому потерпевшему в размере причинённого ему вреда в пределах его собственного предела";
+}
+
+relation property_payment_proportional_to_harm(accident: TrafficAccident)
+    kind institutional {
+    label ru-KZ official "страховая выплата каждому потерпевшему осуществляется соразмерно степени вреда, причинённого его имуществу";
+}
+
+@source(LAW_446_ART24) {
+    rule SingleVictimKeepsOwnLimit(accident: TrafficAccident, victims: Integer) strict {
+        label ru-KZ official "Статья 24 пункт 1 подпункт 2). При вреде, причинённом имуществу одного потерпевшего, страховая выплата осуществляется в размере причинённого вреда в пределах его собственного предела";
+        when property_harm_victim_count(accident, victims);
+        when victims == 1;
+        then property_payment_by_own_limit(accident);
+    }
+
+    rule MultipleVictimsWithinTotalLimit(
+        accident: TrafficAccident,
+        victims: Integer,
+        total: Money,
+        limit: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 1 подпункт 3). За вред, причинённый одновременно имуществу двух и более потерпевших, страховая выплата осуществляется в размере причинённого вреда, но не более шестисот месячных расчётных показателей каждому потерпевшему";
+        when property_harm_victim_count(accident, victims);
+        when victims >= 2;
+        when property_harm_total(accident, total);
+        when multi_victim_property_total_limit(accident, limit);
+        when total <= limit;
+        then property_payment_by_own_limit(accident);
+    }
+
+    rule MultipleVictimsExceedTotalLimit(
+        accident: TrafficAccident,
+        victims: Integer,
+        total: Money,
+        limit: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 1 подпункт 3). В случае превышения размера вреда над предельным объёмом ответственности страховщика страховая выплата каждому потерпевшему осуществляется соразмерно степени вреда, причинённого его имуществу";
+        when property_harm_victim_count(accident, victims);
+        when victims >= 2;
+        when property_harm_total(accident, total);
+        when multi_victim_property_total_limit(accident, limit);
+        when total > limit;
+        then property_payment_proportional_to_harm(accident);
+    }
+
+    // Доля есть частное двух денежных сумм одной валюты (§58, errata E-0083),
+    // а произведение предела на долю — `Money * Decimal` (errata E-0085).
+    // Подавать долю фактом дела значило бы вынести из акта предписанное им
+    // вычисление.
+    rule ProportionalPropertyPayment(
+        accident: TrafficAccident,
+        victim: Victim,
+        harm: Money,
+        total: Money,
+        total_limit: Money,
+        victim_limit: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 1 подпункт 3). Страховая выплата каждому потерпевшему осуществляется соразмерно степени вреда, причинённого его имуществу, но не более шестисот месячных расчётных показателей";
+        when property_payment_proportional_to_harm(accident);
+        when property_harm_amount(accident, victim, harm);
+        when property_harm_total(accident, total);
+        when multi_victim_property_total_limit(accident, total_limit);
+        when insurer_liability_limit(accident, victim, victim_limit);
+        then insurance_payment_amount(accident, victim,
+                                      min(victim_limit, total_limit * (harm / total)));
+    }
+}
+
+// ============================================================================
+// Пункт 4 часть вторая: общая сумма выплаты и компенсации расходов
+// ============================================================================
+
+relation loss_prevention_expenses_on_instructions(accident: TrafficAccident,
+                                                  payer: Beneficiary,
+                                                  on_instructions: Boolean) kind empirical {
+    key(accident, payer);
+    label ru-KZ official "расходы по предотвращению или уменьшению убытков возникли в результате исполнения страхователем указаний страховщика";
+}
+
+relation capped_loss_prevention_expenses(accident: TrafficAccident, payer: Beneficiary,
+                                         amount: Money) kind institutional {
+    key(accident, payer);
+    label ru-KZ official "расходы по предотвращению или уменьшению убытков, компенсация которых входит в предельный объём ответственности";
+}
+
+relation unlimited_loss_prevention_expenses(accident: TrafficAccident, payer: Beneficiary,
+                                            amount: Money) kind institutional {
+    key(accident, payer);
+    label ru-KZ official "расходы, возникшие в результате исполнения страхователем указаний страховщика и возмещаемые в полном размере безотносительно к предельному объёму ответственности";
+}
+
+@source(LAW_446_ART24) {
+    rule ExpensesInsideLiabilityLimit(
+        accident: TrafficAccident,
+        payer: Beneficiary,
+        amount: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 4 часть вторая. Такие расходы возмещаются в фактических размерах и входят в общую сумму страховой выплаты и компенсации расходов";
+        when loss_prevention_expenses(accident, payer, amount);
+        when loss_prevention_expenses_necessary(accident, payer);
+        when loss_prevention_expenses_on_instructions(accident, payer, false);
+        then capped_loss_prevention_expenses(accident, payer, amount);
+    }
+
+    rule ExpensesOnInsurerInstructionsAreUnlimited(
+        accident: TrafficAccident,
+        payer: Beneficiary,
+        amount: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 4 часть вторая. Если расходы возникли в результате исполнения страхователем указаний страховщика, они возмещаются в полном размере безотносительно к предельному объёму ответственности";
+        when loss_prevention_expenses(accident, payer, amount);
+        when loss_prevention_expenses_on_instructions(accident, payer, true);
+        then unlimited_loss_prevention_expenses(accident, payer, amount);
+    }
+}
+
+relation accident_payments_total(accident: TrafficAccident, amount: Money) kind institutional {
+    key(accident);
+    label ru-KZ official "общая сумма страховых выплат всем потерпевшим по данному транспортному происшествию";
+}
+
+@source(LAW_446_ART24)
+rule AccidentPaymentsTotal(accident: TrafficAccident, any_victim: Victim, any_amount: Money)
+    strict {
+    label ru-KZ official "Статья 24 пункт 1 подпункт 3). Общий размер страховых выплат всем потерпевшим есть сумма причитающихся им выплат";
+    when insurance_payment_amount(accident, any_victim, any_amount);
+    then accident_payments_total(accident,
+        (sum all amount: Money for victim: Victim
+             where insurance_payment_amount(accident, victim, amount)));
+}
+
+relation combined_payment_and_expenses(accident: TrafficAccident, amount: Money)
+    kind institutional {
+    key(accident);
+    label ru-KZ official "общая сумма страховой выплаты и компенсации расходов по данному транспортному происшествию (статья 24 пункт 4 часть вторая)";
+}
+
+@source(LAW_446_ART24)
+rule CombinedPaymentAndExpenses(
+    accident: TrafficAccident,
+    payments: Money,
+    any_payer: Beneficiary,
+    any_amount: Money,
+) strict {
+    label ru-KZ official "Статья 24 пункт 4 часть вторая. Общая сумма страховой выплаты и компенсации расходов складывается из страховых выплат потерпевшим и компенсации расходов, входящих в предельный объём ответственности";
+    when accident_payments_total(accident, payments);
+    when capped_loss_prevention_expenses(accident, any_payer, any_amount);
+    then combined_payment_and_expenses(accident, payments +
+        (sum all amount: Money for payer: Beneficiary
+             where capped_loss_prevention_expenses(accident, payer, amount)));
+}
+
+// Предельный объём ответственности «установленный договором» для целей
+// пункта 4 части второй берётся тот же, что установлен пунктом 1 для этого
+// происшествия: при двух и более потерпевших — общий предел подпункта 3),
+// при одном — предел самого потерпевшего. Два правила, ключ по происшествию:
+// дело, дающее оба, получит KEY_CONFLICT, а не два разных предела.
+relation accident_liability_limit(accident: TrafficAccident, amount: Money) kind institutional {
+    key(accident);
+    label ru-KZ official "предельный объём ответственности страховщика по данному транспортному происшествию для целей статьи 24 пункта 4 части второй";
+}
+
+@source(LAW_446_ART24) {
+    rule AccidentLimitIsTheTotalLimit(accident: TrafficAccident, limit: Money) strict {
+        label ru-KZ official "Статья 24 пункт 4 часть вторая. При вреде, причинённом одновременно имуществу двух и более потерпевших, предельным объёмом ответственности по происшествию служит общий предел подпункта 3) пункта 1";
+        when multi_victim_property_total_limit(accident, limit);
+        then accident_liability_limit(accident, limit);
+    }
+
+    rule AccidentLimitIsTheSingleVictimLimit(
+        accident: TrafficAccident,
+        victim: Victim,
+        victims: Integer,
+        limit: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 4 часть вторая. При одном потерпевшем предельным объёмом ответственности по происшествию служит предел, установленный пунктом 1 в отношении этого потерпевшего";
+        when property_harm_victim_count(accident, victims);
+        when victims == 1;
+        when insurer_liability_limit(accident, victim, limit);
+        then accident_liability_limit(accident, limit);
+    }
+
+    constraint CombinedPaymentAndExpensesWithinLiabilityLimit(
+        accident: TrafficAccident,
+        combined: Money,
+        limit: Money,
+    ) {
+        when combined_payment_and_expenses(accident, combined)
+            and accident_liability_limit(accident, limit);
+        require combined <= limit;
+        severity error;
+        message "общая сумма страховой выплаты и компенсации расходов превысила предельный объём ответственности (статья 24 пункт 4 часть вторая)";
+    }
+}

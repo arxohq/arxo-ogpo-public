@@ -1,0 +1,71 @@
+# Экземпляр шаблона `deontic-window` — ДАННЫЕ, не код.
+# Контракт: corpus/templates/deontic-window/TEMPLATE.ru.md
+# Правится руками; правила в .law порождаются из этого файла между маркерами генерации.
+
+target = "13-15-deystvie-i-prekrashchenie.law"
+
+[[rule]]
+name      = "ContractDueAtBorderCrossing"
+strength  = "strict"
+anchored_by_block = true
+label     = { lang = "ru-KZ", status = "official", text = "Статья 13 пункт 3 абзац второй подпункт 1). Договор обязательного страхования должен быть заключен на момент пересечения Государственной границы Республики Казахстан транспортными средствами, находящимися в международном движении по территории Республики Казахстан" }
+params    = ["vehicle: Vehicle", "owner: VehicleOwner", "crossing: Date"]
+premises  = ["vehicle_of(vehicle, owner)", "international_movement_status(vehicle, InInternationalMovement)", "border_crossing_day(vehicle, crossing)"]
+layout    = { indent = 4, params = "multiline", wrapped = true }
+
+[rule.norm]
+modality      = "duty"
+name          = "ZaklyuchitDogovorNaMomentPeresecheniyaGranicy"
+bearer        = "owner"
+beneficiary   = "none"
+goal          = "achieve"
+condition     = "compulsory_insurance_contract_concluded(vehicle, owner)"
+start         = "crossing"
+start_event   = "border_crossing_day(vehicle, crossing)"
+end           = "crossing"
+end_event     = "border_crossing_day(vehicle, crossing)"
+end_inclusive = true
+
+[[rule]]
+name      = "ContractDueOnAcquiringOwnership"
+strength  = "strict"
+anchored_by_block = true
+label     = { lang = "ru-KZ", status = "official", text = "Статья 13 пункт 3 абзац второй подпункт 2). Договор обязательного страхования должен быть заключен на момент возникновения у физического или юридического лица права владения транспортным средством, но не позднее десяти рабочих дней с момента государственной регистрации (перерегистрации) данного транспортного средства" }
+params    = ["vehicle: Vehicle", "owner: VehicleOwner", "arose: Date", "due: Date"]
+premises  = ["ownership_right_arose_on(vehicle, owner, arose)", "conclusion_due_day(vehicle, owner, due)"]
+layout    = { indent = 4, params = "multiline", wrapped = true }
+
+[rule.norm]
+modality      = "duty"
+name          = "ZaklyuchitDogovorPriVozniknoveniiPravaVladeniya"
+bearer        = "owner"
+beneficiary   = "none"
+goal          = "achieve"
+condition     = "compulsory_insurance_contract_concluded(vehicle, owner)"
+start         = "arose"
+start_event   = "ownership_right_arose_on(vehicle, owner, arose)"
+end           = "due"
+end_event     = "conclusion_due_day(vehicle, owner, due)"
+end_inclusive = true
+
+[[rule]]
+name      = "InsurerMustInformDatabaseOrganization"
+strength  = "strict"
+anchored_by_block = true
+label     = { lang = "ru-KZ", status = "official", text = "Статья 14 пункт 2 абзац второй. При осуществлении страховой выплаты страховщик в течение одного рабочего дня информирует об этом организацию по формированию и ведению базы данных" }
+params    = ["contract: InsuranceContract", "policyholder: VehicleOwner", "insurer: Insurer", "paid: Date", "due: Date"]
+premises  = ["insurance_contract_of(contract, policyholder, insurer)", "insurance_payment_made_on(contract, paid)", "database_notification_due_day(contract, due)"]
+layout    = { indent = 4, params = "multiline", wrapped = false }
+
+[rule.norm]
+modality      = "duty"
+name          = "ProinformirovatOrganizaciyuBazyDannykh"
+bearer        = "insurer"
+beneficiary   = "none"
+goal          = "achieve"
+condition     = "database_informed_of_payment(contract)"
+start         = "paid"
+start_event   = "insurance_payment_made_on(contract, paid)"
+end           = "due"
+end_event     = "database_notification_due_day(contract, due)"
+end_inclusive = true

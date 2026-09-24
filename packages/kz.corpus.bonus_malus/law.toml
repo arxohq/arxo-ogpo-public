@@ -1,0 +1,93 @@
+# Манифест §10 пакета Правил системы «бонус-малус» (постановление Правления
+# Национального Банка Республики Казахстан от 30 мая 2016 года № 140).
+[package]
+name = "kz.corpus.bonus_malus"
+version = "0.2.0"
+language = "0.2"
+namespace = "urn:kz:corpus:clir:bonus-malus"
+
+# A3 НЕ ВКЛЮЧЁН, и это следствие текста, а не экономия. Приложение к Правилам
+# есть таблица «класс → коэффициент» и «класс × число страховых случаев →
+# класс», то есть обе её оси и выход — ПЕРЕЧИСЛЕНИЯ. Схема `law.decision/0.1`
+# знает в ячейке только литерал (`{"kind": "value", …}`) и не знает `const_ref`
+# вовсе; положить класс текстовой колонкой значило бы перенести тождество
+# значения с символа на строку, и опечатка перестала бы быть ошибкой. Тот же
+# довод записан у соседнего пакета — `kz/ogpo-vts/package.law`, раздел про оси
+# статьи 19. Поэтому семнадцать строк приложения выражены нормативными фактами
+# `assert`, а не таблицей решений.
+[features]
+semanticLayer = "L1"
+
+# Пункт 11 Правил считает порог «двести месячных расчетных показателей»; МРП
+# устанавливает закон о республиканском бюджете на соответствующий год, и
+# читается он из того же пакета, из которого его читает `kz.corpus.ogpovts`.
+[dependencies]
+"kz.corpus.budget" = "0.1.0"
+
+# Каталожная метадата (DECISION-0051; docs/PACKAGE-METADATA.ru.md). Семантики
+# не несёт; выводимые поля сверяет check_package_metadata.py:
+#   jurisdiction   ← jurisdiction KZ источника BONUS_MALUS;
+#   instrument     ← kind resolution источника;
+#   sourceFidelity ← materialization_status редакции;
+#   primarySource  ← имя source-декларации.
+[metadata]
+act = "kz-bonus-malus"
+title = "Правила расчета и применения коэффициента по системе «бонус-малус» (постановление Правления НБ РК № 140)"
+primarySource = "BONUS_MALUS"
+jurisdiction = "KZ"
+instrument = "resolution"
+sourceFidelity = "pinned_unofficial_copy"
+# Невыводимые поля — с причиной выбора.
+#
+# `issuer`: постановление принято Правлением Национального Банка Республики
+# Казахстан (реквизиты в номере source-декларации); последующие редакции
+# принимало Правление Агентства по регулированию и развитию финансового
+# рынка, но издавший орган акта от этого не меняется.
+issuer = "Национальный Банк Республики Казахстан"
+# `legalStatus = "in_force"`: закреплённые байты несут сноски о поправках
+# 2022, 2024 и 2025 годов, вводимых в действие, и ни одной строки об утрате
+# силы; ответ API портала о самом акте несёт `is_actual: true`.
+legalStatus = "in_force"
+# `verifiedAgainstSource = true`: каждый класс, каждый коэффициент и каждый
+# переход приложения сверены с закреплёнными байтами
+# `sources/bonus-malus/ru.txt` при написании модуля `01-prilozhenie-klassy.law`.
+verifiedAgainstSource = true
+
+# Сценарии §267. Три семейства, и разница между ними — МИР, а не тема:
+# порог пункта 11 меряется в МРП, и его сценам нужен `kz.corpus.budget`.
+#
+# `kz.corpus.budget_code` в мир НЕ ВХОДИТ, хотя предикат МРП носит его
+# пространство имён: величину 2026 года утверждает сам закон о бюджете, и
+# нормативный факт `kz.corpus.budget_code::mrp(2026, 4325 KZT)` объявлен
+# внутри пакета `kz.corpus.budget`. Лишний участник мира потянул бы за собой
+# ресурс календаря пакета бюджетного кодекса, который сценам о классах не
+# нужен вовсе.
+[[tests]]
+family = "kz.corpus.bonus_malus#klassy"
+regression = false
+suites = [
+    "tests/bm-p3-povyshenie-270.lawtest",
+    "tests/bm-p3-snizhenie-po-stolbcam.lawtest",
+    "tests/bm-priznak-strakhovatelya.lawtest",
+]
+world = ["kz.corpus.bonus_malus"]
+
+[[tests]]
+family = "kz.corpus.bonus_malus#modifikatory"
+regression = false
+suites = ["tests/bm-modifikatory.lawtest"]
+world = ["kz.corpus.bonus_malus"]
+
+# Редакции во времени (DECISION-0333): один договор на разные даты права
+# отвечает по разным редакциям приложения; сценам нужен только сам пакет.
+[[tests]]
+family = "kz.corpus.bonus_malus#redaktsii"
+regression = false
+suites = ["tests/bm-redaktsii.lawtest"]
+world = ["kz.corpus.bonus_malus"]
+
+[[tests]]
+family = "kz.corpus.bonus_malus#porog-mrp"
+regression = false
+suites = ["tests/bm-p11-porog-200-mrp.lawtest"]
+world = ["kz.corpus.bonus_malus", "kz.corpus.budget"]

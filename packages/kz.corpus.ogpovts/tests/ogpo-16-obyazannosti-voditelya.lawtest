@@ -1,0 +1,84 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 16 п. 2 подпункты 4), 5), 6), 6-1) и п. 3: носитель этих обязанностей —
+// лицо, непосредственно управлявшее транспортным средством в момент
+// происшествия, а не страхователь.
+//
+// Подпункт 4) назвал ДВУХ адресатов сообщения, и вторая сцена показывает,
+// зачем это две обязанности, а не одна: сообщение потерпевшим исполняет
+// первую и оставляет вторую действующей.
+
+test "urn:query:ogpo-p16-2-driver-active" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p16-2a-a0": driver_at_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:owner:d1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SoobshchitStrakhovshchikaPoterpevshim, ACTIVE);
+    expect position(SoobshchitStrakhovshchikaSotrudnikamOrgana, ACTIVE);
+    expect position(PrinyatMeryKUmensheniyuUbytkov, ACTIVE);
+    expect position(SoobshchitOProisshestviiVSluzhby, ACTIVE);
+    expect not position(ProytiMeditsinskoeOsvidetelstvovanie, ACTIVE);
+}
+
+test "urn:query:ogpo-p16-2-4-two-duties" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p16-2b-a0": driver_at_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:owner:d1")) { origin case_input; }
+        assert "p16-2b-a1": insurer_name_disclosed_to_victims(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SoobshchitStrakhovshchikaPoterpevshim, SATISFIED);
+    expect position(SoobshchitStrakhovshchikaSotrudnikamOrgana, ACTIVE);
+    expect not position(SoobshchitStrakhovshchikaSotrudnikamOrgana, SATISFIED);
+}
+
+// Подпункт 6-1): направление получено — обязанность пройти освидетельствование
+// возникает; освидетельствование пройдено — исполнена. Двухчасовой срок
+// текста в срез НЕ входит (единицы времени короче суток в §84.2 нет), и
+// потому окно открытое: нарушенной обязанность не становится.
+test "urn:query:ogpo-p16-2-6-1-satisfied" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p16-2c-a0": driver_at_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:owner:d1")) { origin case_input; }
+        assert "p16-2c-a1": medical_examination_direction_received_on(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-10) { origin case_input; }
+        assert "p16-2c-a2": medical_examination_passed(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ProytiMeditsinskoeOsvidetelstvovanie, SATISFIED);
+    expect not position(ProytiMeditsinskoeOsvidetelstvovanie, VIOLATED);
+}
+
+test "urn:query:ogpo-p16-2-6-1-open-window" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p16-2d-a0": driver_at_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:owner:d1")) { origin case_input; }
+        assert "p16-2d-a1": medical_examination_direction_received_on(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-10) { origin case_input; }
+        assert "p16-2d-a2": not medical_examination_passed(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ProytiMeditsinskoeOsvidetelstvovanie, ACTIVE);
+    expect not position(ProytiMeditsinskoeOsvidetelstvovanie, VIOLATED);
+}

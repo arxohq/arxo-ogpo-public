@@ -1,0 +1,120 @@
+// СТАТЬЯ 26 ПУНКТ 3. ПЕРЕРАСЧЁТ СУММЫ СТРАХОВОЙ ВЫПЛАТЫ ПРИ УХУДШЕНИИ
+// ЗДОРОВЬЯ — АРИФМЕТИКА ЗАЧЁТА.
+//
+// `26-poryadok-vyplaty.law` взял из пункта 3 ОБЯЗАННОСТЬ («страховщик обязан
+// произвести перерасчёт») и объявил границей саму величину: «принимаются в
+// зачёт ранее выплаченные суммы» требует истории выплат по делу, то есть
+// агрегата по прошлым выплатам. Модуль снимает эту границу.
+//
+// ДВЕ ВЕЛИЧИНЫ, А НЕ ОДНА. Пункт 3 говорит о перерасчёте «в порядке и
+// размере, установленных настоящим Законом», и размер этот берётся не здесь,
+// а в статье 24: при гибели и при установлении инвалидности страховая выплата
+// равна ПРЕДЕЛУ ответственности (пункт 2 статьи 24), а предел зависит от
+// наступившего последствия (пункт 1 подпункт 1)). Поэтому перерасчёт есть
+// разность двух величин: предела по НОВОМУ последствию и суммы ранее
+// выплаченного.
+//
+// НОВОЕ ПОСЛЕДСТВИЕ — СВОЁ ОТНОШЕНИЕ, А НЕ ВТОРОЕ ЗНАЧЕНИЕ СТАРОГО.
+// `harm_to_life_or_health` статьи 24 функционально по паре «происшествие,
+// потерпевший» (`key`), и второе последствие того же потерпевшего дало бы
+// KEY_CONFLICT вместо перерасчёта. Ухудшение здоровья — событие ПОСЛЕ
+// выплаты, и в модели оно отдельный факт требования, а не переписывание
+// прежнего.
+//
+// ДЕОНТИКИ ЗДЕСЬ НЕТ, И ЭТО НЕ ПРОПУСК. Обязанность страховщика произвести
+// перерасчёт уже выведена позицией §127 в `26-poryadok-vyplaty.law`
+// (`ProizvestiPereraschetSummyVyplaty`); модуль отвечает на второй вопрос
+// пункта 3 — на какую сумму. Заводить вторую обязанность о том же значило бы
+// удвоить норму.
+//
+// ЗНАК РАЗНОСТИ НЕ ПРЯЧЕТСЯ. Закон не говорит, что делать, если ранее
+// выплаченное превышает новый предел (такое возможно при ошибке первой
+// выплаты), и модуль ничего за него не решает: разность выводится как есть,
+// отрицательная величина остаётся видимой. Приписать сюда «но не менее нуля»
+// значило бы добавить норму, которой в статье нет.
+
+
+entity PriorInsurancePayment {
+    label ru-KZ official "ранее осуществлённая страховая выплата по требованию потерпевшего (выгодоприобретателя)";
+}
+
+relation payment_claim_victim(demand: PaymentClaim, victim: Victim) kind empirical {
+    key(demand);
+    label ru-KZ official "потерпевший, о вреде которому предъявлено требование о страховой выплате";
+}
+
+relation prior_insurance_payment(demand: PaymentClaim, payment: PriorInsurancePayment,
+                                 amount: Money) kind empirical {
+    key(payment);
+    label ru-KZ official "ранее выплаченная по данному требованию сумма страховой выплаты";
+}
+
+relation health_deterioration_outcome(demand: PaymentClaim,
+                                      outcome: HarmToLifeOrHealthOutcome) kind empirical {
+    key(demand);
+    label ru-KZ official "последствие, наступившее у потерпевшего после осуществления страховой выплаты: установление инвалидности либо более высокой группы инвалидности либо смерть (статья 26 пункт 3)";
+}
+
+relation prior_payments_total(demand: PaymentClaim, amount: Money) kind institutional {
+    key(demand);
+    label ru-KZ official "сумма ранее выплаченных по требованию сумм, принимаемых в зачёт при перерасчёте";
+}
+
+// Свидетель непустоты в теле обязателен: агрегат без него сработал бы на
+// ПУСТОМ множестве и дал бы EMPTY_AGGREGATE на весь документ. Свидетель здесь
+// содержателен и юридически: зачитывать нечего, пока первой выплаты не было.
+@source(LAW_446_ART26, quote = "При этом при перерасчете суммы страховой выплаты принимаются в зачет ранее выплаченные суммы.")
+rule PriorPaymentsTotal(
+    demand: PaymentClaim,
+    any_payment: PriorInsurancePayment,
+    any_amount: Money,
+) strict {
+    label ru-KZ official "Статья 26 пункт 3. При перерасчёте суммы страховой выплаты принимаются в зачёт ранее выплаченные суммы";
+    when prior_insurance_payment(demand, any_payment, any_amount);
+    then prior_payments_total(demand,
+        (sum all amount: Money for payment: PriorInsurancePayment
+             where prior_insurance_payment(demand, payment, amount)));
+}
+
+relation recalculated_liability_limit(demand: PaymentClaim, amount: Money) kind institutional {
+    key(demand);
+    label ru-KZ official "предельный объём ответственности страховщика по последствию, наступившему у потерпевшего после осуществления страховой выплаты";
+}
+
+@source(LAW_446_ART26)
+rule RecalculatedLiabilityLimit(
+    demand: PaymentClaim,
+    outcome: HarmToLifeOrHealthOutcome,
+    multiple: Integer,
+    mrp: Money,
+) strict {
+    label ru-KZ official "Статья 26 пункт 3. Перерасчёт производится в размере, установленном настоящим Законом: за вред, повлёкший наступившее последствие, страховая выплата осуществляется в размере предельного объёма ответственности (статья 24 пункты 1 и 2)";
+    when health_deterioration_reported(demand);
+    when health_deterioration_outcome(demand, outcome);
+    when life_or_health_limit_multiple(outcome, multiple);
+    when payment_day_mrp(mrp);
+    then recalculated_liability_limit(demand, mrp * multiple);
+}
+
+relation recalculated_payment_amount(demand: PaymentClaim, amount: Money) kind institutional {
+    key(demand);
+    label ru-KZ official "сумма страховой выплаты, причитающаяся потерпевшему (выгодоприобретателю) по итогам перерасчёта при ухудшении здоровья либо смерти";
+}
+
+@source(LAW_446_ART26, quote = "Если в результате события, приведшего к наступлению страхового случая, у потерпевшего наступит ухудшение здоровья (устанавливается инвалидность либо более высокая группа инвалидности) либо смерть, то страховщик на основании поступившего от потерпевшего (выгодоприобретателя) заявления и соответствующих документов обязан произвести перерасчет суммы страховой выплаты в порядке и размере, установленных настоящим Законом.")
+rule RecalculatedPaymentAmount(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    insurer: Insurer,
+    victim: Victim,
+    limit: Money,
+    prior: Money,
+) strict {
+    label ru-KZ official "Статья 26 пункт 3. Перерасчёт суммы страховой выплаты производится в порядке и размере, установленных настоящим Законом; при этом при перерасчёте суммы страховой выплаты принимаются в зачёт ранее выплаченные суммы";
+    when payment_claim_of(demand, accident, holder, insurer);
+    when payment_claim_victim(demand, victim);
+    when recalculated_liability_limit(demand, limit);
+    when prior_payments_total(demand, prior);
+    then recalculated_payment_amount(demand, limit - prior);
+}

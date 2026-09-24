@@ -1,0 +1,41 @@
+// Organization of the damage-amount calculation: clauses 2 and 6.
+//
+// PURPOSE. The insurer's basis for the calculation (first part of clause 2) and the three
+// stages of its organization (clause 6).
+//
+// SOURCE PROVISIONS: clause 2 (first part), clause 6.
+//
+// MODEL BOUNDARY. Clause 2's "by the insurer OR the appraiser" is split into two
+// rules (§206): a disjunction in the body is not executed identically by both engines, and
+// the proof would lose the very ground — who exactly did the calculating. The insurer
+// branch lives here; the appraiser branch is in `modules/raschet/otsenshchiki.law`
+// (`RaschetOtsenshchikom`), because it arrives from clause 4 together with the
+// engagement of the appraiser itself. Both branches write the same conclusion
+// `raschet_vedetsya_po_pravilam`, declared here.
+
+// --- Clause 2. The insurer conducts the calculation ---------------------------------------
+relation raschet_osushchestvlyaet_strakhovshchik(r: RaschetVreda, s: Strakhovshchik) kind empirical { label ru official "Расчёт размера вреда осуществляет страховщик"; }
+relation raschet_vedetsya_po_pravilam(r: RaschetVreda) kind institutional { label ru official "Расчёт размера вреда ведётся в порядке, установленном Правилами"; }
+
+@source(VRED_TS_PT_2, quote = "Расчет размера вреда, причиненного транспортному средству (далее – расчет размера вреда) осуществляется страховщиком или оценщиком с применением лицензионного специализированного программного обеспечения (далее – СПО) на основании заявления об определении размера вреда, причиненного имуществу, содержащего сведения согласно приложению 1 к Правилам.")
+rule RaschetStrakhovshchikom(r: RaschetVreda, s: Strakhovshchik, z: Zayavlenie) strict {
+    label ru official "Пункт 2. Расчёт ведётся по Правилам, когда его осуществляет страховщик с применением лицензионного программного обеспечения на основании надлежащего заявления";
+    when raschet_osushchestvlyaet_strakhovshchik(r: r, s: s);
+    when zayavlenie_po_raschetu(z: z, r: r);
+    when zayavlenie_soderzhit_svedeniya_prilozheniya_1(z);
+    when spo_primeneno(r);
+    then raschet_vedetsya_po_pravilam(r);
+}
+
+// --- Clause 6. Stages of organizing the calculation -------------------------------------
+relation mesto_i_vremya_osmotra_soglasovany(r: RaschetVreda) kind empirical { label ru official "Место и время проведения осмотра определены по согласованию сторон"; }
+relation organizatsiya_rascheta_vypolnena(r: RaschetVreda) kind institutional { label ru official "Организация расчёта размера вреда выполнена: пройдены все три этапа"; }
+
+@source(VRED_TS_PT_6, quote = "Организация расчета размера вреда включает следующие этапы:")
+rule OrganizatsiyaRaschetaVypolnena(r: RaschetVreda) strict {
+    label ru official "Пункт 6. Организация расчёта выполнена, когда согласованы место и время осмотра, осмотр оформлен актом и расчёт составлен с применением программного обеспечения";
+    when mesto_i_vremya_osmotra_soglasovany(r);
+    when osmotr_oformlen(r);
+    when spo_primeneno(r);
+    then organizatsiya_rascheta_vypolnena(r);
+}

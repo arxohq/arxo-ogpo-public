@@ -1,0 +1,50 @@
+# Экземпляр шаблона `deontic-window` — ДАННЫЕ, не код.
+# Контракт: corpus/templates/deontic-window/TEMPLATE.ru.md
+# Правится руками; правила в .law порождаются из этого файла между маркерами генерации.
+
+target = "16-18-prava-i-obyazannosti-storon.law"
+
+[[rule]]
+name      = "InsuredMustNotifyInsurerOfAccident"
+strength  = "defeasible"
+anchored_by_block = true
+label     = { lang = "ru-KZ", status = "official", text = "Статья 16 пункт 2 подпункт 3). Страхователь обязан незамедлительно, но не позднее пяти рабочих дней, как ему стало известно о наступлении транспортного происшествия, уведомить об этом страховщика, с которым заключён договор обязательного страхования ответственности владельцев транспортных средств, в письменной форме" }
+params    = ["contract: InsuranceContract", "accident: TrafficAccident", "person: VehicleOwner", "insurer: Insurer", "known, due: Date"]
+premises  = ["policyholder_of(contract, _, insurer)", "accident_under_contract(contract, accident)", "accident_notification_bearer(contract, person)", "accident_became_known_on(contract, accident, known)", "accident_notice_due_day(contract, accident, due)"]
+note      = "// Подпункт 3). Носитель — вывод правил выше; окно закрыто пятым рабочим\n// днём, и потому это единственная обязанность страхователя, которая\n// становится VIOLATED при установленном неисполнении.\n"
+layout    = { indent = 4, params = "multiline", wrapped = false }
+
+[rule.norm]
+modality      = "duty"
+name          = "UvedomitStrakhovshchikaOProisshestvii"
+bearer        = "person"
+beneficiary   = "insurer"
+goal          = "achieve"
+condition     = "insurer_notified_of_accident(contract, accident)"
+start         = "known"
+start_event   = "accident_became_known_on(contract, accident, known)"
+end           = "due"
+end_event     = "accident_notice_due_day(contract, accident, due)"
+end_inclusive = true
+
+[[rule]]
+name      = "InsurerMustProvideContractDetailsToVictim"
+strength  = "strict"
+anchored_by_block = true
+label     = { lang = "ru-KZ", status = "official", text = "Статья 17 пункт 2 подпункт 5-1). Страховщик обязан в течение рабочего дня с даты получения письменного обращения потерпевшего или лица, имеющего согласно законам Республики Казахстан право на возмещение вреда в связи со смертью потерпевшего, письменно представить сведения о заключении договора обязательного страхования ответственности владельцев транспортных средств страхователем, являющимся виновником транспортного происшествия, при наличии документа, подтверждающего страховой случай" }
+params    = ["accident: TrafficAccident", "victim: Victim", "insurer: Insurer", "received, due: Date"]
+premises  = ["accident_insurer(accident, insurer)", "victim_contract_inquiry_received_on(accident, victim, received)", "insured_event_document_presented(accident, victim)", "contract_details_due_day(accident, victim, due)"]
+layout    = { indent = 4, params = "multiline", wrapped = true }
+
+[rule.norm]
+modality      = "duty"
+name          = "PredstavitSvedeniyaODogovorePoterpevshemu"
+bearer        = "insurer"
+beneficiary   = "victim"
+goal          = "achieve"
+condition     = "contract_details_provided_to_victim(accident, victim)"
+start         = "received"
+start_event   = "victim_contract_inquiry_received_on(accident, victim, received)"
+end           = "due"
+end_event     = "contract_details_due_day(accident, victim, due)"
+end_inclusive = true

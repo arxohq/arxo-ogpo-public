@@ -1,0 +1,30 @@
+# Манифест §10 — маркер корня пакета (DECISION-0033). Нормативны заголовки §22
+# в самих .law; манифест обязан с ними совпадать (LDC-E1109, lawc check).
+[package]
+name = "kz.corpus.budget"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:kz:corpus:clir:budget"
+
+# Каталожная метадата (DECISION-0051; docs/PACKAGE-METADATA.ru.md). НЕ семантика:
+# в CLIR не понижается, в semantic hash §209 не входит. Выводимые поля
+# (jurisdiction ← jurisdiction источника, instrument ← kind, sourceFidelity ←
+# materialization_status) сверяются с source-декларациями воротами
+# ci/check_package_metadata.py.
+[metadata]
+act = "kz-budget-2026"
+title = "Закон РК о республиканском бюджете на 2026–2028 годы"
+primarySource = "BUDGET_LAW"
+jurisdiction = "KZ"
+instrument = "law"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "Парламент Республики Казахстан"
+
+[dependencies]
+"kz.corpus.budget_code" = "0.1.0"
+
+[[tests]]
+family = "kz.corpus.budget#parametry-goda"
+suites = ["tests/parametry-goda.lawtest"]
+world = ["kz.corpus.budget", "kz.corpus.budget_code"]

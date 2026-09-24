@@ -1,0 +1,237 @@
+// СТАТЬИ 28 И 29. РЕГРЕСС И ОТКАЗ В СТРАХОВОЙ ВЫПЛАТЕ.
+//
+// Две статьи в одном модуле потому, что они говорят об одной развилке дела
+// после наступления страхового случая: страховщик заплатил и требует обратно
+// (статья 28) либо не платит вовсе (статья 29). Обе стоят на перечислениях
+// оснований, и перечисления эти РАЗНЫЕ по правовому действию — разбор при
+// объявлении `RecourseGround`, `RefusalGround` и `ReleaseGround` в
+// `package.law`.
+//
+// ТРИ РЕЖИМА СТАТЬИ 29, И РАЗЛИЧИЕ МЕЖДУ НИМИ — ГЛАВНОЕ РЕШЕНИЕ МОДУЛЯ:
+//
+//   пункты 1 и 2  — страховщик ВПРАВЕ отказать («вправе полностью или частично
+//                   отказать», «основанием для отказа может быть также»).
+//                   Форма — `liberty` §128: право отказать, а не обязанность
+//                   и не факт отказа. Записать это обязанностью значило бы
+//                   сказать, что страховщик обязан не платить, — чего закон
+//                   не говорит;
+//   пункт 5       — страховщик ОСВОБОЖДАЕТСЯ. Решения здесь нет, и потому
+//                   форма — институциональный факт, а не позиция;
+//   пункт 3       — при наличии оснований для отказа страховщик ОБЯЗАН в семь
+//                   рабочих дней направить мотивированное решение. Это
+//                   единственная обязанность статьи, и она возникает от
+//                   основания отказа, а не от самого отказа.
+//
+// ПУНКТ 6 СТАТЬИ 29 («страховщик не вправе отказать по основаниям, не
+// предусмотренным настоящей статьёй») — ЗАМЫКАНИЕ §70 над перечислениями
+// пунктов 1, 2 и 5, и взято оно замыканием: перечень оснований закрыт самим
+// законом, и это утверждение нормы, а не наблюдение формализатора.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ СРЕЗА (решение формализатора, 05.09.2026):
+//
+//   пункт 2 статьи 28 — регресс к страхователю, когда виновником является
+//              лицо, названное подпунктами 1) и 2) пункта 5 статьи 11. Статья
+//              11 в срезе пакета не формализована (SOURCE_ONLY), и пересказать
+//              её состав здесь значило бы формализовать чужую статью под чужим
+//              якорем. Долг записан в отчёте наряда.
+//
+//   пункт 3 статьи 28 — суброгация к лицу, ответственному за убытки, и
+//              переход требования к виновному в неудовлетворительном
+//              содержании дорог. Взято правилом перехода права; лицо,
+//              ответственное за дорожные условия, остаётся входом дела.
+
+
+// ============================================================================
+// Статья 28. Право обратного требования
+// ============================================================================
+
+relation recourse_ground_established(accident: TrafficAccident, ground: RecourseGround)
+    kind empirical {
+    label ru-KZ official "по данному транспортному происшествию установлено названное основание права обратного требования (статья 28 пункт 1)";
+}
+
+relation insurance_payment_made_by(accident: TrafficAccident, insurer: Insurer, amount: Money)
+    kind empirical {
+    key(accident, insurer);
+    label ru-KZ official "страховщик осуществил страховую выплату в названной сумме по данному транспортному происшествию";
+}
+
+relation liable_for_road_conditions(accident: TrafficAccident, person: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "лицо, виновное в создании дорожных условий, вызванных неудовлетворительным обслуживанием автомобильных дорог и сооружений на них";
+}
+
+relation road_conditions_caused_accident(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "установлено, что страховой случай произошёл по причине дорожных условий, вызванных неудовлетворительным обслуживанием автомобильных дорог и сооружений на них";
+}
+
+relation recourse_amount_repaid(accident: TrafficAccident, owner: VehicleOwner) kind empirical {
+    label ru-KZ official "страхователь (застрахованный) возместил страховщику сумму, выплаченную по обратному требованию";
+}
+
+pub relation insurer_has_recourse_claim(accident: TrafficAccident, insurer: Insurer,
+                                    owner: VehicleOwner, amount: Money) kind institutional {
+    label ru-KZ official "страховщик имеет право обратного требования к страхователю (застрахованному) в пределах уплаченной суммы";
+}
+
+relation insurer_subrogated_against_road_authority(accident: TrafficAccident, insurer: Insurer,
+                                                   person: VehicleOwner) kind institutional {
+    label ru-KZ official "к страховщику, осуществившему страховую выплату, перешло право требования владельца транспортного средства к лицу, виновному в создании дорожных условий";
+}
+
+@source(LAW_446_ART28) {
+    rule InsurerHasRecourseAgainstInsured(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        owner: VehicleOwner,
+        ground: RecourseGround,
+        amount: Money,
+    ) strict {
+        label ru-KZ official "Статья 28 пункт 1. Страховщик, осуществивший страховую выплату, имеет право обратного требования к страхователю (застрахованному) в пределах уплаченной суммы в названных случаях";
+        when insurance_payment_made_by(accident, insurer, amount);
+        when accident_insured(accident, owner);
+        when recourse_ground_established(accident, ground);
+        then insurer_has_recourse_claim(accident, insurer, owner, amount);
+    }
+
+    // Позиция §127: обязанность страхователя вернуть выплаченное. Носитель здесь
+    // страхователь, бенефициар — страховщик; это обратная сторона выплаты, а не
+    // её повторение.
+    rule InsuredMustRepayRecourseAmount(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        owner: VehicleOwner,
+        amount: Money,
+    ) strict {
+        label ru-KZ official "Статья 28 пункт 1. Страхователь (застрахованный) отвечает по обратному требованию страховщика в пределах уплаченной страховщиком суммы";
+        when insurer_has_recourse_claim(accident, insurer, owner, amount);
+        then duty VozmestitStrakhovshchikuSummuPoRegressu {
+            bearer owner;
+            achieve recourse_amount_repaid(accident, owner) during [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerSubrogatedAgainstRoadAuthority(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        person: VehicleOwner,
+        amount: Money,
+    ) strict {
+        label ru-KZ official "Статья 28 пункт 3. Если установлено, что страховой случай произошёл по причине дорожных условий, вызванных неудовлетворительным обслуживанием автомобильных дорог, к страховщику, осуществившему страховую выплату, переходит право требования владельца транспортного средства к лицу, виновному в создании таких условий";
+        when insurance_payment_made_by(accident, insurer, amount);
+        when road_conditions_caused_accident(accident);
+        when liable_for_road_conditions(accident, person);
+        then insurer_subrogated_against_road_authority(accident, insurer, person);
+    }
+}
+
+// ============================================================================
+// Статья 29. Отказ и освобождение
+// ============================================================================
+
+relation refusal_ground_established(demand: PaymentClaim, ground: RefusalGround)
+    kind empirical {
+    label ru-KZ official "по данному требованию установлено названное основание отказа в страховой выплате (статья 29 пункты 1 и 2)";
+}
+
+relation release_ground_established(demand: PaymentClaim, ground: ReleaseGround)
+    kind empirical {
+    label ru-KZ official "страховой случай наступил вследствие названного обстоятельства, освобождающего страховщика от осуществления страховой выплаты (статья 29 пункт 5)";
+}
+
+relation damaged_vehicle_named_in_policy(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "требование заявлено за повреждённое транспортное средство, указанное в страховом полисе";
+}
+
+relation refusal_decision_dispatched(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик направил заявителю письменное решение о полном или частичном отказе в страховой выплате с мотивированным обоснованием и уведомлением о праве обратиться к страховому омбудсману";
+}
+
+relation insurer_released_from_payment(demand: PaymentClaim) kind institutional {
+    label ru-KZ official "страховщик освобождается от осуществления страховой выплаты по данному требованию";
+}
+
+relation refusal_permitted(demand: PaymentClaim) kind institutional {
+    label ru-KZ official "у страховщика имеется предусмотренное статьёй 29 основание для полного либо частичного отказа в страховой выплате";
+}
+
+// Пункты 1 и 2 — ПРАВО отказать. `liberty` §128, а не обязанность: закон
+// говорит «вправе», и превращать это в обязанность значило бы обязать
+// страховщика не платить.
+@source(LAW_446_ART29) {
+    rule InsurerMayRefusePaymentOnGround(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+        ground: RefusalGround,
+    ) strict {
+        label ru-KZ official "Статья 29 пункты 1 и 2. Страховщик вправе полностью или частично отказать в страховой выплате при наличии предусмотренного настоящей статьёй основания";
+        when payment_claim_of(demand, accident, holder, insurer);
+        when refusal_ground_established(demand, ground);
+        then liberty OtkazatVStrakhovoyVyplate {
+            holder insurer;
+            action refusal_decision_dispatched(demand);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule RefusalGroundMakesRefusalPermitted(demand: PaymentClaim, ground: RefusalGround) strict {
+        label ru-KZ official "Статья 29 пункт 6. Страховщик не вправе отказать в страховой выплате по основаниям, не предусмотренным настоящей статьёй";
+        when refusal_ground_established(demand, ground);
+        then refusal_permitted(demand);
+    }
+
+    // Пункт 5 и пункт 5-1 — ОСВОБОЖДЕНИЕ. Решения страховщика здесь нет, и потому
+    // институциональный факт, а не позиция.
+    rule InsurerReleasedByForceMajeureGround(demand: PaymentClaim, ground: ReleaseGround) strict {
+        label ru-KZ official "Статья 29 пункт 5. Страховщик освобождается от осуществления страховой выплаты, если страховой случай наступил вследствие воздействия ядерного взрыва, радиации или радиоактивного заражения, военных действий, гражданской войны, народных волнений, массовых беспорядков или забастовок";
+        when release_ground_established(demand, ground);
+        then insurer_released_from_payment(demand);
+    }
+
+    rule NoPaymentForVehicleNamedInPolicy(demand: PaymentClaim) strict {
+        label ru-KZ official "Статья 29 пункт 5-1. Страховая выплата не осуществляется за повреждённое транспортное средство, указанное в страховом полисе";
+        when damaged_vehicle_named_in_policy(demand);
+        then insurer_released_from_payment(demand);
+    }
+}
+
+// Пункт 3: семь рабочих дней на мотивированное решение. Единственная
+// обязанность статьи, и возникает она от ОСНОВАНИЯ отказа, а не от отказа.
+relation refusal_decision_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок направления заявителю решения о полном или частичном отказе в страховой выплате (статья 29 пункт 3)";
+}
+@source(LAW_446_ART29)
+assert refusal_decision_term(7 business_day);
+
+relation refusal_decision_due_day(demand: PaymentClaim, day: Date) kind institutional {
+    label ru-KZ official "день, в который истекает срок направления решения об отказе в страховой выплате";
+}
+
+@source(LAW_446_ART29) {
+    rule RefusalDecisionDueDay(demand: PaymentClaim, received: Date, term: Quantity) strict {
+        label ru-KZ official "Статья 29 пункт 3. Срок направления решения об отказе истекает на седьмой рабочий день со дня получения заявления и всех документов, предусмотренных пунктом 2 статьи 25 настоящего Закона";
+        when refusal_permitted(demand);
+        when documents_received_on(demand, received);
+        when refusal_decision_term(term);
+        then refusal_decision_due_day(demand, add_business_days(received, term));
+    }
+
+    // DECISION-0209 этап 7 (пилот Р8): правило записано экземпляром каркаса
+    // `claim_deadline_duty` профиля 0.2; узлы — `InsurerMustDispatchRefusalDecision/duty` и `InsurerMustDispatchRefusalDecision/duty/norm`.
+    expand claim_deadline_duty InsurerMustDispatchRefusalDecision {
+        label ru-KZ official "Статья 29 пункт 3. При наличии оснований для отказа в осуществлении страховой выплаты страховщик обязан в течение семи рабочих дней со дня получения заявления и всех документов направить заявителю соответствующее решение в письменной форме с мотивированным обоснованием причин отказа и уведомлением о праве обратиться к страховому омбудсману";
+        bind matter = demand: PaymentClaim;
+        bind context = accident: TrafficAccident;
+        bind beneficiary = holder: Beneficiary;
+        bind bearer = insurer: Insurer;
+        bind start = received: Date;
+        bind due = due: Date;
+        claim = payment_claim_of;
+        started = documents_received_on;
+        due_on = refusal_decision_due_day;
+        conditions = [refusal_permitted];
+        result = refusal_decision_dispatched;
+    }
+}

@@ -1,0 +1,277 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 15 пп. 1, 2 и 3 — досрочное прекращение и удержание по формуле.
+//
+// ОДИН ДОГОВОР НА ВЕСЬ ФАЙЛ И ФАЙЛ-СОСЕД, И ЧИСЛА У НЕГО КРУГЛЫЕ НЕ СЛУЧАЙНО.
+// Договор временного въезда (иной срок пункта 4 статьи 13) действует с
+// 1 января по 11 апреля 2026 года: `N = days_between(1 января, 11 апреля)`
+// = 31 + 28 + 31 + 10 = 100 дней. Ста дням срока соответствует ровно один
+// процент на день, и потому граница шкалы пункта 4 достижима ТОЧНО — на
+// годовом договоре в 365 дней «четыре процента» приходятся на 14,6 суток, и
+// проверить границу было бы нечем.
+//
+// РАСЧЁТ РУКАМИ (пункт 3). Обращение 4 января: `n = days_between(1 января,
+// 4 января) + 1 = 3 + 1 = 4` дня, «включая день обращения». Премия оплачена
+// в размере 100 000 тенге. ЧСП = СП * n/N = 100 000 * 4/100 = 4 000 тенге.
+// Возврату подлежит 100 000 − 4 000 = 96 000 тенге.
+//
+// ПАРА ЗАЯВЛЕНИЯ (пункт 2). Основание Гражданского кодекса без письменного
+// заявления досрочного прекращения не даёт: закон знает его только по
+// заявлению. Прочтение названо в шапке модуля и закреплено второй половиной
+// пары.
+
+context profile KZ_OGPO_DAY_DEADLINES {
+    deadline_policy KZ_OGPO_CALENDAR_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-early-termination-on-application" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t15-a0": contract_in_question(entity_ref("urn:kz:ogpo:contract:s1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-a1": civil_code_early_termination_ground(entity_ref("urn:kz:ogpo:contract:s1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-a2": early_termination_application_by_policyholder(entity_ref("urn:kz:ogpo:contract:s1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_terminated_early(entity_ref("urn:kz:ogpo:contract:s1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Наследник умершего страхователя — второе основание того же пункта 2.
+test "urn:query:ogpo-early-termination-by-heir" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t15-b0": contract_in_question(entity_ref("urn:kz:ogpo:contract:s2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-b1": civil_code_early_termination_ground(entity_ref("urn:kz:ogpo:contract:s2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-b2": early_termination_application_by_heir(entity_ref("urn:kz:ogpo:contract:s2")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_terminated_early(entity_ref("urn:kz:ogpo:contract:s2")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пара: основание есть, заявления нет.
+test "urn:query:ogpo-no-early-termination-without-application" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t15-c0": contract_in_question(entity_ref("urn:kz:ogpo:contract:s3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-c1": civil_code_early_termination_ground(entity_ref("urn:kz:ogpo:contract:s3")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_terminated_early(entity_ref("urn:kz:ogpo:contract:s3")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пункт 3: новый договор с тем же страховщиком — удержание по формуле.
+// 100 000 * 4/100 = 4 000 тенге.
+test "urn:query:ogpo-retention-pro-rata" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t15-d0": contract_in_question(entity_ref("urn:kz:ogpo:contract:s4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-d1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:s4"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-d2": other_term_ground(entity_ref("urn:kz:ogpo:contract:s4"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-d3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:s4"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-d4": early_termination_day(entity_ref("urn:kz:ogpo:contract:s4"), @2026-01-04) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-d5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:s4"), 100000 KZT) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-d6": new_contract_with_same_insurer(entity_ref("urn:kz:ogpo:contract:s4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-d7": civil_code_early_termination_ground(entity_ref("urn:kz:ogpo:contract:s4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-d8": early_termination_application_by_policyholder(entity_ref("urn:kz:ogpo:contract:s4")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:s4"), 4000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Тот же договор: возврату подлежат 96 000 тенге.
+test "urn:query:ogpo-refund-pro-rata" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t15-e0": contract_in_question(entity_ref("urn:kz:ogpo:contract:s5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-e1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:s5"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-e2": other_term_ground(entity_ref("urn:kz:ogpo:contract:s5"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-e3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:s5"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-e4": early_termination_day(entity_ref("urn:kz:ogpo:contract:s5"), @2026-01-04) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-e5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:s5"), 100000 KZT) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-e6": new_contract_with_same_insurer(entity_ref("urn:kz:ogpo:contract:s5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-e7": civil_code_early_termination_ground(entity_ref("urn:kz:ogpo:contract:s5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-e8": early_termination_application_by_policyholder(entity_ref("urn:kz:ogpo:contract:s5")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_refunded(entity_ref("urn:kz:ogpo:contract:s5"), 96000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Оборотная сторона дефитера: удержание ПО ШКАЛЕ на том же деле отведено.
+// Без этой половины две величины удержания по одному договору жили бы рядом,
+// и `key(contract)` ловил бы их KEY_CONFLICT-ом.
+test "urn:query:ogpo-scale-defeated-by-new-contract" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t15-f0": contract_in_question(entity_ref("urn:kz:ogpo:contract:s6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-f1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:s6"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-f2": other_term_ground(entity_ref("urn:kz:ogpo:contract:s6"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-f3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:s6"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-f4": early_termination_day(entity_ref("urn:kz:ogpo:contract:s6"), @2026-01-04) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-f5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:s6"), 100000 KZT) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-f6": new_contract_with_same_insurer(entity_ref("urn:kz:ogpo:contract:s6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-f7": civil_code_early_termination_ground(entity_ref("urn:kz:ogpo:contract:s6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t15-f8": early_termination_application_by_policyholder(entity_ref("urn:kz:ogpo:contract:s6")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:s6"), 20000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

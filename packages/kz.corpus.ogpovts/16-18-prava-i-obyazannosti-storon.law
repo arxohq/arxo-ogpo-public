@@ -1,0 +1,1412 @@
+// СТАТЬИ 16, 17 И 18. ПРАВА И ОБЯЗАННОСТИ СТРАХОВАТЕЛЯ (ЗАСТРАХОВАННОГО),
+// СТРАХОВЩИКА И ПОТЕРПЕВШЕГО.
+//
+// Три статьи в одном модуле потому, что они образуют ОДНУ таблицу позиций:
+// почти каждому праву одной стороны отвечает обязанность другой, и разнести
+// их по трём файлам значило бы трижды объявить один и тот же словарь сторон
+// (кто страхователь, кто застрахованный, кто страховщик, кто потерпевший).
+//
+// ФОРМА КАЖДОГО ПУНКТА — ИЗ ГЛАГОЛА ТЕКСТА, а не из удобства:
+//
+//   «вправе»            — свобода §125 (`liberty`): держатель, тот, против
+//                         кого она действует, действие и окно. Обязанностью
+//                         право не записывается: закон не обязывает
+//                         пользоваться правом;
+//   «обязан»            — обязанность §123 (`duty`) с носителем и целью;
+//   «не может являться
+//    основанием»        — иммунитет §128 (в этом модуле не встречается,
+//                         он в `21-…`).
+//
+// ЧТО РАЗЛИЧАЕТСЯ И ЗАЧЕМ: СТРАХОВАТЕЛЬ, ЗАСТРАХОВАННЫЙ, ВОДИТЕЛЬ.
+// Статья 16 адресует свои нормы трём разным лицам, и текст сам это называет:
+// подпункт 4) пункта 1 — «данное право распространяется только на
+// страхователя»; подпункт 3) пункта 2 — «когда страхователь и застрахованный
+// не являются одним и тем же лицом… обязанность… возлагается на
+// застрахованного»; пункт 3 — обязанности подпунктов 4), 5), 6) и 6-1)
+// «возлагаются на лицо, непосредственно управлявшее транспортным средством».
+// Поэтому носитель у позиций РАЗНЫЙ, а не один «владелец».
+//
+// НЕРАВЕНСТВО ЛИЦ НЕ ВЫРАЖАЕТСЯ `!=`. Различие «страхователь и застрахованный
+// — не одно и то же лицо» подаётся ПОЛОЖИТЕЛЬНЫМ фактом дела
+// (`insured_person_distinct_from_policyholder`), потому что неравенство
+// сущностей в теле правила молча не срабатывает, а отсутствие факта
+// тождества отрицанием тождества не является (§113).
+//
+// ЧТО ВЗЯТО НЕ ЗДЕСЬ (пункты, уже выведенные соседними модулями):
+//
+//   статья 16 пункт 1 подпункт 7) и статья 17 пункт 2 подпункты 7) и 7-1)
+//              — обязанность страховщика произвести выплату выведена
+//              `InsurerMustPayWithinTerm` (`26-poryadok-vyplaty.law`,
+//              статья 26 пункт 1) и `PaymentDueDayIsDirectSettlementTerm`
+//              (статья 26-1 пункт 2). Второй якорь предложен в отчёте наряда;
+//   статья 17 пункт 1 подпункт 6) — право отказать выведено
+//              `InsurerMayRefusePaymentOnGround` (`28-29-regress-i-otkaz.law`,
+//              статья 29 пункты 1 и 2);
+//   статья 17 пункт 2 подпункт 8) — обязанность возместить расходы на
+//              уменьшение убытков выведена `InsurerReimbursesLossPreventionExpenses`
+//              (`24-predely-otvetstvennosti.law`, статья 24 пункт 4);
+//   статья 17 пункт 2 подпункт 4) — САМА ЛЬГОТА исчислена
+//              `PremiumPayableReduced` (`20-reduction.law`); здесь заводится
+//              только обязанность её ПРЕДОСТАВИТЬ, которой у пакета не было.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ СРЕЗА (решение формализатора, 10.09.2026):
+//
+//   статья 16 пункт 2 подпункт 6-1) — срок «не позднее двух часов». Единицы
+//              времени короче суток в §84.2 нет вовсе: `DAY_UNITS` — только
+//              `business_day` и `calendar_day`, `CALENDAR_PERIOD_UNITS` —
+//              день, неделя, месяц, год. Терм-границы окна для двух часов не
+//              существует, и придумать её значило бы назвать срок, которого
+//              язык не считает. Обязанность взята позицией с окном от дня
+//              получения направления; двухчасовой срок в срез не входит.
+//
+//   статья 16 пункт 2 подпункт 7) — исключён Законом РК от 12.07.2022
+//              № 138-VII: в закреплённом тексте от него осталась одна строка
+//              об исключении, нормы нет.
+//
+//   статья 17 пункт 1 подпункт 4) — исключён Законом от 07.05.2007 № 244.
+//
+//   статья 18 пункт 1 подпункт 3) — исключён Законом РК от 10.01.2018
+//              № 134-VI.
+//
+//   абзацы «договором могут быть предусмотрены и другие права (обязанности)»
+//              (статья 16 пункт 1 абзац последний и пункт 2 абзац последний,
+//              статья 17 пункт 1 абзац последний и пункт 2 абзац последний) —
+//              состав этих прав и обязанностей определяет ДОГОВОР, а не закон;
+//              норма называет лишь предел («не противоречащие законам
+//              Республики Казахстан»). Позиции без содержания не бывает.
+//
+//   статья 18 пункт 2 — переход прав потерпевшего к иным лицам,
+//              выступающим выгодоприобретателями. Носителя, которого можно
+//              назвать, у этой нормы в пакете нет: `Victim` и `Beneficiary`
+//              — две НЕСВЯЗАННЫЕ сущности (`package.law`: «своего `Person`
+//              пакет не заводит, хаб лиц корпуса — `kz.corpus.civilcode`»),
+//              и переход права от одной к другой невыразим без общего
+//              надтипа. Долг моста записан в отчёте наряда.
+//
+// РЕДАКЦИЯ БУДУЩЕГО. Подпункты 5) и 6) пункта 1 статьи 16 и подпункты 5-1) и
+// 6) пункта 1 статьи 18, а также подпункт 7-3) пункта 2 статьи 17
+// предъявлены в закреплённых байтах пометой ИЗПИ «предусматривается в
+// редакции Закона РК от 16.01.2026 № 259-VIII (вводится в действие с
+// 01.01.2027)». То есть в закреплённом тексте лежит БУДУЩАЯ формулировка, а
+// действующей до 1 января 2027 года в байтах нет вовсе. Поэтому правила о них
+// несут `effective [@2027-01-01, infinity)`, а период до этого дня объявлен
+// границей: пересказать отсутствующие байты нечем.
+
+
+// ============================================================================
+// Словарь сторон договора
+// ============================================================================
+
+relation policyholder_of(contract: InsuranceContract, policyholder: VehicleOwner,
+                         insurer: Insurer) kind empirical {
+    key(contract);
+    label ru-KZ official "страхователь и страховщик по договору обязательного страхования ответственности владельцев транспортных средств";
+}
+
+
+relation beneficiary_of_contract(contract: InsuranceContract, holder: Beneficiary)
+    kind empirical {
+    label ru-KZ official "выгодоприобретатель по договору обязательного страхования ответственности владельцев транспортных средств";
+}
+
+// «Страхователь (застрахованный)» пункта 1 статьи 16 — ДВА лица, и потому два
+// правила с общей головой (§206), а не дизъюнкция в одном теле.
+relation policyholder_or_insured(contract: InsuranceContract, person: VehicleOwner)
+    kind institutional {
+    label ru-KZ official "страхователь либо застрахованный по договору обязательного страхования ответственности владельцев транспортных средств";
+}
+
+@source(LAW_446_ART16) {
+    rule PartyIsPolicyholder(contract: InsuranceContract, person: VehicleOwner,
+                             insurer: Insurer) strict {
+        label ru-KZ official "Статья 16. Страхователем по договору обязательного страхования ответственности владельцев транспортных средств является заключившее его лицо";
+        when policyholder_of(contract, person, insurer);
+        then policyholder_or_insured(contract, person);
+    }
+
+    rule PartyIsInsuredPerson(contract: InsuranceContract, person: VehicleOwner) strict {
+        label ru-KZ official "Статья 16. Застрахованным является лицо, включённое в страховой полис";
+        when contract_insured_person(contract, person);
+        then policyholder_or_insured(contract, person);
+    }
+}
+
+// ============================================================================
+// Статья 16 пункт 1. Права страхователя (застрахованного)
+// ============================================================================
+
+enum DatabaseInquiryKind {
+    label ru-KZ official "вид сведений, запрашиваемых у организации по формированию и ведению базы данных (статья 16 пункт 1 подпункт 2))";
+    ContractRecord;
+    InsuredEventRecord;
+}
+
+enum DisputeForum {
+    label ru-KZ official "орган, к которому обращаются для урегулирования вопросов, возникающих из договора обязательного страхования";
+    AddressedInsurer;
+    AddressedOmbudsman;
+    AddressedCourt;
+}
+
+enum OmbudsmanSubmissionChannel {
+    label ru-KZ official "способ направления заявления и прилагаемых документов страховому омбудсману";
+    DirectlyToOmbudsman;
+    ThroughInsurer;
+}
+
+relation explanation_of_terms_requested(contract: InsuranceContract, person: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "страхователь (застрахованный) потребовал от страховщика разъяснения условий обязательного страхования ответственности владельцев транспортных средств, своих прав и обязанностей по договору";
+}
+
+relation database_inquiry_submitted(contract: InsuranceContract, kind: DatabaseInquiryKind)
+    kind empirical {
+    label ru-KZ official "у организации по формированию и ведению базы данных запрошены сведения названного вида";
+}
+
+relation harm_and_payment_results_reviewed(contract: InsuranceContract, person: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "лицо ознакомилось с результатами определения размеров причинённого вреда, произведённого страховщиком, и страховой выплаты, осуществлённой страховщиком";
+}
+
+relation early_termination_requested(contract: InsuranceContract, policyholder: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "страхователь досрочно прекратил договор обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation dispute_settlement_sought(contract: InsuranceContract, forum: DisputeForum)
+    kind empirical {
+    label ru-KZ official "по вопросам, возникающим из договора обязательного страхования ответственности владельцев транспортных средств, состоялось обращение в названный орган";
+}
+
+relation ombudsman_application_sent(contract: InsuranceContract,
+                                    channel: OmbudsmanSubmissionChannel) kind empirical {
+    label ru-KZ official "заявление и прилагаемые документы направлены страховому омбудсману названным способом";
+}
+
+@source(LAW_446_ART16) {
+    // Подпункт 1). Право требовать разъяснения. Обратная сторона — обязанность
+    // страховщика подпункта 1) пункта 2 статьи 17, выведенная ниже.
+    rule InsuredMayDemandExplanationOfTerms(
+        contract: InsuranceContract,
+        person, policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 1). Страхователь (застрахованный) вправе требовать от страховщика разъяснения условий обязательного страхования ответственности владельцев транспортных средств, своих прав и обязанностей по договору";
+        when policyholder_or_insured(contract, person);
+        when policyholder_of(contract, policyholder, insurer);
+        then liberty TrebovatRazyasneniyaUsloviy {
+            holder person;
+            against insurer;
+            action explanation_of_terms_requested(contract, person);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 2). Два вида сведений — два применения одной свободы. Третье
+    // правило (о выгодоприобретателе) стоит отдельно: скобка подпункта
+    // распространяет на него право ТОЛЬКО в части страхового случая.
+    rule InsuredMayInquireContractRecord(
+        contract: InsuranceContract,
+        person: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 2). Страхователь (застрахованный) вправе запросить от организации по формированию и ведению базы данных информацию о наличии в базе данных сведений о договоре обязательного страхования ответственности владельцев транспортных средств";
+        when policyholder_or_insured(contract, person);
+        then liberty ZaprositSvedeniyaODogovoreIzBazyDannykh {
+            holder person;
+            action database_inquiry_submitted(contract, ContractRecord);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsuredMayInquireInsuredEventRecord(
+        contract: InsuranceContract,
+        person: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 2). Страхователь (застрахованный) вправе запросить от организации по формированию и ведению базы данных информацию о наличии в базе данных сведений о страховом случае (транспортном происшествии) по договору";
+        when policyholder_or_insured(contract, person);
+        then liberty ZaprositSvedeniyaOSluchaeIzBazyDannykh {
+            holder person;
+            action database_inquiry_submitted(contract, InsuredEventRecord);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule BeneficiaryMayInquireInsuredEventRecord(
+        contract: InsuranceContract,
+        holder: Beneficiary,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 2). Право запроса сведений по страховому случаю (транспортному происшествию) распространяется также на выгодоприобретателя";
+        when beneficiary_of_contract(contract, holder);
+        then liberty VygodopriobretatelZaprositSvedeniyaOSluchae {
+            holder holder;
+            action database_inquiry_submitted(contract, InsuredEventRecord);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 3). Обратная сторона — подпункт 6) пункта 2 статьи 17.
+    rule InsuredMayReviewHarmAndPaymentResults(
+        contract: InsuranceContract,
+        person, policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 3). Страхователь (застрахованный) вправе ознакомиться с результатами определения размеров причинённого вреда, произведённого страховщиком, и страховой выплаты, осуществлённой страховщиком, в том числе посредством интернет-ресурса страховщика";
+        when policyholder_or_insured(contract, person);
+        when policyholder_of(contract, policyholder, insurer);
+        then liberty OznakomitsyaSRezultatamiOpredeleniyaVreda {
+            holder person;
+            against insurer;
+            action harm_and_payment_results_reviewed(contract, person);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 4). ТОЛЬКО страхователь — скобка подпункта. Форма — свобода, а
+    // не полномочие §127, и это решение, а не небрежность: у полномочия
+    // обязательно `valid_when`, а основания и порядок досрочного прекращения
+    // договора стоят в статье 15, которой в срезе пакета нет. Назвать условием
+    // действительности выдуманный предикат значило бы формализовать чужую
+    // статью под якорем статьи 16.
+    rule PolicyholderMayTerminateContractEarly(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 4). Страхователь вправе досрочно прекратить договор обязательного страхования ответственности владельцев транспортных средств (данное право распространяется только на страхователя)";
+        when policyholder_of(contract, policyholder, insurer);
+        then liberty DosrochnoPrekratitDogovor {
+            holder policyholder;
+            against insurer;
+            action early_termination_requested(contract, policyholder);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 5). «Либо… или…» — три самостоятельных обращения, три правила
+    // (§206). Окно правила — с 1 января 2027 года: в закреплённых байтах лежит
+    // редакция, вводимая в действие с этого дня (разбор в шапке модуля).
+    rule InsuredMaySeekSettlementFromInsurer(
+        contract: InsuranceContract,
+        person: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 5). Страхователь (застрахованный) вправе обратиться к страховщику с учётом особенностей, предусмотренных статьёй 29-1 настоящего Закона, для урегулирования вопросов, возникающих из договора обязательного страхования ответственности владельцев транспортных средств";
+        effective [@2027-01-01, infinity);
+        when policyholder_or_insured(contract, person);
+        then liberty ObratitsyaKStrakhovshchikuZaUregulirovaniem {
+            holder person;
+            action dispute_settlement_sought(contract, AddressedInsurer);
+            window [@2027-01-01, infinity);
+        };
+    }
+
+    rule InsuredMaySeekSettlementFromOmbudsman(
+        contract: InsuranceContract,
+        person: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 5). Страхователь (застрахованный) вправе обратиться к страховому омбудсману для урегулирования вопросов, возникающих из договора обязательного страхования ответственности владельцев транспортных средств";
+        effective [@2027-01-01, infinity);
+        when policyholder_or_insured(contract, person);
+        then liberty ObratitsyaKOmbudsmanuZaUregulirovaniem {
+            holder person;
+            action dispute_settlement_sought(contract, AddressedOmbudsman);
+            window [@2027-01-01, infinity);
+        };
+    }
+
+    rule InsuredMaySeekSettlementFromCourt(
+        contract: InsuranceContract,
+        person: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 5). Страхователь (застрахованный) вправе обратиться в суд для урегулирования вопросов, возникающих из договора обязательного страхования ответственности владельцев транспортных средств";
+        effective [@2027-01-01, infinity);
+        when policyholder_or_insured(contract, person);
+        then liberty ObratitsyaVSudZaUregulirovaniem {
+            holder person;
+            action dispute_settlement_sought(contract, AddressedCourt);
+            window [@2027-01-01, infinity);
+        };
+    }
+
+    // Подпункт 6). Два способа направления — два правила (§206).
+    rule InsuredMaySendApplicationDirectlyToOmbudsman(
+        contract: InsuranceContract,
+        person: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 6). Страхователь (застрахованный) вправе направить заявление и прилагаемые документы страховому омбудсману напрямую, в том числе через его интернет-ресурс";
+        effective [@2027-01-01, infinity);
+        when policyholder_or_insured(contract, person);
+        then liberty NapravitZayavlenieOmbudsmanuNapryamuyu {
+            holder person;
+            action ombudsman_application_sent(contract, DirectlyToOmbudsman);
+            window [@2027-01-01, infinity);
+        };
+    }
+
+    rule InsuredMaySendApplicationThroughInsurer(
+        contract: InsuranceContract,
+        person, policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 1 подпункт 6). Страхователь (застрахованный) вправе направить заявление и прилагаемые документы страховому омбудсману через страховщика, в том числе его филиал, представительство, иное обособленное структурное подразделение, интернет-ресурс";
+        effective [@2027-01-01, infinity);
+        when policyholder_or_insured(contract, person);
+        when policyholder_of(contract, policyholder, insurer);
+        then liberty NapravitZayavlenieOmbudsmanuCherezStrakhovshchika {
+            holder person;
+            against insurer;
+            action ombudsman_application_sent(contract, ThroughInsurer);
+            window [@2027-01-01, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Статья 16 пункт 2. Обязанности страхователя
+// ============================================================================
+
+relation contract_conclusion_applied_for(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователь обратился к страховщику за заключением договора обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation application_information_submitted(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страховщику представлены сведения о страхователе, каждом застрахованном, транспортном средстве, двойном страховании, сезонной эксплуатации, временном въезде и праве на уменьшение размера страховой премии, а также копии подтверждающих документов";
+}
+
+relation accident_under_contract(contract: InsuranceContract, accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "транспортное происшествие произошло с участием транспортного средства, застрахованного по данному договору";
+}
+
+relation accident_became_known_on(contract: InsuranceContract, accident: TrafficAccident,
+                                 day: Date) kind empirical {
+    key(contract, accident);
+    label ru-KZ official "день, в который страхователю (застрахованному) стало известно о наступлении транспортного происшествия";
+}
+
+relation insurer_notified_of_accident(contract: InsuranceContract,
+                                      accident: TrafficAccident) kind empirical {
+    label ru-KZ official "страховщик уведомлён о наступлении транспортного происшествия в письменной форме (нарочно либо путём обмена цифровыми ресурсами)";
+}
+
+relation insured_person_distinct_from_policyholder(contract: InsuranceContract)
+    kind empirical {
+    label ru-KZ official "страхователь и застрахованный не являются одним и тем же лицом";
+}
+
+relation valid_reasons_prevented_notification(contract: InsuranceContract,
+                                              accident: TrafficAccident) kind empirical {
+    label ru-KZ official "страхователь (застрахованный) по уважительным причинам не имел возможности уведомить страховщика о транспортном происшествии";
+}
+
+relation valid_reasons_documented(contract: InsuranceContract, accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "уважительные причины невозможности уведомить страховщика подтверждены документально";
+}
+
+relation driver_at_accident(accident: TrafficAccident, driver: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "лицо, непосредственно управлявшее транспортным средством в момент транспортного происшествия";
+}
+
+relation insurer_name_disclosed_to_victims(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "потерпевшим сообщено наименование страховщика, с которым заключён договор обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation insurer_name_disclosed_to_road_safety_officers(accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "сотрудникам уполномоченного органа по обеспечению безопасности дорожного движения сообщено наименование страховщика, с которым заключён договор обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation loss_reduction_measures_taken(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "приняты разумные и доступные в сложившихся обстоятельствах меры, чтобы предотвратить или уменьшить возможные убытки, в том числе меры к спасению имущества и оказанию помощи пострадавшим лицам";
+}
+
+relation accident_reported_to_competent_services(accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "о транспортном происшествии и пострадавших лицах сообщено в соответствующие органы и организации исходя из их компетенции";
+}
+
+relation medical_examination_direction_received_on(accident: TrafficAccident, day: Date)
+    kind empirical {
+    key(accident);
+    label ru-KZ official "день получения письменного направления уполномоченного должностного лица на медицинское освидетельствование";
+}
+
+relation medical_examination_passed(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "пройдено медицинское освидетельствование для установления факта употребления психоактивного вещества и состояния опьянения";
+}
+
+relation recourse_right_transfer_secured(contract: InsuranceContract,
+                                         accident: TrafficAccident) kind empirical {
+    label ru-KZ official "обеспечен переход к страховщику права обратного требования к лицу, ответственному за наступление страхового случая";
+}
+
+// Подпункт 3) части первой пункта 2 переносит обязанность уведомления на
+// застрахованного, когда он не совпадает со страхователем. Носитель поэтому
+// выводится, а не берётся из тела правила: `key(contract)` держит его
+// единственность, поражение снимает страхователя, строгое правило ставит
+// застрахованного.
+relation accident_notification_bearer(contract: InsuranceContract, person: VehicleOwner)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "лицо, на которое возложена обязанность информирования страховщика о наступлении транспортного происшествия";
+}
+
+relation accident_notice_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок уведомления страховщика о наступлении транспортного происшествия (статья 16 пункт 2 подпункт 3))";
+}
+
+relation accident_notice_due_day(contract: InsuranceContract, accident: TrafficAccident,
+                                day: Date) kind institutional {
+    label ru-KZ official "день, в который истекает срок уведомления страховщика о наступлении транспортного происшествия";
+}
+
+@source(LAW_446_ART16)
+assert accident_notice_term(5 business_day);
+
+@source(LAW_446_ART16) {
+    rule NotificationBearerIsPolicyholder(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) defeasible {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 3). Обязанность уведомить страховщика о наступлении транспортного происшествия несёт страхователь";
+        when policyholder_of(contract, policyholder, insurer);
+        then accident_notification_bearer(contract, policyholder);
+    }
+
+    rule DistinctInsuredPersonDefeatsPolicyholderNotification(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+    ) defeater {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 3). В случаях, когда страхователь и застрахованный не являются одним и тем же лицом, обязанность по информированию страховщика о наступлении страхового случая со страхователя снимается";
+        when policyholder_of(contract, policyholder, _);
+        when insured_person_distinct_from_policyholder(contract);
+        defeat accident_notification_bearer(contract, policyholder);
+    }
+
+    rule NotificationBearerIsInsuredPerson(
+        contract: InsuranceContract,
+        person: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 3). В случаях, когда страхователь и застрахованный не являются одним и тем же лицом, обязанность по информированию страховщика о наступлении страхового случая возлагается на застрахованного";
+        when contract_insured_person(contract, person);
+        when insured_person_distinct_from_policyholder(contract);
+        then accident_notification_bearer(contract, person);
+    }
+
+    rule AccidentNoticeDueDay(
+        contract: InsuranceContract,
+        accident: TrafficAccident,
+        known: Date,
+        term: Quantity,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 3). Срок уведомления страховщика истекает на пятый рабочий день со дня, когда страхователю (застрахованному) стало известно о наступлении транспортного происшествия";
+        when accident_became_known_on(contract, accident, known);
+        when accident_notice_term(term);
+        then accident_notice_due_day(contract, accident, add_business_days(known, term));
+    }
+
+    // Подпункт 1).
+    rule PolicyholderMustSubmitApplicationInformation(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 1). Страхователь обязан при заключении договора обязательного страхования ответственности владельцев транспортных средств представить страховщику сведения о себе, каждом застрахованном, транспортном средстве, двойном страховании, сезонной эксплуатации, временном въезде и праве на уменьшение размера страховой премии, а также копии документов, подтверждающих указанные в заявлении сведения";
+        when policyholder_of(contract, policyholder, insurer);
+        when contract_conclusion_applied_for(contract);
+        then duty PredstavitSvedeniyaPriZaklyuchenii {
+            bearer policyholder;
+            beneficiary insurer;
+            achieve application_information_submitted(contract)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // BEGIN GENERATED InsuredMustNotifyInsurerOfAccident (deontic-window)
+    // Подпункт 3). Носитель — вывод правил выше; окно закрыто пятым рабочим
+    // днём, и потому это единственная обязанность страхователя, которая
+    // становится VIOLATED при установленном неисполнении.
+    rule InsuredMustNotifyInsurerOfAccident(
+        contract: InsuranceContract,
+        accident: TrafficAccident,
+        person: VehicleOwner,
+        insurer: Insurer,
+        known, due: Date,
+    ) defeasible {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 3). Страхователь обязан незамедлительно, но не позднее пяти рабочих дней, как ему стало известно о наступлении транспортного происшествия, уведомить об этом страховщика, с которым заключён договор обязательного страхования ответственности владельцев транспортных средств, в письменной форме";
+        when policyholder_of(contract, _, insurer);
+        when accident_under_contract(contract, accident);
+        when accident_notification_bearer(contract, person);
+        when accident_became_known_on(contract, accident, known);
+        when accident_notice_due_day(contract, accident, due);
+        then duty UvedomitStrakhovshchikaOProisshestvii {
+            bearer person;
+            beneficiary insurer;
+            achieve insurer_notified_of_accident(contract, accident) during [known, due];
+        };
+    }
+    // END GENERATED InsuredMustNotifyInsurerOfAccident
+
+    rule InsuredMustDocumentValidReasons(
+        contract: InsuranceContract,
+        accident: TrafficAccident,
+        person: VehicleOwner,
+        insurer: Insurer,
+    ) defeasible {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 3). Если страхователь (застрахованный) по уважительным причинам не имел возможности выполнить указанные действия, он должен подтвердить это документально";
+        when policyholder_of(contract, _, insurer);
+        when accident_under_contract(contract, accident);
+        when accident_notification_bearer(contract, person);
+        when valid_reasons_prevented_notification(contract, accident);
+        then duty PodtverditUvazhitelnyePrichiny {
+            bearer person;
+            beneficiary insurer;
+            achieve valid_reasons_documented(contract, accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункты 4), 5), 6) и 6-1) — носитель по пункту 3 статьи: лицо,
+    // непосредственно управлявшее транспортным средством в момент
+    // транспортного происшествия.
+    //
+    // Подпункт 4) назвал ДВУХ адресатов сообщения — потерпевших и сотрудников
+    // уполномоченного органа, — и это две обязанности, а не одна с двойным
+    // условием: исполнение перед одним адресатом не исполняет обязанности
+    // перед другим.
+    rule DriverMustDiscloseInsurerNameToVictims(
+        accident: TrafficAccident,
+        driver: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 4). При совершении транспортного происшествия сообщить потерпевшим наименование страховщика, с которым заключён договор обязательного страхования ответственности владельцев транспортных средств";
+        when driver_at_accident(accident, driver);
+        then duty SoobshchitStrakhovshchikaPoterpevshim {
+            bearer driver;
+            achieve insurer_name_disclosed_to_victims(accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    rule DriverMustDiscloseInsurerNameToOfficers(
+        accident: TrafficAccident,
+        driver: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 4). При совершении транспортного происшествия сообщить сотрудникам уполномоченного органа по обеспечению безопасности дорожного движения наименование страховщика, с которым заключён договор обязательного страхования ответственности владельцев транспортных средств";
+        when driver_at_accident(accident, driver);
+        then duty SoobshchitStrakhovshchikaSotrudnikamOrgana {
+            bearer driver;
+            achieve insurer_name_disclosed_to_road_safety_officers(accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    rule DriverMustTakeLossReductionMeasures(
+        accident: TrafficAccident,
+        driver: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 5). При совершении транспортного происшествия принять разумные и доступные в сложившихся обстоятельствах меры, чтобы предотвратить или уменьшить возможные убытки, в том числе меры к спасению имущества и оказанию помощи пострадавшим лицам";
+        when driver_at_accident(accident, driver);
+        then duty PrinyatMeryKUmensheniyuUbytkov {
+            bearer driver;
+            achieve loss_reduction_measures_taken(accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // Скобка подпункта 6) перечисляет службы «исходя из их компетенции», и
+    // потому конъюнкцией четырёх сообщений она НЕ становится: какие из служб
+    // компетентны, определяет обстановка происшествия, а не закон. Перечень
+    // остаётся в метке нормы, состав адресатов — в деле.
+    rule DriverMustReportAccidentToServices(
+        accident: TrafficAccident,
+        driver: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 6). Сообщить в соответствующие органы и организации исходя из их компетенции (подразделения уполномоченного органа по обеспечению безопасности дорожного движения, органы государственной противопожарной службы, службу скорой медицинской помощи, аварийные службы) о транспортном происшествии и пострадавших лицах";
+        when driver_at_accident(accident, driver);
+        then duty SoobshchitOProisshestviiVSluzhby {
+            bearer driver;
+            achieve accident_reported_to_competent_services(accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 6-1). Окно открыто со дня получения направления: двухчасового
+    // срока язык не считает (граница в шапке модуля).
+    rule DriverMustUndergoMedicalExamination(
+        accident: TrafficAccident,
+        driver: VehicleOwner,
+        received: Date,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 6-1). При совершении транспортного происшествия незамедлительно, но не позднее двух часов с момента получения письменного направления уполномоченного должностного лица пройти медицинское освидетельствование для установления факта употребления психоактивного вещества и состояния опьянения";
+        when driver_at_accident(accident, driver);
+        when medical_examination_direction_received_on(accident, received);
+        then duty ProytiMeditsinskoeOsvidetelstvovanie {
+            bearer driver;
+            achieve medical_examination_passed(accident) during [received, infinity);
+        };
+    }
+
+    // Подпункт 8).
+    rule PolicyholderMustSecureRecourseTransfer(
+        contract: InsuranceContract,
+        accident: TrafficAccident,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 16 пункт 2 подпункт 8). Страхователь обязан обеспечить переход к страховщику права обратного требования к лицу, ответственному за наступление страхового случая";
+        when policyholder_of(contract, policyholder, insurer);
+        when accident_under_contract(contract, accident);
+        then duty ObespechitPerekhodPravaObratnogoTrebovaniya {
+            bearer policyholder;
+            beneficiary insurer;
+            achieve recourse_right_transfer_secured(contract, accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Статья 17 пункт 1. Права страховщика
+// ============================================================================
+
+relation contract_information_demanded(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страховщик потребовал от страхователя представления сведений, необходимых для внесения в договор обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation documents_requested_from_authorities(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "у соответствующих государственных органов и организаций запрошены документы, подтверждающие факт наступления страхового случая и размер вреда, причинённого потерпевшим";
+}
+
+relation accident_causes_established(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "страховщик установил причины и иные обстоятельства транспортного происшествия";
+}
+
+relation recourse_claim_presented(accident: TrafficAccident, insurer: Insurer)
+    kind empirical {
+    label ru-KZ official "страховщик предъявил право обратного требования лицу, ответственному за причинение вреда";
+}
+
+@source(LAW_446_ART17) {
+    rule InsurerMayDemandContractInformation(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 1 подпункт 1). Страховщик вправе при заключении договора обязательного страхования ответственности владельцев транспортных средств, кроме сведений, предусмотренных Гражданским кодексом Республики Казахстан, требовать от страхователя представления сведений, необходимых для внесения в такой договор в соответствии с настоящим Законом";
+        when policyholder_of(contract, policyholder, insurer);
+        when contract_conclusion_applied_for(contract);
+        then liberty TrebovatPredstavleniyaSvedeniy {
+            holder insurer;
+            against policyholder;
+            action contract_information_demanded(contract);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerMayRequestDocumentsFromAuthorities(
+        accident: TrafficAccident,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 1 подпункт 2). Страховщик вправе запрашивать у соответствующих государственных органов и организаций, исходя из их компетенции, документы, подтверждающие факт наступления страхового случая (совершения транспортного происшествия) и размер вреда, причинённого потерпевшим";
+        when accident_insurer(accident, insurer);
+        then liberty ZaprashivatDokumentyUGosorganov {
+            holder insurer;
+            action documents_requested_from_authorities(accident);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerMayEstablishAccidentCauses(
+        accident: TrafficAccident,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 1 подпункт 3). Страховщик вправе устанавливать причины и иные обстоятельства транспортного происшествия";
+        when accident_insurer(accident, insurer);
+        then liberty UstanavlivatPrichinyProisshestviya {
+            holder insurer;
+            action accident_causes_established(accident);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 5). Само право обратного требования исчислено статьёй 28
+    // (`insurer_has_recourse_claim`, `28-29-regress-i-otkaz.law`); здесь —
+    // ПРАВОМОЧИЕ его предъявить, которого у пакета не было: статья 28 выводит
+    // притязание и встречную обязанность страхователя, но не свободу
+    // страховщика им воспользоваться.
+    rule InsurerMayPresentRecourseClaim(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        owner: VehicleOwner,
+        amount: Money,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 1 подпункт 5). Страховщик вправе предъявлять право обратного требования лицу, ответственному за причинение вреда, в случаях, предусмотренных статьёй 28 настоящего Закона";
+        when insurer_has_recourse_claim(accident, insurer, owner, amount);
+        then liberty PredyavitObratnoeTrebovanie {
+            holder insurer;
+            against owner;
+            action recourse_claim_presented(accident, insurer);
+            window [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Статья 17 пункт 2. Обязанности страховщика
+// ============================================================================
+
+relation terms_explained_to_insured(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователь (застрахованный) ознакомлен с условиями обязательного страхования ответственности владельцев транспортных средств, в том числе с правами и обязанностями сторон, возникающими из договора";
+}
+
+relation insurance_policy_issued(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователю (застрахованному) оформлен страховой полис";
+}
+
+
+relation premium_reduction_granted(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страховщик предоставил льготу по уплате страховой премии";
+}
+
+relation accident_registered_by_insurer(contract: InsuranceContract,
+                                        accident: TrafficAccident) kind empirical {
+    label ru-KZ official "страховщик зарегистрировал транспортное происшествие";
+}
+
+relation accident_data_submitted_to_database(contract: InsuranceContract,
+                                             accident: TrafficAccident) kind empirical {
+    label ru-KZ official "сведения по транспортному происшествию представлены в организацию по формированию и ведению базы данных";
+}
+
+relation victim_contract_inquiry_received_on(accident: TrafficAccident, victim: Victim,
+                                             day: Date) kind empirical {
+    key(accident, victim);
+    label ru-KZ official "день получения страховщиком письменного обращения потерпевшего либо лица, имеющего право на возмещение вреда в связи со смертью потерпевшего, о представлении сведений о заключении договора";
+}
+
+relation insured_event_document_presented(accident: TrafficAccident, victim: Victim)
+    kind empirical {
+    label ru-KZ official "к обращению приложен документ, подтверждающий страховой случай";
+}
+
+relation contract_details_provided_to_victim(accident: TrafficAccident, victim: Victim)
+    kind empirical {
+    label ru-KZ official "страховщик письменно представил сведения о заключении договора обязательного страхования ответственности владельцев транспортных средств страхователем, являющимся виновником транспортного происшествия";
+}
+
+relation harm_assessment_applied_for(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "подано заявление об определении размера вреда, причинённого имуществу";
+}
+
+relation harm_amount_calculated(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик произвёл расчёт размера вреда, причинённого имуществу";
+}
+
+relation harm_report_presented(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "отчёт о размере вреда представлен выгодоприобретателю на ознакомление";
+}
+
+relation harm_assessment_completed(demand: PaymentClaim) kind institutional {
+    label ru-KZ official "расчёт размера вреда произведён и отчёт о размере вреда представлен выгодоприобретателю на ознакомление";
+}
+
+relation documents_insufficient(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "документов, подтверждающих факт наступления страхового случая и размер подлежащего возмещению страховщиком вреда, недостаточно";
+}
+
+relation missing_documents_notified(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "заявителю сообщено о недостаточности документов с указанием полного перечня недостающих и (или) неправильно оформленных документов";
+}
+
+relation dispute_application_received_on(demand: PaymentClaim, day: Date) kind empirical {
+    key(demand);
+    label ru-KZ official "день получения страховщиком заявления на рассмотрение спора, возникшего из договора обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation dispute_answered_in_writing(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "требования страхователя (потерпевшего, выгодоприобретателя) рассмотрены и предоставлен письменный ответ с указанием дальнейшего порядка урегулирования спора";
+}
+
+relation ombudsman_application_received_on(demand: PaymentClaim, day: Date)
+    kind empirical {
+    key(demand);
+    label ru-KZ official "день получения страховщиком заявления, направляемого страховому омбудсману";
+}
+
+relation ombudsman_application_forwarded(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "заявление и прилагаемые к нему документы перенаправлены страховому омбудсману";
+}
+
+relation article9_information_received(contract: InsuranceContract,
+                                       accident: TrafficAccident) kind empirical {
+    label ru-KZ official "страховщиком получена информация, предусмотренная пунктом 5 статьи 9 настоящего Закона";
+}
+
+relation settlement_measures_taken(contract: InsuranceContract, accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "приняты меры по урегулированию страхового случая";
+}
+
+relation insurance_secrecy_kept(insurer: Insurer) kind empirical {
+    label ru-KZ official "тайна страхования обеспечена";
+}
+
+relation insurer_of_compulsory_insurance(insurer: Insurer) kind empirical {
+    label ru-KZ official "страховщик, осуществляющий обязательное страхование гражданско-правовой ответственности владельцев транспортных средств";
+}
+
+// Сроки пункта 2 статьи 17 — три величины и три предельных дня.
+relation contract_details_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок представления потерпевшему сведений о заключении договора (статья 17 пункт 2 подпункт 5-1))";
+}
+relation missing_documents_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок сообщения заявителю о недостаточности документов (статья 17 пункт 2 подпункт 6-1))";
+}
+relation dispute_answer_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок рассмотрения спора и предоставления письменного ответа (статья 17 пункт 2 подпункт 7-2))";
+}
+relation ombudsman_forwarding_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок перенаправления заявления страховому омбудсману (статья 17 пункт 2 подпункт 7-3))";
+}
+
+@source(LAW_446_ART17) {
+    assert contract_details_term(1 business_day);
+    assert missing_documents_term(3 business_day);
+    assert dispute_answer_term(5 business_day);
+    assert ombudsman_forwarding_term(3 business_day);
+}
+
+relation contract_details_due_day(accident: TrafficAccident, victim: Victim, day: Date)
+    kind institutional {
+    label ru-KZ official "день, в который истекает срок представления потерпевшему сведений о заключении договора";
+}
+relation missing_documents_due_day(demand: PaymentClaim, day: Date) kind institutional {
+    label ru-KZ official "день, в который истекает срок сообщения заявителю о недостаточности документов";
+}
+relation dispute_answer_due_day(demand: PaymentClaim, day: Date) kind institutional {
+    label ru-KZ official "день, в который истекает срок предоставления письменного ответа по спору";
+}
+relation ombudsman_forwarding_due_day(demand: PaymentClaim, day: Date) kind institutional {
+    label ru-KZ official "день, в который истекает срок перенаправления заявления страховому омбудсману";
+}
+
+@source(LAW_446_ART17) {
+    // Подпункт 1).
+    rule InsurerMustExplainTerms(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 1). Страховщик обязан ознакомить страхователя (застрахованного) с условиями обязательного страхования ответственности владельцев транспортных средств, в том числе с правами и обязанностями сторон, возникающими из договора обязательного страхования ответственности владельцев транспортных средств";
+        when policyholder_of(contract, policyholder, insurer);
+        when contract_conclusion_applied_for(contract);
+        then duty OznakomitSUsloviyamiStrakhovaniya {
+            bearer insurer;
+            beneficiary policyholder;
+            achieve terms_explained_to_insured(contract)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 2). Возникает ПО ЗАКЛЮЧЕНИИ договора, а не при обращении за ним.
+    rule InsurerMustIssuePolicy(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 2). Страховщик обязан по заключении договора обязательного страхования ответственности владельцев транспортных средств оформить страхователю (застрахованному) страховой полис";
+        when policyholder_of(contract, policyholder, insurer);
+        when contract_concluded(contract);
+        then duty OformitStrakhovoyPolis {
+            bearer insurer;
+            beneficiary policyholder;
+            achieve insurance_policy_issued(contract) during [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 4). Читает вывод статьи 20 — состав льготных владельцев уже
+    // исчислен `PremiumReductionApplies` в `20-reduction.law`. Правило
+    // поражаемое: `premium_reduction_applies` производится строгим правилом,
+    // но его посылка `premium_reduction_ground` стоит на шести основаниях, и
+    // цепочка от них до обязанности должна доходить целиком.
+    rule InsurerMustGrantPremiumReduction(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 4). Страховщик обязан предоставить льготу по уплате страховой премии лицам, указанным в части первой пункта 1 статьи 20 настоящего Закона";
+        when policyholder_of(contract, policyholder, insurer);
+        when premium_reduction_applies(contract);
+        then duty PredostavitLgotuPoUplatePremii {
+            bearer insurer;
+            beneficiary policyholder;
+            achieve premium_reduction_granted(contract) during [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 5). «Незамедлительно зарегистрировать И представить сведения» —
+    // два действия перед разными адресатами, две обязанности.
+    rule InsurerMustRegisterAccident(
+        contract: InsuranceContract,
+        accident: TrafficAccident,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 5). Страховщик обязан при уведомлении о транспортном происшествии, совершённом в период действия страховой защиты, незамедлительно зарегистрировать его";
+        when policyholder_of(contract, policyholder, insurer);
+        when insurer_notified_of_accident(contract, accident);
+        then duty ZaregistrirovatProisshestvie {
+            bearer insurer;
+            beneficiary policyholder;
+            achieve accident_registered_by_insurer(contract, accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerMustSubmitAccidentDataToDatabase(
+        contract: InsuranceContract,
+        accident: TrafficAccident,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 5). Страховщик обязан представить сведения по транспортному происшествию в организацию по формированию и ведению базы данных в соответствии с нормативным правовым актом уполномоченного органа";
+        when policyholder_of(contract, policyholder, insurer);
+        when insurer_notified_of_accident(contract, accident);
+        then duty PredstavitSvedeniyaVBazuDannykh {
+            bearer insurer;
+            beneficiary policyholder;
+            achieve accident_data_submitted_to_database(contract, accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 5-1). Один рабочий день — обратная сторона подпункта 4-1)
+    // пункта 1 статьи 18.
+    rule ContractDetailsDueDay(
+        accident: TrafficAccident,
+        victim: Victim,
+        received: Date,
+        term: Quantity,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 5-1). Срок представления сведений о заключении договора истекает в течение рабочего дня с даты получения письменного обращения потерпевшего";
+        when victim_contract_inquiry_received_on(accident, victim, received);
+        when contract_details_term(term);
+        then contract_details_due_day(accident, victim, add_business_days(received, term));
+    }
+
+    // BEGIN GENERATED InsurerMustProvideContractDetailsToVictim (deontic-window)
+    rule InsurerMustProvideContractDetailsToVictim(
+        accident: TrafficAccident,
+        victim: Victim,
+        insurer: Insurer,
+        received, due: Date,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 5-1). Страховщик обязан в течение рабочего дня с даты получения письменного обращения потерпевшего или лица, имеющего согласно законам Республики Казахстан право на возмещение вреда в связи со смертью потерпевшего, письменно представить сведения о заключении договора обязательного страхования ответственности владельцев транспортных средств страхователем, являющимся виновником транспортного происшествия, при наличии документа, подтверждающего страховой случай";
+        when accident_insurer(accident, insurer);
+        when victim_contract_inquiry_received_on(accident, victim, received);
+        when insured_event_document_presented(accident, victim);
+        when contract_details_due_day(accident, victim, due);
+        then duty PredstavitSvedeniyaODogovorePoterpevshemu {
+            bearer insurer;
+            beneficiary victim;
+            achieve contract_details_provided_to_victim(accident, victim)
+                during [received, due];
+        };
+    }
+    // END GENERATED InsurerMustProvideContractDetailsToVictim
+
+    // Подпункт 6). Срок этой обязанности статья 17 не называет: она отсылает
+    // к «срокам и порядку, которые установлены настоящим Законом» — то есть к
+    // пункту 3 статьи 22, которого в срезе пакета нет. Окно поэтому открытое,
+    // а пятидневный срок Правил определения размера вреда живёт в СВОЁМ
+    // пакете (`kz.corpus.vred_ts`, обязанность `PredostavitOtchet`) и под
+    // якорем Правил, а не Закона.
+    rule HarmAssessmentCompleted(demand: PaymentClaim) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 6). Требование исполнено, когда расчёт размера вреда произведён и отчёт о размере вреда представлен выгодоприобретателю на ознакомление";
+        when harm_amount_calculated(demand);
+        when harm_report_presented(demand);
+        then harm_assessment_completed(demand);
+    }
+
+    rule InsurerMustAssessHarmAndPresentReport(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 6). Страховщик обязан в сроки и порядке, которые установлены настоящим Законом, по заявлению об определении размера вреда, причинённого имуществу, страхователя (застрахованного) либо потерпевшего (выгодоприобретателя) или их представителей провести расчёт размера вреда, причинённого имуществу, и представить отчёт о размере вреда на ознакомление выгодоприобретателю";
+        when payment_claim_of(demand, accident, holder, insurer);
+        when harm_assessment_applied_for(demand);
+        then duty ProvestiRaschetVredaIPredstavitOtchet {
+            bearer insurer;
+            beneficiary holder;
+            achieve harm_assessment_completed(demand) during [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 6-1). Три рабочих дня со дня получения документов; день
+    // получения тот же, от которого статья 26 считает срок выплаты, и потому
+    // читается уже объявленный `documents_received_on`.
+    rule MissingDocumentsDueDay(
+        demand: PaymentClaim,
+        received: Date,
+        term: Quantity,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 6-1). Срок сообщения о недостаточности документов истекает на третий рабочий день со дня их получения";
+        when documents_received_on(demand, received);
+        when missing_documents_term(term);
+        then missing_documents_due_day(demand, add_business_days(received, term));
+    }
+
+    // DECISION-0209 этап 7 (пилот Р8): правило записано экземпляром каркаса
+    // `claim_deadline_duty` профиля 0.2; узлы — `InsurerMustNotifyMissingDocuments/duty` и `InsurerMustNotifyMissingDocuments/duty/norm`.
+    expand claim_deadline_duty InsurerMustNotifyMissingDocuments {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 6-1). Страховщик обязан при недостаточности документов, подтверждающих факт наступления страхового случая и размер подлежащего возмещению страховщиком вреда, в течение трёх рабочих дней со дня их получения сообщить об этом заявителю с указанием полного перечня недостающих и (или) неправильно оформленных документов";
+        bind matter = demand: PaymentClaim;
+        bind context = accident: TrafficAccident;
+        bind beneficiary = holder: Beneficiary;
+        bind bearer = insurer: Insurer;
+        bind start = received: Date;
+        bind due = due: Date;
+        claim = payment_claim_of;
+        started = documents_received_on;
+        due_on = missing_documents_due_day;
+        conditions = [documents_insufficient];
+        result = missing_documents_notified;
+    }
+
+    // Подпункт 7-2). Пять рабочих дней.
+    rule DisputeAnswerDueDay(demand: PaymentClaim, received: Date, term: Quantity) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 7-2). Срок предоставления письменного ответа по спору истекает на пятый рабочий день со дня получения заявления";
+        when dispute_application_received_on(demand, received);
+        when dispute_answer_term(term);
+        then dispute_answer_due_day(demand, add_business_days(received, term));
+    }
+
+    // DECISION-0209 этап 7 (пилот Р8): правило записано экземпляром каркаса
+    // `claim_deadline_duty` профиля 0.2; узлы — `InsurerMustAnswerDisputeApplication/duty` и `InsurerMustAnswerDisputeApplication/duty/norm`.
+    expand claim_deadline_duty InsurerMustAnswerDisputeApplication {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 7-2). Страховщик обязан при получении от страхователя (потерпевшего, выгодоприобретателя) заявления на рассмотрение спора, возникшего из договора обязательного страхования ответственности владельцев транспортных средств, рассмотреть требования страхователя (потерпевшего, выгодоприобретателя) и предоставить письменный ответ с указанием дальнейшего порядка урегулирования спора в течение пяти рабочих дней";
+        bind matter = demand: PaymentClaim;
+        bind context = accident: TrafficAccident;
+        bind beneficiary = holder: Beneficiary;
+        bind bearer = insurer: Insurer;
+        bind start = received: Date;
+        bind due = due: Date;
+        claim = payment_claim_of;
+        started = dispute_application_received_on;
+        due_on = dispute_answer_due_day;
+        conditions = [];
+        result = dispute_answered_in_writing;
+    }
+
+    // Подпункт 7-3). Редакция, вводимая в действие с 1 января 2027 года.
+    rule OmbudsmanForwardingDueDay(
+        demand: PaymentClaim,
+        received: Date,
+        term: Quantity,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 7-3). Срок перенаправления заявления страховому омбудсману истекает на третий рабочий день со дня его получения";
+        effective [@2027-01-01, infinity);
+        when ombudsman_application_received_on(demand, received);
+        when ombudsman_forwarding_term(term);
+        then ombudsman_forwarding_due_day(demand, add_business_days(received, term));
+    }
+
+    // DECISION-0209 этап 7 (пилот Р8): правило записано экземпляром каркаса
+    // `claim_deadline_duty` профиля 0.2; узлы — `InsurerMustForwardApplicationToOmbudsman/duty` и `InsurerMustForwardApplicationToOmbudsman/duty/norm`.
+    expand claim_deadline_duty InsurerMustForwardApplicationToOmbudsman {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 7-3). Страховщик обязан при получении от страхователя (потерпевшего, выгодоприобретателя) заявления, направляемого страховому омбудсману, перенаправить данное заявление, а также прилагаемые к нему документы страховому омбудсману в течение трёх рабочих дней со дня получения";
+        effective [@2027-01-01, infinity);
+        bind matter = demand: PaymentClaim;
+        bind context = accident: TrafficAccident;
+        bind beneficiary = holder: Beneficiary;
+        bind bearer = insurer: Insurer;
+        bind start = received: Date;
+        bind due = due: Date;
+        claim = payment_claim_of;
+        started = ombudsman_application_received_on;
+        due_on = ombudsman_forwarding_due_day;
+        conditions = [];
+        result = ombudsman_application_forwarded;
+    }
+
+    // Подпункт 7-4). Порядок принятия мер делегирован нормативному правовому
+    // акту уполномоченного органа, и в срез он не входит; сама обязанность
+    // исполнима: её условие — получение информации пункта 5 статьи 9.
+    rule InsurerMustTakeSettlementMeasures(
+        contract: InsuranceContract,
+        accident: TrafficAccident,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 7-4). Страховщик обязан при получении информации, предусмотренной пунктом 5 статьи 9 настоящего Закона, принять меры по урегулированию страхового случая в порядке, установленном нормативным правовым актом уполномоченного органа";
+        when policyholder_of(contract, policyholder, insurer);
+        when article9_information_received(contract, accident);
+        then duty PrinyatMeryPoUregulirovaniyuSluchaya {
+            bearer insurer;
+            beneficiary policyholder;
+            achieve settlement_measures_taken(contract, accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 9). Обязанность ПОДДЕРЖАНИЯ §124.2: тайна обеспечивается всё
+    // время, а не достигается однажды. Установленный контрапример внутри окна
+    // даёт VIOLATED немедленно — этим она и отличается от остальных
+    // обязанностей открытого окна в этом модуле.
+    rule InsurerMustKeepInsuranceSecrecy(insurer: Insurer) strict {
+        label ru-KZ official "Статья 17 пункт 2 подпункт 9). Страховщик обязан обеспечить тайну страхования";
+        when insurer_of_compulsory_insurance(insurer);
+        then duty ObespechitTaynuStrakhovaniya {
+            bearer insurer;
+            maintain insurance_secrecy_kept(insurer) during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Статья 18 пункт 1. Права потерпевшего
+// ============================================================================
+
+relation victim_of_accident(accident: TrafficAccident, victim: Victim) kind empirical {
+    label ru-KZ official "лицо, которому в результате транспортного происшествия причинён вред страхователем (застрахованным)";
+}
+
+relation victim_reported_accident(accident: TrafficAccident, victim: Victim)
+    kind empirical {
+    label ru-KZ official "потерпевший сообщил страховщику о транспортном происшествии, в результате которого ему причинён вред";
+}
+
+relation victim_collected_documents(accident: TrafficAccident, victim: Victim)
+    kind empirical {
+    label ru-KZ official "потерпевший произвёл вместо страхователя (застрахованного) сбор документов, необходимых для осуществления страховой выплаты, и представил их страховщику";
+}
+
+relation medical_institution_used(accident: TrafficAccident, victim: Victim)
+    kind empirical {
+    label ru-KZ official "потерпевший воспользовался услугами медицинского учреждения по своему выбору";
+}
+
+relation victim_reviewed_results(accident: TrafficAccident, victim: Victim)
+    kind empirical {
+    label ru-KZ official "потерпевший ознакомился с результатами произведённого страховщиком определения размеров причинённого вреда и страховой выплаты";
+}
+
+relation victim_asked_insurer_for_contract_details(accident: TrafficAccident,
+                                                   victim: Victim) kind empirical {
+    label ru-KZ official "потерпевший письменно обратился к страховщику лица, виновного в причинении вреда, о подтверждении сведений о наличии договора обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation victim_asked_database_for_contract_details(accident: TrafficAccident,
+                                                    victim: Victim) kind empirical {
+    label ru-KZ official "потерпевший письменно обратился в организацию по формированию и ведению базы данных о представлении сведений о наличии либо отсутствии договора обязательного страхования у лица, виновного в причинении вреда";
+}
+
+relation victim_dispute_settlement_sought(accident: TrafficAccident, victim: Victim,
+                                          forum: DisputeForum) kind empirical {
+    label ru-KZ official "потерпевший обратился в названный орган для урегулирования вопросов, возникающих из договора обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation victim_ombudsman_application_sent(accident: TrafficAccident, victim: Victim,
+                                           channel: OmbudsmanSubmissionChannel)
+    kind empirical {
+    label ru-KZ official "потерпевший направил заявление и прилагаемые документы страховому омбудсману названным способом";
+}
+
+relation excess_claim_presented(accident: TrafficAccident, victim: Victim,
+                                owner: VehicleOwner) kind empirical {
+    label ru-KZ official "потерпевший предъявил владельцу транспортного средства требование о возмещении причинённого вреда в размере превышения суммы причинённого вреда над суммой полученной страховой выплаты";
+}
+
+// Подпункт 7) считает превышение над ПОЛУЧЕННОЙ ВЫПЛАТОЙ, а пункт 5 статьи 24
+// — над СТРАХОВОЙ СУММОЙ (предельным объёмом ответственности). Это две разные
+// величины и две разные нормы: выплата может оказаться меньше предела, и
+// тогда превышение подпункта 7) больше разницы пункта 5. Поэтому здесь своё
+// отношение, а не ссылка на `VozmestitRaznitsuSverkhStrakhovoySummy`.
+relation excess_over_insurance_payment(accident: TrafficAccident, victim: Victim,
+                                       amount: Money) kind institutional {
+    key(accident, victim);
+    label ru-KZ official "превышение суммы причинённого вреда над суммой полученной потерпевшим страховой выплаты";
+}
+
+@source(LAW_446_ART18) {
+    rule VictimMayReportAccident(accident: TrafficAccident, victim: Victim,
+                                 insurer: Insurer) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 1). Потерпевший вправе сообщить страховщику о транспортном происшествии, в результате которого ему причинён вред страхователем (застрахованным)";
+        when victim_of_accident(accident, victim);
+        when accident_insurer(accident, insurer);
+        then liberty SoobshchitStrakhovshchikuOProisshestvii {
+            holder victim;
+            against insurer;
+            action victim_reported_accident(accident, victim);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule VictimMayCollectDocuments(accident: TrafficAccident, victim: Victim,
+                                   insurer: Insurer) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 2). Потерпевший вправе произвести вместо страхователя (застрахованного) сбор документов, необходимых для осуществления страховой выплаты, и представить их страховщику";
+        when victim_of_accident(accident, victim);
+        when accident_insurer(accident, insurer);
+        then liberty SobratIPredstavitDokumenty {
+            holder victim;
+            against insurer;
+            action victim_collected_documents(accident, victim);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule VictimMayUseAnyMedicalInstitution(accident: TrafficAccident,
+                                           victim: Victim) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 3-1). Потерпевший вправе воспользоваться услугами любого медицинского учреждения";
+        when victim_of_accident(accident, victim);
+        then liberty VospolzovatsyaLyubymMeditsinskimUchrezhdeniem {
+            holder victim;
+            action medical_institution_used(accident, victim);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule VictimMayReviewHarmAndPaymentResults(accident: TrafficAccident, victim: Victim,
+                                               insurer: Insurer) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 4). Потерпевший вправе ознакомиться с результатами произведённого страховщиком определения размеров причинённого вреда и страховой выплаты";
+        when victim_of_accident(accident, victim);
+        when accident_insurer(accident, insurer);
+        then liberty PoterpevshiyOznakomitsyaSRezultatami {
+            holder victim;
+            against insurer;
+            action victim_reviewed_results(accident, victim);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule VictimMayAskInsurerForContractDetails(accident: TrafficAccident, victim: Victim,
+                                                insurer: Insurer) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 4-1). Потерпевший вправе письменно обратиться к страховщику лица, виновного в причинении вреда жизни, здоровью и (или) имуществу потерпевшего, о подтверждении сведений о наличии договора обязательного страхования ответственности владельцев транспортных средств у данного лица в порядке, предусмотренном подпунктом 5-1) статьи 17 настоящего Закона";
+        when victim_of_accident(accident, victim);
+        when accident_insurer(accident, insurer);
+        then liberty ObratitsyaKStrakhovshchikuVinovnogo {
+            holder victim;
+            against insurer;
+            action victim_asked_insurer_for_contract_details(accident, victim);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule VictimMayAskDatabaseForContractDetails(accident: TrafficAccident,
+                                                 victim: Victim) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 4-2). Потерпевший вправе письменно обратиться в организацию по формированию и ведению базы данных о представлении сведений о наличии либо отсутствии договора обязательного страхования ответственности владельцев транспортных средств у лица, виновного в причинении вреда, при наличии документа, подтверждающего страховой случай";
+        when victim_of_accident(accident, victim);
+        when insured_event_document_presented(accident, victim);
+        then liberty ObratitsyaVBazuDannykhZaSvedeniyami {
+            holder victim;
+            action victim_asked_database_for_contract_details(accident, victim);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Подпункт 5-1) — редакция, вводимая в действие с 1 января 2027 года.
+    rule VictimMaySeekSettlementFromInsurer(accident: TrafficAccident, victim: Victim,
+                                            insurer: Insurer) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 5-1). Потерпевший вправе обратиться к страховщику с учётом особенностей, предусмотренных статьёй 29-1 настоящего Закона, для урегулирования вопросов, возникающих из договора обязательного страхования ответственности владельцев транспортных средств";
+        effective [@2027-01-01, infinity);
+        when victim_of_accident(accident, victim);
+        when accident_insurer(accident, insurer);
+        then liberty PoterpevshiyObratitsyaKStrakhovshchiku {
+            holder victim;
+            against insurer;
+            action victim_dispute_settlement_sought(accident, victim, AddressedInsurer);
+            window [@2027-01-01, infinity);
+        };
+    }
+
+    rule VictimMaySeekSettlementFromOmbudsman(accident: TrafficAccident,
+                                              victim: Victim) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 5-1). Потерпевший вправе обратиться к страховому омбудсману для урегулирования вопросов, возникающих из договора обязательного страхования ответственности владельцев транспортных средств";
+        effective [@2027-01-01, infinity);
+        when victim_of_accident(accident, victim);
+        then liberty PoterpevshiyObratitsyaKOmbudsmanu {
+            holder victim;
+            action victim_dispute_settlement_sought(accident, victim, AddressedOmbudsman);
+            window [@2027-01-01, infinity);
+        };
+    }
+
+    rule VictimMaySeekSettlementFromCourt(accident: TrafficAccident,
+                                          victim: Victim) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 5-1). Потерпевший вправе обратиться в суд для урегулирования вопросов, возникающих из договора обязательного страхования ответственности владельцев транспортных средств";
+        effective [@2027-01-01, infinity);
+        when victim_of_accident(accident, victim);
+        then liberty PoterpevshiyObratitsyaVSud {
+            holder victim;
+            action victim_dispute_settlement_sought(accident, victim, AddressedCourt);
+            window [@2027-01-01, infinity);
+        };
+    }
+
+    // Подпункт 6) — редакция, вводимая в действие с 1 января 2027 года.
+    rule VictimMaySendApplicationDirectlyToOmbudsman(accident: TrafficAccident,
+                                                     victim: Victim) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 6). Потерпевший вправе направить заявление и прилагаемые документы страховому омбудсману напрямую, в том числе через его интернет-ресурс";
+        effective [@2027-01-01, infinity);
+        when victim_of_accident(accident, victim);
+        then liberty PoterpevshiyNapravitZayavlenieNapryamuyu {
+            holder victim;
+            action victim_ombudsman_application_sent(accident, victim, DirectlyToOmbudsman);
+            window [@2027-01-01, infinity);
+        };
+    }
+
+    rule VictimMaySendApplicationThroughInsurer(accident: TrafficAccident, victim: Victim,
+                                                insurer: Insurer) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 6). Потерпевший вправе направить заявление и прилагаемые документы страховому омбудсману через страховщика, его филиал, представительство";
+        effective [@2027-01-01, infinity);
+        when victim_of_accident(accident, victim);
+        when accident_insurer(accident, insurer);
+        then liberty PoterpevshiyNapravitZayavlenieCherezStrakhovshchika {
+            holder victim;
+            against insurer;
+            action victim_ombudsman_application_sent(accident, victim, ThroughInsurer);
+            window [@2027-01-01, infinity);
+        };
+    }
+
+    // Подпункт 7). Величина превышения СЧИТАЕТСЯ, а не остаётся числом дела:
+    // оба слагаемых уже выведены пакетом — фактический размер вреда (статья 24)
+    // и размер страховой выплаты (статья 24 пункты 1 и 2). Условие `harm > paid`
+    // сторожит вычитание: без него норма утверждала бы требование на
+    // отрицательную сумму, когда выплата покрыла вред целиком.
+    rule ExcessOverInsurancePayment(
+        accident: TrafficAccident,
+        victim: Victim,
+        harm, paid: Money,
+    ) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 7). Превышение суммы причинённого вреда над суммой полученной страховой выплаты";
+        when actual_harm_amount(accident, victim, harm);
+        when insurance_payment_amount(accident, victim, paid);
+        when harm > paid;
+        then excess_over_insurance_payment(accident, victim, harm - paid);
+    }
+
+    rule VictimMayClaimExcessFromOwner(
+        accident: TrafficAccident,
+        victim: Victim,
+        owner: VehicleOwner,
+        excess: Money,
+    ) strict {
+        label ru-KZ official "Статья 18 пункт 1 подпункт 7). Потерпевший вправе предъявить требование о возмещении причинённого вреда к владельцу транспортного средства в размере превышения суммы причинённого вреда над суммой полученной страховой выплаты";
+        when victim_of_accident(accident, victim);
+        when accident_insured(accident, owner);
+        when excess_over_insurance_payment(accident, victim, excess);
+        then liberty PredyavitTrebovanieKVladeltsu {
+            holder victim;
+            against owner;
+            action excess_claim_presented(accident, victim, owner);
+            window [@2026-07-23, infinity);
+        };
+    }
+}

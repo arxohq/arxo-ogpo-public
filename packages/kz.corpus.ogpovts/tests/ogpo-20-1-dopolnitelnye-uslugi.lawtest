@@ -1,0 +1,40 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 20-1: правомочие страховщика оказывать дополнительные платные услуги
+// возникает ТОЛЬКО при наличии согласия страхователя. Пара сцен закрепляет
+// именно это: молчание дела о согласии свободы не даёт.
+//
+// Запрета навязывания статья не содержит, и потому его в модуле нет: из
+// «вправе при наличии согласия» следует отсутствие свободы, а не запрет
+// поведения.
+
+test "urn:query:ogpo-20-1-so-soglasiem" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "d20-a-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "d20-a-a1": additional_services_consented(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(OkazyvatDopolnitelnyePlatnyeUslugi, ACTIVE);
+}
+
+test "urn:query:ogpo-20-1-bez-soglasiya" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "d20-b-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(OkazyvatDopolnitelnyePlatnyeUslugi, ACTIVE);
+}

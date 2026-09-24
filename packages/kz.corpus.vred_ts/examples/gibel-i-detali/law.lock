@@ -1,0 +1,56 @@
+{
+  "dependencyEdges": [
+    {
+      "features": [],
+      "from": "examples.vred_ts.gibel_i_detali",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.vred_ts"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.vred_ts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.clir.official_calendar"
+    }
+  ],
+  "languageSemantics": "law.core/0.2.0",
+  "lockVersion": "0.2",
+  "packages": [
+    {
+      "contentHash": "sha256:d5dd393f6b712104611798a39bb03c43da014f16c150c1b95c5a8f3587fc44d5",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.clir.official_calendar",
+      "namespace": "urn:kz:corpus:clir:official-calendar",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:1b021c6a928c6248e90214c6ecc0c192df99576b179e5d2452f3bb1c77035fa2",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.vred_ts",
+      "namespace": "urn:kz:corpus:clir:vred-ts",
+      "version": "0.1.0"
+    }
+  ],
+  "resolutionHash": "sha256:7b03721e8974dcb809e941834f3b78dddb1872ba7e114ab72046a1203e132fb5",
+  "resources": [
+    {
+      "capability": "law.calendar/0.1",
+      "contentHash": "sha256:a17b851ac08e622c05c116637ecf8d818bc7b480568f5560407d69461c4b8c21",
+      "id": "urn:kz:corpus:clir:official-calendar#snapshot-2026",
+      "kind": "calendar-dataset",
+      "path": "../../../../../../clir/kz-official-2026.calendar.json"
+    }
+  ],
+  "root": {
+    "contentHash": "sha256:30fee1ceeea2d4b7a88b4cdeb2b04d0df778425ba7f33b2eba4e88aee33ab3c3",
+    "name": "examples.vred_ts.gibel_i_detali",
+    "namespace": "urn:law:examples:vred-ts:gibel-i-detali",
+    "version": "0.1.0"
+  }
+}

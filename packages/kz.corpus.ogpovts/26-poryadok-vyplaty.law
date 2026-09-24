@@ -1,0 +1,404 @@
+// СТАТЬИ 25, 26 И 26-1. ОБРАЩЕНИЕ ЗА ВЫПЛАТОЙ, СРОК ВЫПЛАТЫ, ПРЯМОЕ
+// УРЕГУЛИРОВАНИЕ.
+//
+// Здесь появляется ВРЕМЯ: до этого модуля пакет считал только суммы. Сроки
+// статьи 26 исчисляются в РАБОЧИХ днях, и потому делу нужен снимок календаря
+// §85 и порядок исчисления §86 — ровно как у Правил упрощённого урегулирования
+// (`kz.corpus.uproshchennoe_uregulirovanie`), с которыми этот модуль стоит
+// рядом: там урегулирование БЕЗ полиции по декларации, здесь — общий порядок.
+//
+// ЧТО ВЗЯТО ИЗ СТАТЬИ 25. Только то, что определяет НАЧАЛО срока: перечень
+// документов пункта 2 и день их получения страховщиком. Сам перечень взят
+// замыканием §70 — восемью подпунктами, из которых два исключены поправками, —
+// потому что от него зависит, наступил ли день начала течения: «со дня
+// получения им документов, предусмотренных статьёй 25». Остальное содержание
+// статьи 25 (форма справки, право на остатки имущества, выплата
+// непосредственно лечебному учреждению) в срез не взято и объявлено границей.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ СРЕЗА (решение формализатора, 05.09.2026):
+//
+//   пункт 3 статьи 26 — ПЕРЕРАСЧЁТ при ухудшении здоровья. Обязанность взята
+//              позицией ЗДЕСЬ; арифметика перерасчёта («принимаются в зачёт
+//              ранее выплаченные суммы») взята 10.09.2026 модулем
+//              `26a-pereraschet-vyplaty.law` агрегатом по прошлым выплатам
+//              дела. Границей пункт 3 больше не объявлен.
+//
+//   пункт 4 статьи 26 — НЕУСТОЙКА за несвоевременную выплату. Закон её не
+//              считает: он отсылает к статье 353 Гражданского кодекса
+//              («в порядке и размере, установленных статьёй 353»). Ставка
+//              рефинансирования и порядок её применения — норма ЧУЖОГО акта,
+//              и здесь она не пересказывается. Обязанность уплатить неустойку
+//              выведена позицией с носителем-страховщиком, размер оставлен
+//              долгом моста к `kz.corpus.civilcode` (записан в отчёте наряда).
+//
+//   пункты 3 и 4 статьи 26-1 — расчёты между страховщиками (возмещение
+//              фактически выплаченной суммы страховщику, урегулировавшему
+//              случай) и отсылка к нормативным актам уполномоченного органа.
+//              Первое — обязанность между двумя страховщиками, и она взята;
+//              второе содержания не имеет.
+
+
+// ============================================================================
+// Статья 25: документы и день их получения
+// ============================================================================
+
+// `pub` — читает пакет-мост `kz.corpus.strakhovaya_neustoyka`: база и
+// стороны неустойки статьи 353 ГК живут здесь, а расчёт — там.
+pub relation payment_claim_of(demand: PaymentClaim, accident: TrafficAccident,
+                          holder: Beneficiary, insurer: Insurer) kind empirical {
+    key(demand);
+    label ru-KZ official "требование о страховой выплате предъявлено выгодоприобретателем страховщику по данному транспортному происшествию";
+}
+
+relation required_document_kind(doc_kind: RequiredDocumentKind) kind institutional {
+    label ru-KZ official "названный вид документа входит в перечень прилагаемых к заявлению о страховой выплате (статья 25 пункт 2)";
+}
+
+// Замыкание §70 по действующим подпунктам пункта 2. Подпункты 1), 5) и 8)
+// исключены поправками 2015 и 2018 годов и в перечень не входят: закреплённый
+// текст оставляет от них только строку об исключении.
+@source(LAW_446_ART25) {
+    assert required_document_kind(HarmAndAmountEvidence);
+    assert required_document_kind(IncapacityOrDisabilityCertificate);
+    assert required_document_kind(DeathCertificate);
+    assert required_document_kind(BeneficiaryEntitlementDocument);
+    assert required_document_kind(HarmAssessmentApplication);
+    assert required_document_kind(BeneficiaryIdentityDocument);
+    assert required_document_kind(LossPreventionExpensesEvidence);
+}
+
+// `pub` — читает пакет-дело `examples/srok-vyplaty-i-neustoyka/`: делу
+// предъявляется день получения документов, а день истечения срока выводит
+// статья 26, а не подаётся готовым фактом (13.09.2026).
+pub relation documents_received_on(demand: PaymentClaim, day: Date) kind empirical {
+    key(demand);
+    label ru-KZ official "день получения страховщиком документов, предусмотренных статьёй 25 настоящего Закона";
+}
+
+// `pub` трём фактам дела (DECISION-0340): без него пакет-дело не может ни сообщить, что выплата
+// осуществлена, ни заявить прямое урегулирование, ни назвать полис причинителя — `law ask` отвергает
+// неэкспортированный символ (LDC-E1105), и обязанность статьи 26 оставалась UNDETERMINED.
+pub relation insurance_payment_made(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховая выплата по данному требованию осуществлена";
+}
+
+pub relation direct_settlement_requested(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "потерпевший обратился за возмещением к страховщику, застраховавшему его собственную ответственность (прямое урегулирование)";
+}
+
+pub relation tortfeasor_has_compulsory_policy(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "лицо, по вине которого произошло транспортное происшествие, имеет договор обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation health_deterioration_reported(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "от потерпевшего (выгодоприобретателя) поступило заявление об ухудшении здоровья либо о смерти после осуществления страховой выплаты";
+}
+
+relation payment_recalculated(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик произвёл перерасчёт суммы страховой выплаты";
+}
+
+// ДЕНЬ ФАКТИЧЕСКОЙ ВЫПЛАТЫ — факт дела, и именно он, а не вывод о просрочке.
+// До 13.09.2026 делом подавалась САМА ПРОСРОЧКА: «выплата осуществлена
+// несвоевременно» входило готовым признаком, то есть юридический вывод —
+// сравнение дня выплаты с днём истечения срока — делался вне модели. Теперь
+// делом входят два события (день получения документов и день выплаты), а
+// вывод делает право.
+pub relation strakhovaya_vyplata_osushchestvlena(demand: PaymentClaim, day: Date) kind empirical {
+    key(demand);
+    label ru-KZ official "день, в который страховщик фактически осуществил страховую выплату по данному требованию";
+}
+
+pub relation payment_made_late(demand: PaymentClaim) kind institutional {
+    label ru-KZ official "страховая выплата осуществлена страховщиком несвоевременно";
+}
+
+// ОДНО СОБЫТИЕ — ДВА ПРЕДИКАТА (DECISION-0340). День выплаты
+// `strakhovaya_vyplata_osushchestvlena(demand, day)` и факт исполнения
+// `insurance_payment_made(demand)`, который читает обязанность-срок
+// `InsurerMustPayWithinTerm`, описывают одно и то же событие, но правилом связаны не
+// были: дело, назвавшее день выплаты, не влекло исполнения, и позиция оставалась
+// UNDETERMINED (README примера `srok-vyplaty-i-neustoyka`, находка M2 исследования
+// Executable Knowledge). Связь — строгая и в одну сторону: из дня следует факт,
+// из факта день не следует.
+@source(LAW_446_ART26)
+rule PaymentDayEstablishesPayment(demand: PaymentClaim, day: Date) strict {
+    label ru-KZ official "Страховая выплата, осуществлённая в установленный день, есть осуществлённая страховая выплата по данному требованию";
+    when strakhovaya_vyplata_osushchestvlena(demand, day);
+    then insurance_payment_made(demand);
+}
+
+@source(LAW_446_ART26)
+rule PaymentMadeLate(demand: PaymentClaim, due: Date, paid: Date) defeasible {
+    label ru-KZ official "Статья 26 пункт 1. Страховая выплата осуществлена несвоевременно, если день фактической выплаты позже дня истечения срока, исчисляемого со дня получения документов, предусмотренных статьёй 25 настоящего Закона";
+    when payment_due_day(demand, due);
+    when strakhovaya_vyplata_osushchestvlena(demand, paid);
+    when paid > due;
+    then payment_made_late(demand);
+}
+
+// ОКНО ПРОСРОЧКИ ЗАДАНО ДВУМЯ УЖЕ ИЗВЕСТНЫМИ ДНЯМИ, и это не обход, а отказ
+// от выдумки. Просрочка течёт с дня, СЛЕДУЮЩЕГО за днём истечения срока (пока
+// срок не истёк, обязанность не нарушена, §86), и по день уплаты включительно
+// (статья 353 пункт 2 ГК). Назвать «день, следующий за днём истечения срока»
+// термом `add_calendar_period(due, 1 calendar_day)` можно, но он требует
+// именованной `deadline_policy` в контексте дела — политики, которой ни
+// статья 26, ни статья 353 не устанавливают, и любая названная здесь была бы
+// выбрана автором, а не законом (замер 13.09.2026: сцена OGPO-P29 ответила
+// MISSING_POLICY).
+//
+// Поэтому окно предъявляется полуинтервалом [день истечения срока, день
+// уплаты): дней в нём РОВНО столько же, сколько в [день истечения + 1, день
+// уплаты] — их число в обоих случаях есть разность двух дней, — а календарная
+// политика не нужна вовсе. Первый и последний день просрочки как ПОНЯТИЯ
+// от этого не исчезают: они названы в шапке моста `kz.corpus.strakhovaya_neustoyka`
+// и в сценах, где посчитаны глазами.
+
+pub relation summa_prosrochennoy_vyplaty(demand: PaymentClaim, amount: Money)
+    kind institutional {
+    key(demand);
+    label ru-KZ official "размер страховой выплаты, осуществлённой с просрочкой, — база начисления неустойки статьи 26 пункта 4";
+}
+
+@source(LAW_446_ART26)
+rule SummaProsrochennoyVyplaty(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    insurer: Insurer,
+    victim: Victim,
+    amount: Money,
+) strict {
+    label ru-KZ official "Базой неустойки пункта 4 статьи 26 служит размер страховой выплаты по требованию, определённый статьёй 24";
+    when payment_claim_of(demand, accident, holder, insurer);
+    when beneficiary_of_victim(accident, victim, holder);
+    when insurance_payment_amount(accident, victim, amount);
+    then summa_prosrochennoy_vyplaty(demand, amount);
+}
+
+// РАЗМЕР НЕУСТОЙКИ — ВЫВОДИМЫЙ, а не факт дела. Отношение объявлено ЗДЕСЬ,
+// потому что здешняя норма — пункт 4 статьи 26: она и делает неустойку
+// последствием просрочки. Считает же её пакет-мост
+// `kz.corpus.strakhovaya_neustoyka` по статье 353 ГК РК: базовая ставка
+// Национального Банка на день исполнения, начисление по день уплаты.
+// В мире без него размер не выводится, и это правильный ответ: по одному
+// Закону № 446-II он и не вычисляется — пункт 4 отсылает к ГК.
+pub relation late_payment_penalty_amount(demand: PaymentClaim, amount: Money)
+    kind institutional {
+    key(demand);
+    label ru-KZ official "размер неустойки за несвоевременное осуществление страховой выплаты (статья 26 пункт 4 Закона, статья 353 Гражданского кодекса)";
+}
+
+pub relation late_payment_penalty_paid(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик уплатил выгодоприобретателю неустойку за несвоевременное осуществление страховой выплаты";
+}
+
+relation direct_settlement_amount_reimbursed(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховая компания виновного лица возместила фактически выплаченную сумму страховщику, урегулировавшему страховой случай";
+}
+
+// ============================================================================
+// Сроки статьи 26
+// ============================================================================
+
+relation general_payment_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок осуществления страховой выплаты в общем порядке (статья 26 пункт 1)";
+}
+@source(LAW_446_ART26)
+assert general_payment_term(15 business_day);
+
+relation direct_settlement_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок возмещения причинённого вреда при прямом урегулировании (статья 26-1 пункт 2)";
+}
+@source(LAW_446_ART26_1)
+assert direct_settlement_term(7 business_day);
+
+// `pub` — читает пакет-мост `kz.corpus.strakhovaya_neustoyka`: база и
+// стороны неустойки статьи 353 ГК живут здесь, а расчёт — там.
+pub relation general_payment_due_day(demand: PaymentClaim, day: Date) kind institutional {
+    label ru-KZ official "день истечения пятнадцатидневного срока страховой выплаты в общем порядке";
+}
+relation direct_settlement_due_day(demand: PaymentClaim, day: Date) kind institutional {
+    label ru-KZ official "день истечения семидневного срока возмещения при прямом урегулировании";
+}
+// `pub` — окно начисления неустойки статьи 353 ГК строится на этом дне;
+// считает его пакет-мост `kz.corpus.strakhovaya_neustoyka`.
+pub relation payment_due_day(demand: PaymentClaim, day: Date) kind institutional {
+    label ru-KZ official "день, в который истекает срок осуществления страховой выплаты по данному требованию";
+}
+
+@source(LAW_446_ART26, quote = "Страховая выплата производится страховщиком в течение пятнадцати рабочих дней со дня получения им документов, предусмотренных статьей 25 настоящего Закона.")
+rule GeneralPaymentDueDay(demand: PaymentClaim, received: Date, term: Quantity) strict {
+    label ru-KZ official "Статья 26 пункт 1. Страховая выплата производится страховщиком в течение пятнадцати рабочих дней со дня получения им документов, предусмотренных статьёй 25 настоящего Закона";
+    when documents_received_on(demand, received);
+    when general_payment_term(term);
+    then general_payment_due_day(demand, add_business_days(received, term));
+}
+
+// Прямое урегулирование — СВОЙ срок, вдвое короче общего, и потому своё
+// правило, а не исключение из общего: у общего срока другое основание.
+@source(LAW_446_ART26_1, quote = "Возмещение причиненного вреда производится страховщиком в течение семи рабочих дней со дня получения документов, предусмотренных подпунктами 1), 2), 3), 4), 4-1), 4-2) и 6) пункта 2 статьи 25 настоящего Закона.")
+rule DirectSettlementDueDay(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    insurer: Insurer,
+    received: Date,
+    term: Quantity,
+) strict {
+    label ru-KZ official "Статья 26-1 пункт 2. Возмещение причинённого вреда производится страховщиком в течение семи рабочих дней со дня получения документов, предусмотренных пунктом 2 статьи 25 настоящего Закона";
+    when payment_claim_of(demand, accident, holder, insurer);
+    when direct_settlement_requested(demand);
+    when tortfeasor_has_compulsory_policy(accident);
+    when documents_received_on(demand, received);
+    when direct_settlement_term(term);
+    then direct_settlement_due_day(demand, add_business_days(received, term));
+}
+
+// ДВА СРОКА НАД ОДНИМ ТРЕБОВАНИЕМ РАЗВЕДЕНЫ ДЕФИТЕРОМ, а не гардом. Форма —
+// каноническая §95.3: тело дефитера само связывает переменные головы, иначе
+// подстановка приходит неполной и оракул падает на первом же деле прямого
+// урегулирования — тот же отказ, что разобран у
+// `PremiumReductionDefeatsFullPremium` в `20-reduction.law`.
+//
+// ОТМЕНЯЕТСЯ ПРИМЕНИМОСТЬ ОБЩЕГО СРОКА, А НЕ ВЫВОД С ДАТОЙ (DECISION-0344).
+// До 20.09.2026 дефитер бил прямо по выводу `payment_due_day(demand, due)`,
+// где `due` — день ОБЩЕГО срока. Поражение в §95 адресное: оно снимает
+// НАЗВАННЫЙ литерал, а не вывод конкретного правила. Поэтому в деле, где день
+// общего срока СОВПАДЁТ с днём специального, отмена снимала бы и тождественный
+// вывод статьи 26-1: промежуточные отношения `general_payment_due_day` и
+// `direct_settlement_due_day` держались бы оба, а `payment_due_day` оставалось
+// бы пустым — без единого issue. Дефект был спящим сразу по двум причинам:
+// сроки не совпадают (7 и 15 рабочих дней от одного дня), а вывод статьи 26-1
+// держится СТРОГОЙ опорой, которую дефитер не берёт (§107). Оба множителя
+// снимает одна поправка: гипотетический десятидневный срок для юридических лиц
+// уравнял дни и сделал опору специального дня поражаемой — и срока у дела не
+// осталось вовсе (находка F-26 исследования Executable Knowledge, 20.09.2026).
+//
+// Надёжная форма не даёт совпадению значений никакого хода: поражается
+// БЕЗЗНАЧНОЕ отношение применимости `general_term_applies(demand)`, и вывод
+// специальной нормы к цели поражения не относится вовсе, какой бы день он ни
+// назвал.
+relation general_term_applies(demand: PaymentClaim) kind institutional {
+    label ru-KZ official "к данному требованию применяется общий порядок исчисления срока страховой выплаты (статья 26 пункт 1)";
+}
+
+// Поражаемое умолчание: общий срок применяется к требованию, документы по
+// которому страховщиком получены. Тот же вход, что и у `GeneralPaymentDueDay`,
+// — поведение на всех прежних делах сохраняется дословно.
+@source(LAW_446_ART26)
+rule GeneralTermApplies(demand: PaymentClaim, received: Date) defeasible {
+    label ru-KZ official "Статья 26 пункт 1. К требованию, документы по которому получены страховщиком, применяется общий порядок исчисления срока страховой выплаты";
+    when documents_received_on(demand, received);
+    then general_term_applies(demand);
+}
+
+// §111: правило читает вывод поражаемого правила, и потому само поражаемое,
+// — строгое было бы отклонено как поздний производитель (`LDC-E4103`).
+@source(LAW_446_ART26)
+rule PaymentDueDayIsGeneralTerm(demand: PaymentClaim, due: Date) defeasible {
+    label ru-KZ official "Срок осуществления страховой выплаты по требованию исчисляется по общему правилу статьи 26 пункта 1";
+    when general_term_applies(demand);
+    when general_payment_due_day(demand, due);
+    then payment_due_day(demand, due);
+}
+
+@source(LAW_446_ART26_1) {
+    rule DirectSettlementDefeatsGeneralTerm(demand: PaymentClaim) defeater {
+        label ru-KZ official "Статья 26-1 пункт 2. При прямом урегулировании общий пятнадцатидневный срок статьи 26 отводится семидневным сроком возмещения";
+        when direct_settlement_requested(demand);
+        defeat general_term_applies(demand);
+    }
+
+    rule PaymentDueDayIsDirectSettlementTerm(demand: PaymentClaim, due: Date) strict {
+        label ru-KZ official "Статья 26-1 пункт 2. Срок возмещения при прямом урегулировании истекает на седьмой рабочий день со дня получения документов";
+        when direct_settlement_due_day(demand, due);
+        then payment_due_day(demand, due);
+    }
+}
+
+// ============================================================================
+// Позиции §127
+// ============================================================================
+
+@source(LAW_446_ART26) {
+    // DECISION-0209 этап 7 (пилот Р8): правило записано экземпляром каркаса
+    // `claim_deadline_duty` профиля 0.2; узлы — `InsurerMustPayWithinTerm/duty` и `InsurerMustPayWithinTerm/duty/norm`.
+    expand claim_deadline_duty InsurerMustPayWithinTerm {
+        label ru-KZ official "Статья 26 пункт 1. Страховщик обязан произвести страховую выплату в срок, исчисляемый со дня получения им документов, предусмотренных статьёй 25 настоящего Закона";
+        bind matter = demand: PaymentClaim;
+        bind context = accident: TrafficAccident;
+        bind beneficiary = holder: Beneficiary;
+        bind bearer = insurer: Insurer;
+        bind start = received: Date;
+        bind due = due: Date;
+        claim = payment_claim_of;
+        started = documents_received_on;
+        due_on = payment_due_day;
+        conditions = [];
+        result = insurance_payment_made;
+    }
+
+    // Пункт 3: перерасчёт при ухудшении здоровья. Окно от акта, а не от события:
+    // закон срока перерасчёта не называет вовсе, и придумывать его нельзя.
+    rule InsurerMustRecalculateOnDeterioration(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 26 пункт 3. Если у потерпевшего наступит ухудшение здоровья либо смерть, страховщик на основании поступившего заявления и соответствующих документов обязан произвести перерасчёт суммы страховой выплаты";
+        when payment_claim_of(demand, accident, holder, insurer);
+        when health_deterioration_reported(demand);
+        then duty ProizvestiPereraschetSummyVyplaty {
+            bearer insurer;
+            beneficiary holder;
+            achieve payment_recalculated(demand) during [@2026-07-23, infinity);
+        };
+    }
+
+    // Пункт 4: неустойка. Обязанность выводится, размер — норма ГК (граница в
+    // шапке модуля).
+    rule InsurerMustPayPenaltyForLatePayment(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 26 пункт 4. При несвоевременном осуществлении страховой выплаты страховщик обязан уплатить выгодоприобретателю неустойку в порядке и размере, установленных статьёй 353 Гражданского кодекса Республики Казахстан";
+        when payment_claim_of(demand, accident, holder, insurer);
+        when payment_made_late(demand);
+        then duty UplatitNeustoykuZaProsrochkuVyplaty {
+            bearer insurer;
+            beneficiary holder;
+            achieve late_payment_penalty_paid(demand) during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// Статья 26-1 пункт 3: расчёт между страховщиками. Носитель — страховщик
+// ВИНОВНОГО, бенефициар — страховщик, урегулировавший случай; ни тот, ни
+// другой не есть потерпевший, и потому это отдельная позиция, а не оборотная
+// сторона выплаты.
+relation tortfeasor_insurer(accident: TrafficAccident, insurer: Insurer) kind empirical {
+    label ru-KZ official "страховая компания лица, по вине которого произошёл страховой случай";
+}
+
+@source(LAW_446_ART26_1, quote = "Страховая компания лица, по вине которого произошел страховой случай, возмещает фактически выплаченную сумму страховщику, урегулировавшему страховой случай.")
+rule TortfeasorInsurerReimbursesSettlingInsurer(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    settling: Insurer,
+    liable: Insurer,
+) strict {
+    label ru-KZ official "Статья 26-1 пункт 3. Страховая компания лица, по вине которого произошёл страховой случай, возмещает фактически выплаченную сумму страховщику, урегулировавшему страховой случай";
+    when payment_claim_of(demand, accident, holder, settling);
+    when direct_settlement_requested(demand);
+    when insurance_payment_made(demand);
+    when tortfeasor_insurer(accident, liable);
+    then duty VozmestitVyplatuUregulirovavshemuStrakhovshchiku {
+        bearer liable;
+        achieve direct_settlement_amount_reimbursed(demand) during [@2026-07-23, infinity);
+    };
+}

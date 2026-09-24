@@ -1,0 +1,244 @@
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Incomplete and contradictory inputs. Expectations follow §113 (absence of
+// a fact is not its negation), §61 (a contradiction yields BOTH), and E-0105
+// (a candidate term error propagates into the result status).
+
+// Cl. 9: the vehicle is technically destroyed, but the market value
+// was not submitted — the payout amount is not derived.
+test "urn:query:vred-t15-a" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15a-a0": raschet_po_ts(r: entity_ref("urn:case:vred:raschet-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15a-a1": vosstanovlenie_tekhnicheski_nevozmozhno(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15a-a2": ostatki_peredany_v_sobstvennost_strakhovshchika(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate truth(ts_schitaetsya_unichtozhennym(entity_ref("urn:case:vred:ts-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate collect amount: Money where strakhovaya_vyplata_pri_gibeli(r: entity_ref("urn:case:vred:raschet-1"), amount: amount);
+    expect result_kind == COLLECTION;
+    expect evaluation_status == COMPUTED;
+    expect collected_count(0);
+}
+
+// Cl. 9: the salvage is usable (its value was submitted), but the case is
+// SILENT on the transfer of the salvage — neither of the two alternatives is derived (§113).
+test "urn:query:vred-t15-b" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15b-a0": raschet_po_ts(r: entity_ref("urn:case:vred:raschet-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15b-a1": vosstanovlenie_tekhnicheski_nevozmozhno(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15b-a2": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:case:vred:ts-1"), amount: 1000000 KZT) { origin case_input; }
+        assert "t15b-a3": stoimost_godnykh_k_realizatsii_ostatkov(v: entity_ref("urn:case:vred:ts-1"), amount: 150000 KZT) { origin case_input; }
+    }
+    evaluate collect amount: Money where strakhovaya_vyplata_pri_gibeli(r: entity_ref("urn:case:vred:raschet-1"), amount: amount);
+    expect result_kind == COLLECTION;
+    expect evaluation_status == COMPUTED;
+    expect collected_count(0);
+}
+
+// Cl. 9: the transfer of the salvage is established negatively — the payout
+// is net of the usable salvage value, and exactly one amount is derived.
+test "urn:query:vred-t15-c" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15c-a0": raschet_po_ts(r: entity_ref("urn:case:vred:raschet-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15c-a1": vosstanovlenie_tekhnicheski_nevozmozhno(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15c-a2": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:case:vred:ts-1"), amount: 1000000 KZT) { origin case_input; }
+        assert "t15c-a3": stoimost_godnykh_k_realizatsii_ostatkov(v: entity_ref("urn:case:vred:ts-1"), amount: 150000 KZT) { origin case_input; }
+        assert "t15c-a4": not ostatki_peredany_v_sobstvennost_strakhovshchika(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate collect amount: Money where strakhovaya_vyplata_pri_gibeli(r: entity_ref("urn:case:vred:raschet-1"), amount: amount);
+    expect result_kind == COLLECTION;
+    expect evaluation_status == COMPUTED;
+    expect collected_count(1);
+
+    evaluate truth(strakhovaya_vyplata_pri_gibeli(r: entity_ref("urn:case:vred:raschet-1"), amount: 850000 KZT));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Cl. 9, contradiction: the salvage is both transferred and not transferred —
+// the transfer fact itself is BOTH (§62), and a bare body premise is read as
+// established (§66): neither of the two payout alternatives applies, and no
+// amount is derived at all — the contradiction does not turn into a choice.
+test "urn:query:vred-t15-d" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15d-a0": raschet_po_ts(r: entity_ref("urn:case:vred:raschet-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15d-a1": vosstanovlenie_tekhnicheski_nevozmozhno(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15d-a2": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:case:vred:ts-1"), amount: 1000000 KZT) { origin case_input; }
+        assert "t15d-a3": stoimost_godnykh_k_realizatsii_ostatkov(v: entity_ref("urn:case:vred:ts-1"), amount: 150000 KZT) { origin case_input; }
+        assert "t15d-a4": ostatki_peredany_v_sobstvennost_strakhovshchika(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15d-a5": not ostatki_peredany_v_sobstvennost_strakhovshchika(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate truth(ostatki_peredany_v_sobstvennost_strakhovshchika(entity_ref("urn:case:vred:raschet-1")));
+    expect truth_status == BOTH;
+
+    evaluate collect amount: Money where strakhovaya_vyplata_pri_gibeli(r: entity_ref("urn:case:vred:raschet-1"), amount: amount);
+    expect result_kind == COLLECTION;
+    expect collected_count(0);
+
+    evaluate truth(strakhovaya_vyplata_pri_gibeli(r: entity_ref("urn:case:vred:raschet-1"), amount: 1000000 KZT));
+    expect truth_status == NEITHER;
+}
+
+// Cl. 9: expenses are submitted, but there is no market value —
+// inexpediency is not derived, and destruction is not derived.
+test "urn:query:vred-t15-e" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15e-a0": ozhidaemye_raskhody_na_vosstanovlenie(v: entity_ref("urn:case:vred:ts-1"), amount: 900000 KZT) { origin case_input; }
+    }
+    evaluate truth(ts_schitaetsya_unichtozhennym(entity_ref("urn:case:vred:ts-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Cl. 4-1: the number of appraisers was not submitted — neither the choice
+// nor its absence is derived; zero appraisers is an established absence of choice.
+test "urn:query:vred-t15-f" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15f-a0": predlozheno_otsenshchikov(r: entity_ref("urn:case:vred:raschet-2"), n: 0) { origin case_input; }
+    }
+    evaluate truth(vybor_otsenshchikov_obespechen(entity_ref("urn:case:vred:raschet-1")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(vybor_otsenshchikov_obespechen(entity_ref("urn:case:vred:raschet-2")));
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Cl. 7: the repair cost is being determined, seven conditions are
+// satisfied, but the case is silent on the accident documents — admissibility
+// is not derived (neither TRUE nor FALSE).
+test "urn:query:vred-t15-g" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15g-a0": dostup_k_ts_besprepyatstvennyy(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15g-a1": identifikatsiya_ts_provodima(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15g-a2": probeg_po_odometru_ustanovim(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15g-a3": komplektnost_ustanovima(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15g-a4": perechen_defektov_ustanovim(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15g-a5": fotosemka_povrezhdeniy_provodima(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15g-a6": priznaki_prezhnikh_remontov_ustanovimy(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15g-a7": opredelyaetsya_stoimost_vosstanovitelnogo_remonta(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate truth(osmotr_dopustim(entity_ref("urn:case:vred:raschet-1")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Cl. 7: one of the seven conditions (photography) is not satisfied, the
+// documents are present — the feasibility conditions are not derived,
+// admissibility is not derived.
+test "urn:query:vred-t15-h" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15h-a0": dostup_k_ts_besprepyatstvennyy(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15h-a1": identifikatsiya_ts_provodima(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15h-a2": probeg_po_odometru_ustanovim(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15h-a3": komplektnost_ustanovima(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15h-a4": perechen_defektov_ustanovim(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15h-a6": priznaki_prezhnikh_remontov_ustanovimy(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15h-a7": opredelyaetsya_stoimost_vosstanovitelnogo_remonta(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t15h-a8": dokumenty_o_povrezhdeniyakh_v_dtp_predstavleny(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate truth(osmotr_vozmozhen(entity_ref("urn:case:vred:raschet-1")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(osmotr_dopustim(entity_ref("urn:case:vred:raschet-1")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Cl. 10: mileage submitted in a foreign unit (metres instead of
+// kilometres) — comparing quantities of different units fails loudly rather
+// than computing silently.
+test "urn:query:vred-t15-i" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15i-a0": detal_ts(d: entity_ref("urn:case:vred:detal-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15i-a1": detal_podlezhit_zamene(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t15i-a2": vladelets_fizicheskoe_litso(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15i-a3": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t15i-a4": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t15i-a5": srednegodovoy_probeg(v: entity_ref("urn:case:vred:ts-1"), distance: 12000 m) { origin case_input; }
+    }
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:case:vred:detal-1")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == TYPE_ERROR;
+}
+
+// Cl. 9, threshold with tiyn: market value 1,000,000.01 tenge, expenses
+// 800,000.01 tenge. 80% of the value is EXACTLY 800,000.008 tenge (§50:
+// no rounding is implied), and the expenses exceed it.
+test "urn:query:vred-t15-j" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t15j-a0": ozhidaemye_raskhody_na_vosstanovlenie(v: entity_ref("urn:case:vred:ts-1"), amount: 800000.01 KZT) { origin case_input; }
+        assert "t15j-a1": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:case:vred:ts-1"), amount: 1000000.01 KZT) { origin case_input; }
+    }
+    evaluate truth(vosstanovlenie_ekonomicheski_netselesoobrazno(entity_ref("urn:case:vred:ts-1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,112 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 27 — страховая выплата при причинении вреда несколькими лицами.
+// МРП дня выплаты (2026 год) — 4 325 ₸, предел за вред имуществу одного
+// потерпевшего 600 × 4 325 = 2 595 000 ₸.
+
+// OGPO-P27-1 — ДВА ЗАСТРАХОВАННЫХ ПРИЧИНИТЕЛЯ, ПРЕДЕЛ НЕ СРЕЗАЕТ.
+// Реальный вред 2 000 000 ₸. Размеры ответственности страхователей — 3/4
+// и 1/4. Выплаты: min(2 595 000; 2 000 000 × 3/4 = 1 500 000) = 1 500 000 ₸
+// и min(2 595 000; 500 000) = 500 000 ₸.
+test "urn:query:ogpo-p27-share-within-limit" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p27a-0": harm_caused_by_vehicle(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:vehicle:w1")) { origin case_input; }
+        assert "p27a-1": harm_caused_by_vehicle(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:vehicle:w2")) { origin case_input; }
+        assert "p27a-2": vehicle_owner_insurer(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:vehicle:w1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p27a-3": vehicle_owner_insurer(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:vehicle:w2"), entity_ref("urn:kz:ogpo:owner:o2"), entity_ref("urn:kz:ogpo:insurer:i2")) { origin case_input; }
+        assert "p27a-4": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), 2000000 KZT) { origin case_input; }
+        assert "p27a-5": actual_harm_amount(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), 2000000 KZT) { origin case_input; }
+        assert "p27a-6": insured_liability_share(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:owner:o1"), 3, 4) { origin case_input; }
+        assert "p27a-7": insured_liability_share(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:owner:o2"), 1, 4) { origin case_input; }
+        assert "p27a-8": beneficiary_of_victim(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+    }
+    evaluate truth(insurer_share_payment(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:insurer:i1"), 1500000 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P27-2 — тот же мир: общая сумма выплат всеми страховщиками
+// 1 500 000 + 500 000 = 2 000 000 ₸, что равно реальному вреду и потому
+// ограничение третьего предложения соблюдено.
+test "urn:query:ogpo-p27-all-insurers-total" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p27b-0": harm_caused_by_vehicle(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:vehicle:w1")) { origin case_input; }
+        assert "p27b-1": harm_caused_by_vehicle(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:vehicle:w2")) { origin case_input; }
+        assert "p27b-2": vehicle_owner_insurer(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:vehicle:w1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p27b-3": vehicle_owner_insurer(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:vehicle:w2"), entity_ref("urn:kz:ogpo:owner:o2"), entity_ref("urn:kz:ogpo:insurer:i2")) { origin case_input; }
+        assert "p27b-4": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), 2000000 KZT) { origin case_input; }
+        assert "p27b-5": actual_harm_amount(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), 2000000 KZT) { origin case_input; }
+        assert "p27b-6": insured_liability_share(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:owner:o1"), 3, 4) { origin case_input; }
+        assert "p27b-7": insured_liability_share(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:owner:o2"), 1, 4) { origin case_input; }
+        assert "p27b-8": beneficiary_of_victim(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+    }
+    evaluate truth(all_insurers_payment_total(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), 2000000 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P27-3 — ПРЕДЕЛ СРЕЗАЕТ ДОЛЮ. Реальный вред 8 000 000 ₸, доли те
+// же: 8 000 000 × 3/4 = 6 000 000 ₸ выше предела 2 595 000 ₸, и первый
+// страховщик платит предел. Второй платит 8 000 000 × 1/4 = 2 000 000 ₸,
+// предел его доли не срезает.
+test "urn:query:ogpo-p27-share-capped-by-limit" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p27c-0": harm_caused_by_vehicle(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:victim:v2"), entity_ref("urn:kz:ogpo:vehicle:w1")) { origin case_input; }
+        assert "p27c-1": harm_caused_by_vehicle(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:victim:v2"), entity_ref("urn:kz:ogpo:vehicle:w2")) { origin case_input; }
+        assert "p27c-2": vehicle_owner_insurer(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:vehicle:w1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p27c-3": vehicle_owner_insurer(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:vehicle:w2"), entity_ref("urn:kz:ogpo:owner:o2"), entity_ref("urn:kz:ogpo:insurer:i2")) { origin case_input; }
+        assert "p27c-4": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:victim:v2"), 8000000 KZT) { origin case_input; }
+        assert "p27c-5": actual_harm_amount(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:victim:v2"), 8000000 KZT) { origin case_input; }
+        assert "p27c-6": insured_liability_share(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:owner:o1"), 3, 4) { origin case_input; }
+        assert "p27c-7": insured_liability_share(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:owner:o2"), 1, 4) { origin case_input; }
+        assert "p27c-8": beneficiary_of_victim(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:victim:v2"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+    }
+    evaluate truth(insurer_share_payment(entity_ref("urn:kz:ogpo:accident:a6"), entity_ref("urn:kz:ogpo:victim:v2"), entity_ref("urn:kz:ogpo:insurer:i1"), 2595000 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P27-4 — ПОЗИЦИЯ §127: право выгодоприобретателя получить выплату
+// отдельно по каждому договору. Мир тот же, что у OGPO-P27-1.
+test "urn:query:ogpo-p27-beneficiary-liberty" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p27d-0": harm_caused_by_vehicle(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:vehicle:w1")) { origin case_input; }
+        assert "p27d-1": harm_caused_by_vehicle(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:vehicle:w2")) { origin case_input; }
+        assert "p27d-2": vehicle_owner_insurer(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:vehicle:w1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p27d-3": vehicle_owner_insurer(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:vehicle:w2"), entity_ref("urn:kz:ogpo:owner:o2"), entity_ref("urn:kz:ogpo:insurer:i2")) { origin case_input; }
+        assert "p27d-4": beneficiary_of_victim(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+    }
+    evaluate truth(harm_by_several_insured_vehicles(entity_ref("urn:kz:ogpo:accident:a5"), entity_ref("urn:kz:ogpo:victim:v1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

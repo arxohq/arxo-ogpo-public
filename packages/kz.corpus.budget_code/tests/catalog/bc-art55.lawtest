@@ -1,0 +1,40 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 55 пункт 1 абзац второй. Уполномоченные органы обеспечивают мониторинг посредством формирования отчётности реализации запланированных мероприятий с указа
+test "CATALOG-MONITOREXTRABUDGETARYOBLIGATIONDUTY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": obligation_supervised_by(entity_ref("urn:kz:catalog:monitorextrabudgetaryobligationduty:v0"), entity_ref("urn:kz:catalog:monitorextrabudgetaryobligationduty:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(MonitorObligation, ACTIVE);
+}
+
+// Статья 55 пункт 1 абзац третий. Уполномоченные органы обеспечивают включение результатов мониторинга и отчётности в годовой отчёт об исполнении соответствующего
+test "CATALOG-INCLUDEOBLIGATIONINANNUALREPORTDUTY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": obligation_supervised_by(entity_ref("urn:kz:catalog:includeobligationinannualreportduty:v0"), entity_ref("urn:kz:catalog:includeobligationinannualreportduty:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(IncludeObligationInAnnualReport, ACTIVE);
+}
+
+// Статья 55 пункт 1 абзац четвёртый. Уполномоченные органы обеспечивают публикацию результатов мониторинга и отчётности на официальном интернет-ресурсе
+test "CATALOG-PUBLISHOBLIGATIONRESULTSDUTY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": obligation_supervised_by(entity_ref("urn:kz:catalog:publishobligationresultsduty:v0"), entity_ref("urn:kz:catalog:publishobligationresultsduty:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(PublishObligationResults, ACTIVE);
+}

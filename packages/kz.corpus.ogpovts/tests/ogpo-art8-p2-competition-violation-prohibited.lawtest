@@ -1,0 +1,31 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 8 п. 2: недопустимая практика — необоснованное преимущество между
+// страховщиками при заключении договоров ОГПО ВТС — под запретом.
+// E-0179: факт практики уже установлен, поэтому запрет НАРУШЕН (§124.3).
+
+test "urn:query:ogpo-art8-p2-competition-violation-prohibited" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "art8-p2-a0": licensed_for_compulsory_insurance(entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+        assert "art8-p2-a1": competition_or_fairness_violation(entity_ref("urn:kz:ogpo:insurer:i1"), UnjustifiedAdvantageBetweenInsurers) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect position(NedopustimayaPraktikaPriZaklyucheniiDogovorov, VIOLATED);
+    expect not position(NedopustimayaPraktikaPriZaklyucheniiDogovorov, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

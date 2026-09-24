@@ -1,0 +1,7 @@
+{
+  "format": "law.package-info/0.1",
+  "purpose": "Пакет kz.corpus.popravochnye_koeffitsienty для проверяемого исполнения в составе ОГПО ВТС.",
+  "license": "Модель, сценарии и каталоги — Apache-2.0 (см. LICENSE). Закреплённые тексты нормативных актов Республики Казахстан воспроизводятся с указанием официального источника в манифестах sources/; этот репозиторий не является официальным изданием и не связан с государственными органами Республики Казахстан.",
+  "maintainer": "Rifat Dzhumagulov (hi@arxo.io)",
+  "repository": "https://github.com/arxohq/arxo-ogpo-public"
+}

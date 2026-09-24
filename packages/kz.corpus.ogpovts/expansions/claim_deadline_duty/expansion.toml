@@ -1,0 +1,5 @@
+[expansion]
+name = "law.expansions.claim_deadline_duty"
+version = "0.1.0"
+profile = "law.expansion/0.2"
+entry = "claim_deadline_duty.law"

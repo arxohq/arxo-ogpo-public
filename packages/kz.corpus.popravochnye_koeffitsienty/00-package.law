@@ -1,0 +1,186 @@
+// ПОПРАВОЧНЫЕ КОЭФФИЦИЕНТЫ к коэффициентам по территории регистрации
+// транспортного средства — пункт 3-1 статьи 19 Закона РК от 01.07.2003
+// № 446-II.
+//
+// ЗАЧЕМ ОТДЕЛЬНЫЙ ПАКЕТ. Закон устанавливает только РОЛЬ величины: она
+// множитель к коэффициенту по территории регистрации. Ни одной цифры он не
+// называет — их ежегодно утверждает уполномоченный орган, а порядок расчёта
+// определён отдельными Правилами. До 13.09.2026 множитель входил в
+// `kz.corpus.ogpovts` ФАКТОМ ДЕЛА; теперь владельцем стал этот пакет, а
+// статья 19 читает готовую величину.
+//
+// НАПРАВЛЕНИЕ ИМПОРТА — ПОДЗАКОННЫЙ ПАКЕТ ЧИТАЕТ ЗАКОН. Размеры утверждены по
+// территориям ЗАКОНА (те же двадцать строк, что у пункта 3 статьи 19), и
+// второй перечень территорий был бы копией закона в подзаконном акте. Поэтому
+// пакет импортирует `kz.corpus.ogpovts`, пользуется его перечислением
+// `RegistrationTerritory` и ПРОИЗВОДИТ объявленный там
+// `territory_adjustment_coefficient`. Обратное направление замкнуло бы кольцо
+// (`ogpovts` уже импортирует `kz.corpus.bonus_malus`, который тоже читает
+// закон, и кольцо возникло бы у обоих).
+//
+// КАРТА ПАКЕТА
+//
+//   01-sources.law     три источника: методика и размеры на 2025 и 2026 годы
+//   00-package.law     этот файл: словарь и мост в статью 19
+//   02-razmery.law     сорок нормативных фактов таблиц АРРФР
+//   03-metodika.law    Правила расчёта № 46: формула, границы, ответственность
+//   tools/tables.py    независимое чтение таблиц из закреплённых байтов
+//   tests/*.lawtest    сценарии §267, включая обе стороны рубежа года
+
+language "law.core" version "0.2";
+package kz.corpus.popravochnye_koeffitsienty version "0.1.0";
+namespace "urn:kz:corpus:clir:popravochnye-koeffitsienty";
+
+import kz.corpus.ogpovts version "0.1.0";
+
+// Общий словарь регионов §139: им названы территории и здесь, и у закона.
+// Прямая ссылка на члена `RegistrationTerritory` невозможна — `pub enum`
+// членов не экспортирует (§24).
+import vocab.geo version "0.1.0";
+
+// Исключение пункта 12 Правил «бонус-малус» сравнивает две территории —
+// признак объявлен там, а производится здесь (см. конец файла).
+import kz.corpus.bonus_malus version "0.2.0";
+
+// --- Размеры и выбор года ----------------------------------------------------
+
+pub relation razmer_popravochnogo_koeffitsienta(
+    region: vocab.geo::Region,
+    god: Integer,
+    koeffitsient: Decimal
+) kind institutional {
+    key(region, god);
+    label ru-KZ official "размер поправочного коэффициента по территории регистрации транспортного средства, утверждённый уполномоченным органом на указанный год";
+}
+
+// ГОД, ВЕЛИЧИНЫ КОТОРОГО ПРИМЕНЯЮТСЯ. Год выбирается ОКНОМ ДЕЙСТВИЯ правила, а
+// не фактом дела, и это следствие самих актов: каждое постановление объявлено
+// вводимым в действие с 1 января своего года и утверждает размеры «на» этот
+// год. Проекция as-of §31 поэтому и есть тот механизм, которым акты велят
+// пользоваться: на 31.12.2025 отвечает постановление № 82, на 01.01.2026 —
+// № 72, и ни одно из них не отвечает на дату другого.
+//
+// ОТКРЫТЫЙ ВОПРОС ВЛАДЕЛЬЦУ: год берётся по дате, НА КОТОРУЮ задан вопрос
+// (`legal_time`), а не по дате заключения договора. Прочтение принято потому,
+// что сами постановления говорят о годе РАСЧЁТА страховой премии, а не о годе
+// договора, и закон дня привязки не называет. Развилка записана в README.
+pub relation raschetnyy_god(god: Integer) kind institutional {
+    key(god);
+    label ru-KZ official "год, размеры поправочных коэффициентов которого применяются к расчёту страховой премии";
+}
+
+@source(PK_2025_TABLE)
+rule RaschetnyyGod2025(region: vocab.geo::Region,
+                       koeffitsient: Decimal) strict {
+    label ru-KZ official "Размеры, утверждённые на 2025 год, применяются к расчётам 2025 года";
+    effective [@2025-01-01, @2026-01-01);
+    when razmer_popravochnogo_koeffitsienta(region, 2025, koeffitsient);
+    then raschetnyy_god(2025);
+}
+
+@source(PK_2026_TABLE)
+rule RaschetnyyGod2026(region: vocab.geo::Region,
+                       koeffitsient: Decimal) strict {
+    label ru-KZ official "Размеры, утверждённые на 2026 год, применяются к расчётам 2026 года";
+    effective [@2026-01-01, @2027-01-01);
+    when razmer_popravochnogo_koeffitsienta(region, 2026, koeffitsient);
+    then raschetnyy_god(2026);
+}
+
+// --- Мост в пункт 3-1 статьи 19 ----------------------------------------------
+//
+// Голова — ЧУЖОЙ предикат: отношение объявлено в `kz.corpus.ogpovts`, потому
+// что множителем премии величину делает статья 19, а не подзаконный акт.
+// Производит её этот пакет, потому что величину устанавливает он.
+
+@source(PK_2025_TABLE)
+@source(PK_2026_TABLE)
+rule PopravochnyyKoeffitsientDogovora(
+    contract: kz.corpus.ogpovts::InsuranceContract,
+    territoriya: kz.corpus.ogpovts::RegistrationTerritory,
+    region: vocab.geo::Region,
+    god: Integer,
+    koeffitsient: Decimal,
+) strict {
+    label ru-KZ official "Статья 19 пункт 3-1. К коэффициентам по территории регистрации транспортного средства применяются поправочные коэффициенты, размеры которых утверждены уполномоченным органом на соответствующий год";
+    when kz.corpus.ogpovts::registration_territory(contract, territoriya);
+    when kz.corpus.ogpovts::territoriya_registratsii_regiona(territoriya, region);
+    when raschetnyy_god(god);
+    when razmer_popravochnogo_koeffitsienta(region, god, koeffitsient);
+    then kz.corpus.ogpovts::territory_adjustment_coefficient(contract, koeffitsient);
+}
+
+
+// --- Исключение пункта 12 Правил «бонус-малус» -------------------------------
+//
+// ЗАЧЕМ ЭТО ЗДЕСЬ. Пункт 12 Правил расчёта коэффициента «бонус-малус»
+// (постановление № 140) понижает класс на один, когда страховой случай
+// наступил ВНЕ территории регистрации, но НЕ понижает, «если на момент
+// заключения договора размер коэффициента по территории регистрации
+// транспортного средства, с учётом поправочного коэффициента, … больше
+// размера коэффициента по территории наступления страхового случая … с
+// учётом соответствующего ему поправочного коэффициента». Тот же пункт
+// прямо называет, откуда берутся обе половины: коэффициент территории — «в
+// значениях, предусмотренных пунктом 3 статьи 19 Закона», поправочный — «в
+// значениях, утверждённых уполномоченным органом в соответствии с пунктом
+// 3-1 статьи 19 Закона».
+//
+// Ни одному из двух пакетов обе величины не видны: `kz.corpus.bonus_malus`
+// не импортирует закон (иначе кольцо — закон читает коэффициент оттуда), а
+// `kz.corpus.ogpovts` не знает размеров поправочных. Видны они ЗДЕСЬ, и
+// потому здесь стоит производитель признака, объявленного владельцем нормы.
+// В мире без этого пакета признак не выводится, и исключение пункта 12
+// молчит — сравнивать нечего.
+
+pub relation territoriya_nastupleniya_sluchaya(
+    dogovor: kz.corpus.bonus_malus::Dogovor,
+    territoriya: kz.corpus.ogpovts::RegistrationTerritory
+) kind empirical {
+    key(dogovor);
+    label ru-KZ official "территория наступления страхового случая (пункт 12 Правил расчёта коэффициента по системе «бонус-малус»)";
+}
+
+pub relation koeffitsient_territorii_s_popravochnym(
+    territoriya: kz.corpus.ogpovts::RegistrationTerritory,
+    god: Integer,
+    koeffitsient: Decimal
+) kind institutional {
+    key(territoriya, god);
+    label ru-KZ official "размер коэффициента по территории с учётом соответствующего ей поправочного коэффициента (пункт 12 Правил, часть вторая)";
+}
+
+@source(PK_2026_TABLE)
+rule KoeffitsientTerritoriiSPopravochnym(
+    territoriya: kz.corpus.ogpovts::RegistrationTerritory,
+    region: vocab.geo::Region,
+    god: Integer,
+    scale: Decimal,
+    popravochnyy: Decimal,
+) strict {
+    label ru-KZ official "Коэффициент по территории с учётом поправочного есть произведение величины пункта 3 статьи 19 на размер поправочного коэффициента, утверждённый на соответствующий год";
+    when kz.corpus.ogpovts::territoriya_registratsii_regiona(territoriya, region);
+    when kz.corpus.ogpovts::territory_scale(territoriya, scale);
+    when razmer_popravochnogo_koeffitsienta(region, god, popravochnyy);
+    then koeffitsient_territorii_s_popravochnym(territoriya, god, scale * popravochnyy);
+}
+
+@source(PK_2026_TABLE)
+rule RegistratsiyaNeDeshevleMestaSluchaya(
+    dogovor: kz.corpus.bonus_malus::Dogovor,
+    contract: kz.corpus.ogpovts::InsuranceContract,
+    territoriya_registratsii: kz.corpus.ogpovts::RegistrationTerritory,
+    territoriya_sluchaya: kz.corpus.ogpovts::RegistrationTerritory,
+    god: Integer,
+    k_registratsii: Decimal,
+    k_sluchaya: Decimal,
+) strict {
+    label ru-KZ official "Пункт 12 Правил расчёта коэффициента по системе «бонус-малус», часть вторая: размер коэффициента по территории регистрации транспортного средства с учётом поправочного коэффициента не меньше размера коэффициента по территории наступления страхового случая с учётом соответствующего ему поправочного коэффициента";
+    when kz.corpus.ogpovts::raschet_bonus_malus_dogovora(contract, dogovor);
+    when kz.corpus.ogpovts::registration_territory(contract, territoriya_registratsii);
+    when territoriya_nastupleniya_sluchaya(dogovor, territoriya_sluchaya);
+    when raschetnyy_god(god);
+    when koeffitsient_territorii_s_popravochnym(territoriya_registratsii, god, k_registratsii);
+    when koeffitsient_territorii_s_popravochnym(territoriya_sluchaya, god, k_sluchaya);
+    when k_registratsii >= k_sluchaya;
+    then kz.corpus.bonus_malus::registratsiya_ne_deshevle_mesta_sluchaya(dogovor);
+}

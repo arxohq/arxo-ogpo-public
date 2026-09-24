@@ -1,0 +1,40 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 29 пункт 2. Не допускается установление в иных законах Республики Казахстан, кроме настоящего Кодекса, уровня бюджета, за счёт которого финансируются рас
+test "CATALOG-ONLYCODESETSEXPENDITURELEVEL" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": expenditure_level_set_by_other_law(entity_ref("urn:kz:catalog:onlycodesetsexpenditurelevel:v0")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(SetExpenditureLevelOutsideCode, ACTIVE);
+}
+
+// Статья 29 пункт 3. Не допускается финансирование расходов определённого уровня бюджета из других уровней бюджетов
+test "CATALOG-NOCROSSLEVELFUNDING" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": programme_administrator(entity_ref("urn:kz:catalog:nocrosslevelfunding:v0"), entity_ref("urn:kz:catalog:nocrosslevelfunding:v2")) { origin case_input; }
+        assert "cat-1": cross_level_funding(entity_ref("urn:kz:catalog:nocrosslevelfunding:v0"), entity_ref("urn:kz:catalog:nocrosslevelfunding:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(FundExpenditureFromAnotherLevel, ACTIVE);
+}
+
+// Статья 29 пункт 3. Расход, финансируемый из бюджета чужого уровня, есть расход с межуровневым финансированием
+test "CATALOG-CROSSLEVELFUNDEDPROJECTION" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": cross_level_funding(entity_ref("urn:kz:catalog:crosslevelfundedprojection:v0"), entity_ref("urn:kz:catalog:crosslevelfundedprojection:v1")) { origin case_input; }
+    }
+    evaluate truth(cross_level_funded(entity_ref("urn:kz:catalog:crosslevelfundedprojection:v0")));
+    expect truth_status == TRUE_ONLY;
+}

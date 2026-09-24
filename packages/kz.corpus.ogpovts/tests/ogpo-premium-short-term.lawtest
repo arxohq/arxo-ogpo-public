@@ -1,0 +1,269 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 19 п. 14 — премия по договору короче двенадцати месяцев.
+//
+// ОБЩИЙ ВХОД ВСЕХ ТРЁХ ДЕЛ (ГСП по пункту 1): МРП 2026 года 4 325 ₸,
+// базовая премия 4 325 × 1,9 = 8 217,5 ₸; Жамбылская область 1,00;
+// поправочный коэффициент 1,74 — размер на 2026 год, утверждённый
+// постановлением Правления АРРФР от 12.11.2025 № 72 и ВЫВОДИМЫЙ пакетом
+// `kz.corpus.popravochnye_koeffitsienty` (13.09.2026; прежде входил делом
+// величиной 1,0); мототранспорт 1,00; физическое лицо
+// 30 лет / стаж 5 лет = 1,00; срок эксплуатации 3 года = 1,00;
+// бонус-малус 1,00 — класс 3 приложения к Правилам № 140.
+// ГСП = 8 217,5 × 1,74 = 14 298,45 ₸.
+//
+// КОЭФФИЦИЕНТ «БОНУС-МАЛУС» БОЛЬШЕ НЕ ПОДАЁТСЯ ВЕЛИЧИНОЙ (13.09.2026). Дело
+// называет связку договора с расчётом класса и сами сведения базы данных —
+// подтверждённое отсутствие страховых случаев, действующий класс 3 и 269 дней
+// страхования (порога в 270 дней не достигнуто, класс не повышается). Пакет
+// `kz.corpus.bonus_malus` выводит из них 1,00.
+//
+// Оба A3-входа (`…/input`) подаются делом: строки таблиц пунктов 7 и 9
+// эмитируются только по предъявленному входу.
+
+// OGPO-P14-1 — ГОД БЕЗ 29 ФЕВРАЛЯ.
+// Договор начинается 01.03.2026; годовой период 01.03.2026 – 01.03.2027
+// содержит 365 дней. n = 73.
+// СП = 14 298,45 × 73 / 365 = 1 043 786,85 / 365 = 2 859,69 ₸.
+test "urn:query:ogpo-p14-non-leap-year" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+            deadline_policy KZ_OGPO_CALENDAR_MONTH_DEADLINES;
+        }
+        assert "p14a-0": territory_basis(entity_ref("urn:kz:ogpo:contract:short-1"), CityOfOblastSignificance) { origin case_input; }
+        assert "p14a-1": registration_territory(entity_ref("urn:kz:ogpo:contract:short-1"), ZhambylOblast) { origin case_input; }
+        assert "p14a-3": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:short-1"), MotorVehicle) { origin case_input; }
+        assert "p14a-4": insured_kind_of(entity_ref("urn:kz:ogpo:contract:short-1"), NaturalPerson) { origin case_input; }
+        assert "p14a-5": insured_age_years(entity_ref("urn:kz:ogpo:contract:short-1"), 30) { origin case_input; }
+        assert "p14a-6": driving_experience_years(entity_ref("urn:kz:ogpo:contract:short-1"), 5) { origin case_input; }
+        assert "p14a-7": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:short-1"), 3) { origin case_input; }
+        assert "p14a-8": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:short-1"), entity_ref("urn:kz:bm:ogpo:short-1")) { origin case_input; }
+        assert "p14a-8-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:short-1"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "p14a-8-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:short-1"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "p14a-8-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:short-1"), 269) { origin case_input; }
+        assert "p14a-9": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(30, 5) { origin case_input; }
+        assert "p14a-10": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(3) { origin case_input; }
+        assert "p14a-11": contract_starts_on(entity_ref("urn:kz:ogpo:contract:short-1"), @2026-03-01) { origin case_input; }
+        assert "p14a-12": contract_term_days(entity_ref("urn:kz:ogpo:contract:short-1"), 73) { origin case_input; }
+    }
+    evaluate truth(short_term_insurance_premium(entity_ref("urn:kz:ogpo:contract:short-1"), 2859.69 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P14-2 — ГОД С 29 ФЕВРАЛЯ, ЗАКРЕПЛЯЕТ ПРОЧТЕНИЕ.
+// Договор заключается 01.12.2027 на 122 дня, то есть САМ СРОК договора
+// пересекает 29.02.2028. Годовой период 01.12.2027 – 01.12.2028 тоже
+// содержит 29.02.2028, поэтому N = 366.
+// СП = 14 298,45 × 122 / 366 = 1 744 410,90 / 366 = 4 766,15 ₸.
+//
+// ДЕЛО РАЗЛИЧАЕТ ПРОЧТЕНИЯ. Год ЗАКЛЮЧЕНИЯ договора здесь 2027-й — не
+// високосный, и при том прочтении N был бы 365, а частное 183/365
+// неточным: пакет отказал бы `INEXACT_DIVISION` вместо ответа. Смена
+// прочтения меняет ответ, и потому оно записано в шапке модуля, а вопрос
+// вынесен владельцу.
+test "urn:query:ogpo-p14-leap-year" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+            deadline_policy KZ_OGPO_CALENDAR_MONTH_DEADLINES;
+        }
+        assert "p14b-0": territory_basis(entity_ref("urn:kz:ogpo:contract:short-2"), CityOfOblastSignificance) { origin case_input; }
+        assert "p14b-1": registration_territory(entity_ref("urn:kz:ogpo:contract:short-2"), ZhambylOblast) { origin case_input; }
+        assert "p14b-3": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:short-2"), MotorVehicle) { origin case_input; }
+        assert "p14b-4": insured_kind_of(entity_ref("urn:kz:ogpo:contract:short-2"), NaturalPerson) { origin case_input; }
+        assert "p14b-5": insured_age_years(entity_ref("urn:kz:ogpo:contract:short-2"), 30) { origin case_input; }
+        assert "p14b-6": driving_experience_years(entity_ref("urn:kz:ogpo:contract:short-2"), 5) { origin case_input; }
+        assert "p14b-7": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:short-2"), 3) { origin case_input; }
+        assert "p14b-8": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:short-2"), entity_ref("urn:kz:bm:ogpo:short-2")) { origin case_input; }
+        assert "p14b-8-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:short-2"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "p14b-8-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:short-2"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "p14b-8-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:short-2"), 269) { origin case_input; }
+        assert "p14b-9": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(30, 5) { origin case_input; }
+        assert "p14b-10": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(3) { origin case_input; }
+        assert "p14b-11": contract_starts_on(entity_ref("urn:kz:ogpo:contract:short-2"), @2027-12-01) { origin case_input; }
+        assert "p14b-12": contract_term_days(entity_ref("urn:kz:ogpo:contract:short-2"), 122) { origin case_input; }
+    }
+    evaluate truth(short_term_insurance_premium(entity_ref("urn:kz:ogpo:contract:short-2"), 4766.15 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P14-3 — ВРЕМЕННЫЙ ВЪЕЗД: вторая формула пункта 14 и таблица
+// пункта 14-1. Территориальный коэффициент 4,4 (пункт 5), поправочный
+// коэффициент пункта 3-1 к нему НЕ применяется.
+// Бонус-малус здесь НЕ единица: пункт 6 Правил № 140 присваивает владельцу
+// временно въехавшего транспортного средства класс 13, то есть 0,50, и то же
+// обстоятельство, что даёт территориальный коэффициент 4,4, даёт и этот класс.
+// ГСП = 8 217,5 × 4,4 × 1,00 × 1,00 × 1,00 × 0,50 = 18 078,5 ₸.
+// Строка «3 месяца» даёт К = 0,5; СП = 18 078,5 × 0,5 = 9 039,25 ₸.
+test "urn:query:ogpo-p14-temporary-entry" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+            deadline_policy KZ_OGPO_CALENDAR_MONTH_DEADLINES;
+        }
+        assert "p14c-0": territory_basis(entity_ref("urn:kz:ogpo:contract:short-3"), TemporaryEntry) { origin case_input; }
+        assert "p14c-3": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:short-3"), MotorVehicle) { origin case_input; }
+        assert "p14c-4": insured_kind_of(entity_ref("urn:kz:ogpo:contract:short-3"), NaturalPerson) { origin case_input; }
+        assert "p14c-5": insured_age_years(entity_ref("urn:kz:ogpo:contract:short-3"), 30) { origin case_input; }
+        assert "p14c-6": driving_experience_years(entity_ref("urn:kz:ogpo:contract:short-3"), 5) { origin case_input; }
+        assert "p14c-7": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:short-3"), 3) { origin case_input; }
+        assert "p14c-8": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:short-3"), entity_ref("urn:kz:bm:ogpo:short-3")) { origin case_input; }
+        assert "p14c-8-bm1": kz.corpus.bonus_malus::vremennyy_vezd_na_territoriyu_rk(entity_ref("urn:kz:bm:ogpo:short-3")) { origin case_input; }
+        assert "p14c-9": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(30, 5) { origin case_input; }
+        assert "p14c-10": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(3) { origin case_input; }
+        assert "p14c-11": contract_starts_on(entity_ref("urn:kz:ogpo:contract:short-3"), @2026-03-01) { origin case_input; }
+        assert "p14c-12": contract_term_days(entity_ref("urn:kz:ogpo:contract:short-3"), 90) { origin case_input; }
+        assert "p14c-13": temporary_entry_term_band(entity_ref("urn:kz:ogpo:contract:short-3"), ThreeMonths) { origin case_input; }
+    }
+    evaluate truth(short_term_insurance_premium(entity_ref("urn:kz:ogpo:contract:short-3"), 9039.25 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P14-4 — НИЖНЯЯ СТОРОНА ПАРЫ: РЕЖИМ ОКРУГЛЕНИЯ ЗАКОНОМ НЕ НАЗВАН.
+// Тот же договор, что в OGPO-P14-1, но срок 100 дней:
+// 14 298,45 × 100 / 365 = 1 429 845 / 365 = 3 917,383561… — частное неточно.
+// Закон режима округления страховой премии не устанавливает, а деление
+// денег без явной политики §50 неточного частного не даёт. Документ
+// поэтому отвечает NON_EXECUTABLE, и премия не выводится ВОВСЕ.
+// Это и есть объявленная граница: пакет отказывается считать вместо
+// того, чтобы выбрать округление за законодателя.
+test "urn:query:ogpo-p14-inexact-quotient-refused" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+            deadline_policy KZ_OGPO_CALENDAR_MONTH_DEADLINES;
+        }
+        assert "p14e-0": territory_basis(entity_ref("urn:kz:ogpo:contract:short-4"), CityOfOblastSignificance) { origin case_input; }
+        assert "p14e-1": registration_territory(entity_ref("urn:kz:ogpo:contract:short-4"), ZhambylOblast) { origin case_input; }
+        assert "p14e-3": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:short-4"), MotorVehicle) { origin case_input; }
+        assert "p14e-4": insured_kind_of(entity_ref("urn:kz:ogpo:contract:short-4"), NaturalPerson) { origin case_input; }
+        assert "p14e-5": insured_age_years(entity_ref("urn:kz:ogpo:contract:short-4"), 30) { origin case_input; }
+        assert "p14e-6": driving_experience_years(entity_ref("urn:kz:ogpo:contract:short-4"), 5) { origin case_input; }
+        assert "p14e-7": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:short-4"), 3) { origin case_input; }
+        assert "p14e-8": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:short-4"), entity_ref("urn:kz:bm:ogpo:short-4")) { origin case_input; }
+        assert "p14e-8-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:short-4"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "p14e-8-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:short-4"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "p14e-8-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:short-4"), 269) { origin case_input; }
+        assert "p14e-9": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(30, 5) { origin case_input; }
+        assert "p14e-10": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(3) { origin case_input; }
+        assert "p14e-11": contract_starts_on(entity_ref("urn:kz:ogpo:contract:short-4"), @2026-03-01) { origin case_input; }
+        assert "p14e-12": contract_term_days(entity_ref("urn:kz:ogpo:contract:short-4"), 100) { origin case_input; }
+    }
+    evaluate collect amount: Money where short_term_insurance_premium(entity_ref("urn:kz:ogpo:contract:short-4"), amount);
+    expect result_kind == COLLECTION;
+    expect collected_count(0);
+    expect evaluation_status == NON_EXECUTABLE;
+}
+
+// These queries expose the computed Money value for before/after review.
+test "urn:query:ogpo-p14-non-leap-year-amount" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+            deadline_policy KZ_OGPO_CALENDAR_MONTH_DEADLINES;
+        }
+        assert "p14a-0": territory_basis(entity_ref("urn:kz:ogpo:contract:short-1"), CityOfOblastSignificance) { origin case_input; }
+        assert "p14a-1": registration_territory(entity_ref("urn:kz:ogpo:contract:short-1"), ZhambylOblast) { origin case_input; }
+        assert "p14a-3": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:short-1"), MotorVehicle) { origin case_input; }
+        assert "p14a-4": insured_kind_of(entity_ref("urn:kz:ogpo:contract:short-1"), NaturalPerson) { origin case_input; }
+        assert "p14a-5": insured_age_years(entity_ref("urn:kz:ogpo:contract:short-1"), 30) { origin case_input; }
+        assert "p14a-6": driving_experience_years(entity_ref("urn:kz:ogpo:contract:short-1"), 5) { origin case_input; }
+        assert "p14a-7": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:short-1"), 3) { origin case_input; }
+        assert "p14a-8": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:short-1"), entity_ref("urn:kz:bm:ogpo:short-1")) { origin case_input; }
+        assert "p14a-8-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:short-1"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "p14a-8-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:short-1"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "p14a-8-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:short-1"), 269) { origin case_input; }
+        assert "p14a-9": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(30, 5) { origin case_input; }
+        assert "p14a-10": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(3) { origin case_input; }
+        assert "p14a-11": contract_starts_on(entity_ref("urn:kz:ogpo:contract:short-1"), @2026-03-01) { origin case_input; }
+        assert "p14a-12": contract_term_days(entity_ref("urn:kz:ogpo:contract:short-1"), 73) { origin case_input; }
+    }
+    evaluate collect amount: Money where short_term_insurance_premium(entity_ref("urn:kz:ogpo:contract:short-1"), amount);
+    expect result_kind == COLLECTION;
+    expect collected_count(1);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-p14-leap-year-amount" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+            deadline_policy KZ_OGPO_CALENDAR_MONTH_DEADLINES;
+        }
+        assert "p14b-0": territory_basis(entity_ref("urn:kz:ogpo:contract:short-2"), CityOfOblastSignificance) { origin case_input; }
+        assert "p14b-1": registration_territory(entity_ref("urn:kz:ogpo:contract:short-2"), ZhambylOblast) { origin case_input; }
+        assert "p14b-3": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:short-2"), MotorVehicle) { origin case_input; }
+        assert "p14b-4": insured_kind_of(entity_ref("urn:kz:ogpo:contract:short-2"), NaturalPerson) { origin case_input; }
+        assert "p14b-5": insured_age_years(entity_ref("urn:kz:ogpo:contract:short-2"), 30) { origin case_input; }
+        assert "p14b-6": driving_experience_years(entity_ref("urn:kz:ogpo:contract:short-2"), 5) { origin case_input; }
+        assert "p14b-7": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:short-2"), 3) { origin case_input; }
+        assert "p14b-8": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:short-2"), entity_ref("urn:kz:bm:ogpo:short-2")) { origin case_input; }
+        assert "p14b-8-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:short-2"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "p14b-8-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:short-2"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "p14b-8-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:short-2"), 269) { origin case_input; }
+        assert "p14b-9": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(30, 5) { origin case_input; }
+        assert "p14b-10": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(3) { origin case_input; }
+        assert "p14b-11": contract_starts_on(entity_ref("urn:kz:ogpo:contract:short-2"), @2027-12-01) { origin case_input; }
+        assert "p14b-12": contract_term_days(entity_ref("urn:kz:ogpo:contract:short-2"), 122) { origin case_input; }
+    }
+    evaluate collect amount: Money where short_term_insurance_premium(entity_ref("urn:kz:ogpo:contract:short-2"), amount);
+    expect result_kind == COLLECTION;
+    expect collected_count(1);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-p14-temporary-entry-amount" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+            deadline_policy KZ_OGPO_CALENDAR_MONTH_DEADLINES;
+        }
+        assert "p14c-0": territory_basis(entity_ref("urn:kz:ogpo:contract:short-3"), TemporaryEntry) { origin case_input; }
+        assert "p14c-3": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:short-3"), MotorVehicle) { origin case_input; }
+        assert "p14c-4": insured_kind_of(entity_ref("urn:kz:ogpo:contract:short-3"), NaturalPerson) { origin case_input; }
+        assert "p14c-5": insured_age_years(entity_ref("urn:kz:ogpo:contract:short-3"), 30) { origin case_input; }
+        assert "p14c-6": driving_experience_years(entity_ref("urn:kz:ogpo:contract:short-3"), 5) { origin case_input; }
+        assert "p14c-7": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:short-3"), 3) { origin case_input; }
+        assert "p14c-8": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:short-3"), entity_ref("urn:kz:bm:ogpo:short-3")) { origin case_input; }
+        assert "p14c-8-bm1": kz.corpus.bonus_malus::vremennyy_vezd_na_territoriyu_rk(entity_ref("urn:kz:bm:ogpo:short-3")) { origin case_input; }
+        assert "p14c-9": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient/input"(30, 5) { origin case_input; }
+        assert "p14c-10": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(3) { origin case_input; }
+        assert "p14c-11": contract_starts_on(entity_ref("urn:kz:ogpo:contract:short-3"), @2026-03-01) { origin case_input; }
+        assert "p14c-12": contract_term_days(entity_ref("urn:kz:ogpo:contract:short-3"), 90) { origin case_input; }
+        assert "p14c-13": temporary_entry_term_band(entity_ref("urn:kz:ogpo:contract:short-3"), ThreeMonths) { origin case_input; }
+    }
+    evaluate collect amount: Money where short_term_insurance_premium(entity_ref("urn:kz:ogpo:contract:short-3"), amount);
+    expect result_kind == COLLECTION;
+    expect collected_count(1);
+    expect evaluation_status == COMPUTED;
+}

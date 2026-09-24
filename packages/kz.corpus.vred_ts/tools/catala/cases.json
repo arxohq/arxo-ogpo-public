@@ -1,0 +1,1135 @@
+{
+  "$comment": "Independent parity references for Catala ↔ lawc ↔ lawref. Expectations (expected) are set BY HAND from the text of the Rules (sources/vred-ts/ru.txt) and the pinned 2026 calendar (corpus/clir/kz-official-2026.calendar.json), not copied from any implementation's output; rationale names the clause and the line of reasoning. Conventions: null — no output (Absent ⇔ NEITHER); true/false — an established output (⇔ TRUE_ONLY/FALSE_ONLY); money — tenge as a number; dates — YYYY-MM-DD. A missing optional input — the case is silent (Absent ⇔ no fact).",
+  "format": "vred-ts.parity-cases/1",
+  "calendar_dataset": "corpus/clir/kz-official-2026.calendar.json",
+  "calendar_snapshot_id": "urn:kz:corpus:clir:official-calendar#snapshot-2026",
+  "cases": [
+    {
+      "id": "G01",
+      "scope": "Gibel",
+      "source": "cl. 9 para. 1",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": false,
+        "ozhidaemye_raskhody": 800000,
+        "rynochnaya_stoimost": 1000000
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": null,
+        "vyplata": null
+      },
+      "rationale": "800,000 = exactly 80% of 1,000,000; \"exceed\" means strictly more, so there is no inexpediency; no other grounds for destruction either."
+    },
+    {
+      "id": "G02",
+      "scope": "Gibel",
+      "source": "cl. 9 para. 1",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": false,
+        "ozhidaemye_raskhody": 800001,
+        "rynochnaya_stoimost": 1000000
+      },
+      "expected": {
+        "netselesoobrazno": true,
+        "unichtozheno": true,
+        "vyplata": null
+      },
+      "rationale": "800,001 > 800,000: inexpedient, hence destroyed; the case is silent on salvage transfer — the payout amount is undetermined."
+    },
+    {
+      "id": "G03",
+      "scope": "Gibel",
+      "source": "cl. 9 para. 1",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": false,
+        "ozhidaemye_raskhody": 799999,
+        "rynochnaya_stoimost": 1000000
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": null,
+        "vyplata": null
+      },
+      "rationale": "Below the threshold."
+    },
+    {
+      "id": "G04",
+      "scope": "Gibel",
+      "source": "cl. 9 para. 2",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": true,
+        "rynochnaya_stoimost": 1000000,
+        "ostatki_peredany": true
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": true,
+        "vyplata": 1000000
+      },
+      "rationale": "Technical impossibility — destroyed; salvage transferred — payout equal to market value."
+    },
+    {
+      "id": "G05",
+      "scope": "Gibel",
+      "source": "cl. 9 para. 2",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": true,
+        "rynochnaya_stoimost": 1000000,
+        "ostatki_peredany": false,
+        "stoimost_godnykh_ostatkov": 150000
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": true,
+        "vyplata": 850000
+      },
+      "rationale": "Salvage not transferred (established) — minus the value of the usable salvage: 1,000,000 − 150,000."
+    },
+    {
+      "id": "G06",
+      "scope": "Gibel",
+      "source": "cl. 9 para. 2",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": true,
+        "rynochnaya_stoimost": 1000000,
+        "ostatki_peredany": false
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": true,
+        "vyplata": null
+      },
+      "rationale": "Salvage not transferred, but its value was not supplied — nothing to deduct, payout undetermined."
+    },
+    {
+      "id": "G07",
+      "scope": "Gibel",
+      "source": "cl. 9",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": false,
+        "ozhidaemye_raskhody": 900000,
+        "rynochnaya_stoimost": 1000000,
+        "ostatki_peredany": true
+      },
+      "expected": {
+        "netselesoobrazno": true,
+        "unichtozheno": true,
+        "vyplata": 1000000
+      },
+      "rationale": "Destroyed due to inexpediency; salvage transferred — market value."
+    },
+    {
+      "id": "G08",
+      "scope": "Gibel",
+      "source": "cl. 9",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": false,
+        "ozhidaemye_raskhody": 900000
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": null,
+        "vyplata": null
+      },
+      "rationale": "Market value not supplied — nothing to compare against."
+    },
+    {
+      "id": "G09",
+      "scope": "Gibel",
+      "source": "cl. 9",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": true,
+        "ostatki_peredany": true
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": true,
+        "vyplata": null
+      },
+      "rationale": "Destroyed, but there is no market value — the payout amount is undetermined."
+    },
+    {
+      "id": "G10",
+      "scope": "Gibel",
+      "source": "cl. 9",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": false,
+        "ozhidaemye_raskhody": 1,
+        "rynochnaya_stoimost": 0
+      },
+      "expected": {
+        "netselesoobrazno": true,
+        "unichtozheno": true,
+        "vyplata": null
+      },
+      "rationale": "1 > 0 (80% of zero): inexpedient."
+    },
+    {
+      "id": "G11",
+      "scope": "Gibel",
+      "source": "cl. 9",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": false,
+        "ozhidaemye_raskhody": 0,
+        "rynochnaya_stoimost": 0
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": null,
+        "vyplata": null
+      },
+      "rationale": "0 > 0 is false."
+    },
+    {
+      "id": "G12",
+      "scope": "Gibel",
+      "source": "cl. 9",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": false,
+        "ozhidaemye_raskhody": 4000001,
+        "rynochnaya_stoimost": 5000000
+      },
+      "expected": {
+        "netselesoobrazno": true,
+        "unichtozheno": true,
+        "vyplata": null
+      },
+      "rationale": "80% of 5,000,000 = 4,000,000; 4,000,001 is more."
+    },
+    {
+      "id": "G13",
+      "scope": "Gibel",
+      "source": "cl. 9",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": false,
+        "ozhidaemye_raskhody": 4000000,
+        "rynochnaya_stoimost": 5000000
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": null,
+        "vyplata": null
+      },
+      "rationale": "Exactly 80% — does not exceed."
+    },
+    {
+      "id": "G14",
+      "scope": "Gibel",
+      "source": "cl. 9 para. 2",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": true,
+        "rynochnaya_stoimost": 100000,
+        "ostatki_peredany": false,
+        "stoimost_godnykh_ostatkov": 150000
+      },
+      "expected": {
+        "netselesoobrazno": null,
+        "unichtozheno": true,
+        "vyplata": -50000
+      },
+      "rationale": "The salvage value exceeds the market value: the text does not name a floor for the payout, and the arithmetic gives −50,000. Open question Q3 of the report (zero as a floor is not set by the text and is not invented)."
+    },
+    {
+      "id": "G15",
+      "scope": "Gibel",
+      "source": "cl. 9",
+      "inputs": {
+        "tekhnicheski_nevozmozhno": true,
+        "ozhidaemye_raskhody": 900000,
+        "rynochnaya_stoimost": 1000000,
+        "ostatki_peredany": true
+      },
+      "expected": {
+        "netselesoobrazno": true,
+        "unichtozheno": true,
+        "vyplata": 1000000
+      },
+      "rationale": "Both grounds for destruction at once — the same payout, one amount."
+    },
+    {
+      "id": "D01",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 1; annex 3 footnote",
+      "inputs": {
+        "vladelets": "FizicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": false,
+        "srednegodovoy_probeg_km": 15000,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": true,
+        "stoimost": 240000
+      },
+      "rationale": "A private individual, technical inspection not mandatory, 15,000 km \"does not exceed\", the part is intact and unrepaired — without depreciation: market value of a new part."
+    },
+    {
+      "id": "D02",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 1",
+      "inputs": {
+        "vladelets": "FizicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": false,
+        "srednegodovoy_probeg_km": 15001,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": null,
+        "stoimost": 96000
+      },
+      "rationale": "15,001 km exceeds 15,000 — the clause 10 case does not arise, the depreciated value is used (external result)."
+    },
+    {
+      "id": "D03",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 2",
+      "inputs": {
+        "vladelets": "YuridicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": false,
+        "na_garantiynom_obsluzhivanii": true,
+        "srednegodovoy_probeg_km": 20000,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": true,
+        "stoimost": 240000
+      },
+      "rationale": "A legal entity, under warranty, exactly 20,000 km — without depreciation."
+    },
+    {
+      "id": "D04",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 2",
+      "inputs": {
+        "vladelets": "YuridicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": false,
+        "na_garantiynom_obsluzhivanii": true,
+        "srednegodovoy_probeg_km": 20001,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": null,
+        "stoimost": 96000
+      },
+      "rationale": "20,001 km exceeds 20,000."
+    },
+    {
+      "id": "D05",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 1",
+      "inputs": {
+        "vladelets": "FizicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": false,
+        "na_garantiynom_obsluzhivanii": false,
+        "srednegodovoy_probeg_km": 10000,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": null,
+        "stoimost": 96000
+      },
+      "rationale": "The vehicle is subject to mandatory technical inspection — the first condition of sub-clause 1 is not met."
+    },
+    {
+      "id": "D06",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 2",
+      "inputs": {
+        "vladelets": "YuridicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": false,
+        "srednegodovoy_probeg_km": 10000,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": null,
+        "stoimost": 96000
+      },
+      "rationale": "A legal entity without warranty service; the technical-inspection exemption does not apply to a legal entity."
+    },
+    {
+      "id": "D07",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 1",
+      "inputs": {
+        "vladelets": "FizicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": false,
+        "srednegodovoy_probeg_km": 10000,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": false,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": null,
+        "stoimost": 96000
+      },
+      "rationale": "The part was repaired — the third condition (\"was not repaired\") is not met."
+    },
+    {
+      "id": "D08",
+      "scope": "StoimostDetali",
+      "source": "cl. 10",
+      "inputs": {
+        "vladelets": "FizicheskoeLitso",
+        "podlezhit_zamene": false,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": false,
+        "srednegodovoy_probeg_km": 10000,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": null,
+        "stoimost": 96000
+      },
+      "rationale": "Clause 10 applies \"where a part needs replacing\"; there is no replacement — the case does not arise."
+    },
+    {
+      "id": "D09",
+      "scope": "StoimostDetali",
+      "source": "cl. 10; annex 3 footnote",
+      "inputs": {
+        "vladelets": "FizicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": false,
+        "srednegodovoy_probeg_km": 10000,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": true,
+        "stoimost": null
+      },
+      "rationale": "The clause 10 case has arisen, so depreciation does not apply (footnote) and the depreciated value is not used; the new-part value was not supplied — the value is undetermined."
+    },
+    {
+      "id": "D10",
+      "scope": "StoimostDetali",
+      "source": "cl. 10",
+      "inputs": {
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": true,
+        "srednegodovoy_probeg_km": 10000,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": null,
+        "stoimost": 96000
+      },
+      "rationale": "The owner is not established — neither of the two cases arises."
+    },
+    {
+      "id": "D11",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 1",
+      "inputs": {
+        "vladelets": "FizicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": false,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": null,
+        "stoimost": 96000
+      },
+      "rationale": "Average annual mileage not supplied — the mileage condition cannot be checked."
+    },
+    {
+      "id": "D12",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 1",
+      "inputs": {
+        "vladelets": "FizicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": false,
+        "srednegodovoy_probeg_km": 0,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000
+      },
+      "expected": {
+        "bez_iznosa": true,
+        "stoimost": 240000
+      },
+      "rationale": "Zero mileage does not exceed 15,000; the depreciated value was not supplied, but it is not needed either."
+    },
+    {
+      "id": "D13",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 2",
+      "inputs": {
+        "vladelets": "YuridicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": true,
+        "srednegodovoy_probeg_km": 18000,
+        "ranee_ne_povrezhdalas": true,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": true,
+        "stoimost": 240000
+      },
+      "rationale": "18,000 km is above the private-individual threshold but below the legal-entity threshold (20,000): the condition is met for a legal entity."
+    },
+    {
+      "id": "D14",
+      "scope": "StoimostDetali",
+      "source": "cl. 10 sub-cl. 1",
+      "inputs": {
+        "vladelets": "FizicheskoeLitso",
+        "podlezhit_zamene": true,
+        "ne_podlezhit_tekhosmotru": true,
+        "na_garantiynom_obsluzhivanii": false,
+        "srednegodovoy_probeg_km": 15000,
+        "ranee_ne_povrezhdalas": false,
+        "ne_podvergalas_remontu": true,
+        "stoimost_novoy": 240000,
+        "stoimost_s_uchetom_iznosa": 96000
+      },
+      "expected": {
+        "bez_iznosa": null,
+        "stoimost": 96000
+      },
+      "rationale": "The part was previously damaged — the condition is not met."
+    },
+    {
+      "id": "V01",
+      "scope": "VyborOtsenshchikov",
+      "source": "cl. 4-1",
+      "inputs": {
+        "predlozheno": 2
+      },
+      "expected": {
+        "obespechen": true
+      },
+      "rationale": "\"At least two\" — two is enough."
+    },
+    {
+      "id": "V02",
+      "scope": "VyborOtsenshchikov",
+      "source": "cl. 4-1",
+      "inputs": {
+        "predlozheno": 1
+      },
+      "expected": {
+        "obespechen": false
+      },
+      "rationale": "One — fewer than two: choice is not ensured (established negation)."
+    },
+    {
+      "id": "V03",
+      "scope": "VyborOtsenshchikov",
+      "source": "cl. 4-1",
+      "inputs": {
+        "predlozheno": 0
+      },
+      "expected": {
+        "obespechen": false
+      },
+      "rationale": "Zero appraisers."
+    },
+    {
+      "id": "V04",
+      "scope": "VyborOtsenshchikov",
+      "source": "cl. 4-1",
+      "inputs": {},
+      "expected": {
+        "obespechen": null
+      },
+      "rationale": "The number was not supplied — neither the choice nor its absence is established."
+    },
+    {
+      "id": "V05",
+      "scope": "VyborOtsenshchikov",
+      "source": "cl. 4-1",
+      "inputs": {
+        "predlozheno": 5
+      },
+      "expected": {
+        "obespechen": true
+      },
+      "rationale": "Five — at least two."
+    },
+    {
+      "id": "O01",
+      "scope": "DopustimostOsmotra",
+      "source": "cl. 7",
+      "inputs": {
+        "dostup_besprepyatstvennyy": true,
+        "identifikatsiya_provodima": true,
+        "probeg_ustanovim": true,
+        "komplektnost_ustanovima": true,
+        "perechen_defektov_ustanovim": true,
+        "fotosemka_provodima": true,
+        "priznaki_remontov_ustanovimy": true,
+        "opredelyaetsya_stoimost_remonta": true,
+        "dokumenty_o_dtp": true
+      },
+      "expected": {
+        "vozmozhen": true,
+        "dopustim": true
+      },
+      "rationale": "Seven conditions plus the accident documents, when determining repair cost."
+    },
+    {
+      "id": "O02",
+      "scope": "DopustimostOsmotra",
+      "source": "cl. 7 para. 9",
+      "inputs": {
+        "dostup_besprepyatstvennyy": true,
+        "identifikatsiya_provodima": true,
+        "probeg_ustanovim": true,
+        "komplektnost_ustanovima": true,
+        "perechen_defektov_ustanovim": true,
+        "fotosemka_provodima": true,
+        "priznaki_remontov_ustanovimy": true,
+        "opredelyaetsya_stoimost_remonta": true,
+        "dokumenty_o_dtp": false
+      },
+      "expected": {
+        "vozmozhen": true,
+        "dopustim": false
+      },
+      "rationale": "No documents (established) — when determining repair cost, the inspection is inadmissible."
+    },
+    {
+      "id": "O03",
+      "scope": "DopustimostOsmotra",
+      "source": "cl. 7",
+      "inputs": {
+        "dostup_besprepyatstvennyy": true,
+        "identifikatsiya_provodima": true,
+        "probeg_ustanovim": true,
+        "komplektnost_ustanovima": true,
+        "perechen_defektov_ustanovim": true,
+        "fotosemka_provodima": true,
+        "priznaki_remontov_ustanovimy": true,
+        "opredelyaetsya_stoimost_remonta": true
+      },
+      "expected": {
+        "vozmozhen": true,
+        "dopustim": null
+      },
+      "rationale": "The case is silent on the documents — neither admissible nor inadmissible."
+    },
+    {
+      "id": "O04",
+      "scope": "DopustimostOsmotra",
+      "source": "cl. 7",
+      "inputs": {
+        "dostup_besprepyatstvennyy": true,
+        "identifikatsiya_provodima": true,
+        "probeg_ustanovim": true,
+        "komplektnost_ustanovima": true,
+        "perechen_defektov_ustanovim": true,
+        "fotosemka_provodima": true,
+        "priznaki_remontov_ustanovimy": true,
+        "opredelyaetsya_stoimost_remonta": false
+      },
+      "expected": {
+        "vozmozhen": true,
+        "dopustim": true
+      },
+      "rationale": "Repair cost is not being determined (established) — the accident documents are not required."
+    },
+    {
+      "id": "O05",
+      "scope": "DopustimostOsmotra",
+      "source": "cl. 7",
+      "inputs": {
+        "dostup_besprepyatstvennyy": true,
+        "identifikatsiya_provodima": true,
+        "probeg_ustanovim": true,
+        "komplektnost_ustanovima": true,
+        "perechen_defektov_ustanovim": true,
+        "fotosemka_provodima": true,
+        "priznaki_remontov_ustanovimy": true
+      },
+      "expected": {
+        "vozmozhen": true,
+        "dopustim": null
+      },
+      "rationale": "The purpose of the calculation is not established — the negation \"repair cost is not being determined\" is not derived (§113), admissibility is undetermined."
+    },
+    {
+      "id": "O06",
+      "scope": "DopustimostOsmotra",
+      "source": "cl. 7",
+      "inputs": {
+        "dostup_besprepyatstvennyy": true,
+        "identifikatsiya_provodima": true,
+        "probeg_ustanovim": true,
+        "komplektnost_ustanovima": true,
+        "perechen_defektov_ustanovim": true,
+        "fotosemka_provodima": false,
+        "priznaki_remontov_ustanovimy": true,
+        "opredelyaetsya_stoimost_remonta": false
+      },
+      "expected": {
+        "vozmozhen": null,
+        "dopustim": null
+      },
+      "rationale": "Photography is not possible — one of the seven conditions is not met."
+    },
+    {
+      "id": "O07",
+      "scope": "DopustimostOsmotra",
+      "source": "cl. 7 para. 9",
+      "inputs": {
+        "dostup_besprepyatstvennyy": true,
+        "identifikatsiya_provodima": true,
+        "probeg_ustanovim": true,
+        "komplektnost_ustanovima": true,
+        "perechen_defektov_ustanovim": true,
+        "fotosemka_provodima": false,
+        "priznaki_remontov_ustanovimy": true,
+        "opredelyaetsya_stoimost_remonta": true,
+        "dokumenty_o_dtp": false
+      },
+      "expected": {
+        "vozmozhen": null,
+        "dopustim": false
+      },
+      "rationale": "Inadmissibility due to missing documents does not depend on the seven conditions."
+    },
+    {
+      "id": "O08",
+      "scope": "DopustimostOsmotra",
+      "source": "cl. 7",
+      "inputs": {
+        "dostup_besprepyatstvennyy": false,
+        "identifikatsiya_provodima": false,
+        "probeg_ustanovim": false,
+        "komplektnost_ustanovima": false,
+        "perechen_defektov_ustanovim": false,
+        "fotosemka_provodima": false,
+        "priznaki_remontov_ustanovimy": false
+      },
+      "expected": {
+        "vozmozhen": null,
+        "dopustim": null
+      },
+      "rationale": "Nothing is established."
+    },
+    {
+      "id": "S01",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 3",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "otchet_poluchen": "2026-09-01"
+      },
+      "expected": {
+        "predel_otmetki": "2026-09-04",
+        "predel_otveta": null,
+        "predel_otcheta": null,
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Tue 1 September: Wed 2 (1), Thu 3 (2), Fri 4 (3)."
+    },
+    {
+      "id": "S02",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 3",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "otchet_poluchen": "2026-03-06"
+      },
+      "expected": {
+        "predel_otmetki": "2026-03-12",
+        "predel_otveta": null,
+        "predel_otcheta": null,
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Fri 6 March: Sat 7, Sun 8 (holiday), Mon 9 (shifted day off) do not count; Tue 10 (1), Wed 11 (2), Thu 12 (3)."
+    },
+    {
+      "id": "S03",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 6",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "osmotr_osushchestvlen": "2026-03-19"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": null,
+        "predel_otcheta": "2026-03-31",
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Thu 19 March: Fri 20 (1); 21-25 March are non-working (Nauryz and shifts); Thu 26 (2), Fri 27 (3); weekend; Mon 30 (4), Tue 31 (5)."
+    },
+    {
+      "id": "S04",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 4",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "otmetka_nesoglasiya_poluchena": "2026-04-15"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": "2026-04-20",
+        "predel_otcheta": null,
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Wed 15 April: Thu 16 (1), Fri 17 (2), Mon 20 (3)."
+    },
+    {
+      "id": "S05",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 6",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "osmotr_osushchestvlen": "2026-09-01",
+        "otchet_poluchen": "2026-09-08"
+      },
+      "expected": {
+        "predel_otmetki": "2026-09-11",
+        "predel_otveta": null,
+        "predel_otcheta": "2026-09-08",
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Report deadline — Tue 8 September (2, 3, 4, 7, 8); the report was received exactly on the last day — on time. Mark deadline from 8 September: 9 (1), 10 (2), 11 (3)."
+    },
+    {
+      "id": "S06",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 6",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "osmotr_osushchestvlen": "2026-09-01",
+        "otchet_poluchen": "2026-09-09"
+      },
+      "expected": {
+        "predel_otmetki": "2026-09-14",
+        "predel_otveta": null,
+        "predel_otcheta": "2026-09-08",
+        "otchet_ne_v_srok": true,
+        "pravo_na_vyplatu": true
+      },
+      "rationale": "Received on 9 September — after the 8 September deadline: late, giving the right to payment under cl. 3-1 art. 22 of the Law. Mark deadline from Wed 9: Thu 10 (1), Fri 11 (2), Mon 14 (3)."
+    },
+    {
+      "id": "S07",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 6",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "osmotr_osushchestvlen": "2026-09-01",
+        "otchet_predostavlen": false,
+        "den_rassmotreniya": "2026-09-08"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": null,
+        "predel_otcheta": "2026-09-08",
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Not provided, but the review day is the last day of the deadline — the deadline has not yet been missed."
+    },
+    {
+      "id": "S08",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 6",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "osmotr_osushchestvlen": "2026-09-01",
+        "otchet_predostavlen": false,
+        "den_rassmotreniya": "2026-09-09"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": null,
+        "predel_otcheta": "2026-09-08",
+        "otchet_ne_v_srok": true,
+        "pravo_na_vyplatu": true
+      },
+      "rationale": "The review day is after the deadline — not provided on time."
+    },
+    {
+      "id": "S09",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3-1",
+      "inputs": {
+        "uproshchennoe_oformlenie": true,
+        "osmotr_osushchestvlen": "2026-09-01",
+        "otchet_poluchen": "2026-09-09"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": null,
+        "predel_otcheta": null,
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Simplified processing: none of the clause 3 deadlines apply (reading — all three deadlines; report question Q1), nor do the consequences."
+    },
+    {
+      "id": "S10",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3; §85",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "otchet_poluchen": "2026-12-30"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": null,
+        "predel_otcheta": null,
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Wed 30 December: Thu 31 (1), then 2027 falls outside the snapshot's coverage — the deadline cannot be computed."
+    },
+    {
+      "id": "S11",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 6",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "osmotr_osushchestvlen": "2026-12-24"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": null,
+        "predel_otcheta": "2026-12-31",
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Thu 24 December: Fri 25 (1), Mon 28 (2), Tue 29 (3), Wed 30 (4), Thu 31 (5) — the last day of coverage."
+    },
+    {
+      "id": "S12",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 6; §85",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "osmotr_osushchestvlen": "2026-12-25"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": null,
+        "predel_otcheta": null,
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Fri 25 December: 28 (1), 29 (2), 30 (3), 31 (4), the fifth falls in 2027, outside coverage."
+    },
+    {
+      "id": "S13",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 3",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "otchet_poluchen": "2026-05-06"
+      },
+      "expected": {
+        "predel_otmetki": "2026-05-13",
+        "predel_otveta": null,
+        "predel_otcheta": null,
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Wed 6 May: Thu 7 (holiday), Fri 8 (1), Sat 9 (holiday), Sun 10, Mon 11 (shifted day off), Tue 12 (2), Wed 13 (3)."
+    },
+    {
+      "id": "S14",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 6",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "osmotr_osushchestvlen": "2026-01-01"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": null,
+        "predel_otcheta": "2026-01-09",
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Inspection on the 1 January holiday: 2 (holiday), 3-4 weekend; Mon 5 (1), 6 (2), 7 (3), 8 (4), Fri 9 (5)."
+    },
+    {
+      "id": "S15",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 4",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "otmetka_nesoglasiya_poluchena": "2026-10-23"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": "2026-10-29",
+        "predel_otcheta": null,
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "Fri 23 October: Sat 24, Sun 25 (holiday), Mon 26 (shifted day off); Tue 27 (1), Wed 28 (2), Thu 29 (3)."
+    },
+    {
+      "id": "S16",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3; §85",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "otchet_poluchen": "2024-12-31"
+      },
+      "expected": {
+        "predel_otmetki": null,
+        "predel_otveta": null,
+        "predel_otcheta": null,
+        "otchet_ne_v_srok": null,
+        "pravo_na_vyplatu": null
+      },
+      "rationale": "The event date is before the snapshot's coverage begins — the deadline cannot be computed. The date was shifted from 31.12.2025 to 31.12.2024 (12.09.2026): the official §85 snapshot was extended to [2025-01-01, 2027-01-01), and the earlier date fell WITHIN coverage — the boundary remains but now falls earlier. The case's meaning (an event before coverage begins) is preserved verbatim."
+    },
+    {
+      "id": "S17",
+      "scope": "SrokiPunkta3",
+      "source": "cl. 3 para. 6",
+      "inputs": {
+        "uproshchennoe_oformlenie": false,
+        "osmotr_osushchestvlen": "2026-09-01",
+        "otchet_poluchen": "2026-09-09",
+        "otchet_predostavlen": false,
+        "den_rassmotreniya": "2026-09-09"
+      },
+      "expected": {
+        "predel_otmetki": "2026-09-14",
+        "predel_otveta": null,
+        "predel_otcheta": "2026-09-08",
+        "otchet_ne_v_srok": true,
+        "pravo_na_vyplatu": true
+      },
+      "rationale": "Both grounds for non-provision at once — one conclusion, one right."
+    },
+    {
+      "id": "I01",
+      "scope": "ItogovayaVelichina",
+      "source": "annex 3 cl. 2",
+      "inputs": {
+        "summa": 1234567,
+        "rasshifrovana_propisyu": true
+      },
+      "expected": {
+        "nadlezhashche": true
+      },
+      "rationale": "Whole tenge, spelled out."
+    },
+    {
+      "id": "I02",
+      "scope": "ItogovayaVelichina",
+      "source": "annex 3 cl. 2",
+      "inputs": {
+        "summa": 1234567.5,
+        "rasshifrovana_propisyu": true
+      },
+      "expected": {
+        "nadlezhashche": null
+      },
+      "rationale": "A fractional part — not rounded to whole tenge."
+    },
+    {
+      "id": "I03",
+      "scope": "ItogovayaVelichina",
+      "source": "annex 3 cl. 2",
+      "inputs": {
+        "summa": 0.01,
+        "rasshifrovana_propisyu": true
+      },
+      "expected": {
+        "nadlezhashche": null
+      },
+      "rationale": "One tiyn — not whole tenge."
+    },
+    {
+      "id": "I04",
+      "scope": "ItogovayaVelichina",
+      "source": "annex 3 cl. 2",
+      "inputs": {
+        "summa": 0,
+        "rasshifrovana_propisyu": true
+      },
+      "expected": {
+        "nadlezhashche": true
+      },
+      "rationale": "Zero — whole."
+    },
+    {
+      "id": "I05",
+      "scope": "ItogovayaVelichina",
+      "source": "annex 3 cl. 2",
+      "inputs": {
+        "summa": 1234567,
+        "rasshifrovana_propisyu": false
+      },
+      "expected": {
+        "nadlezhashche": null
+      },
+      "rationale": "No amount spelled out in words."
+    },
+    {
+      "id": "I06",
+      "scope": "ItogovayaVelichina",
+      "source": "annex 3 cl. 2",
+      "inputs": {
+        "rasshifrovana_propisyu": true
+      },
+      "expected": {
+        "nadlezhashche": null
+      },
+      "rationale": "Amount not supplied."
+    }
+  ]
+}

@@ -1,0 +1,230 @@
+// СТАТЬЯ 27. СТРАХОВАЯ ВЫПЛАТА ПРИ ПРИЧИНЕНИИ ВРЕДА НЕСКОЛЬКИМИ ЛИЦАМИ.
+//
+// Статья состоит из ТРЁХ предложений, и каждое из них — своя форма:
+//
+//   первое  — ПРАВО выгодоприобретателя получить страховую выплату отдельно
+//             по каждому договору. Право регулируемого субъекта есть
+//             деонтическая позиция §127, а не литеральная голова;
+//   второе  — РАСЧЁТ выплаты каждого страховщика: предел объёма
+//             ответственности и соразмерность размеру ответственности
+//             страхователя;
+//   третье  — НЕДЕРИВАЦИОННОЕ ограничение на сумму выплат всех страховщиков.
+//             Оно ничего не выводит, а запрещает состояние, и потому форма —
+//             `constraint` §14.
+//
+// СОЛИДАРНОСТИ В ТЕКСТЕ НЕТ. Статья 27 не отсылает ни к статье 287, ни к
+// статье 932 Гражданского кодекса и слова «солидарно» не содержит: каждый
+// страховщик платит СВОЮ долю («соразмерно размеру ответственности
+// страхователя»), а выгодоприобретатель обращается к каждому отдельно.
+// Поэтому здесь нет ни одного правила о солидарном обязательстве — было бы
+// дописыванием чужой нормы.
+//
+// ПРИНЯТОЕ ПРОЧТЕНИЕ: «размер ответственности страхователя» входит делом
+// ДОЛЕЙ, парой целых. Закон ни в статье 27, ни где-либо ещё не говорит, как
+// эта величина определяется: степень вины устанавливает суд либо соглашение
+// сторон, и величина эта — не норма страхового закона. Доля выражена парой
+// `numerator`/`denominator` тем же приёмом, каким выражена присуждённая доля
+// супруга в `kz.corpus.marriage`: точное рациональное число, а не Decimal,
+// потому что «одна треть» иначе невыразима.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ СРЕЗА (решение формализатора, 10.09.2026):
+//
+//   третье предложение, второй конъюнкт («и предельный объем ответственности,
+//              предусмотренный для каждого страховщика») отдельного правила
+//              НЕ получает: он повторяет предел, уже поставленный вторым
+//              предложением, и в модели стоит минимумом внутри самого
+//              расчёта. Второе прочтение второго конъюнкта — «ОБЩАЯ сумма не
+//              превышает предел одного страховщика» — даёт другой ответ и
+//              вынесено вопросом владельцу, а не выбрано молча.
+
+
+// ============================================================================
+// Факты дела: несколько транспортных средств, несколько страховщиков
+// ============================================================================
+
+relation harm_caused_by_vehicle(accident: TrafficAccident, victim: Victim, vehicle: Vehicle)
+    kind empirical {
+    label ru-KZ official "вред потерпевшему причинён данным транспортным средством";
+}
+
+relation vehicle_owner_insurer(accident: TrafficAccident, vehicle: Vehicle,
+                               owner: VehicleOwner, insurer: Insurer) kind empirical {
+    key(accident, vehicle);
+    label ru-KZ official "владелец транспортного средства имеет договор обязательного страхования ответственности владельцев транспортных средств, заключённый с указанным страховщиком";
+}
+
+// `pub` — читает пакет-мост `kz.corpus.strakhovaya_neustoyka`: база и
+// стороны неустойки статьи 353 ГК живут здесь, а расчёт — там.
+pub relation beneficiary_of_victim(accident: TrafficAccident, victim: Victim,
+                               holder: Beneficiary) kind empirical {
+    label ru-KZ official "выгодоприобретатель по вреду, причинённому данному потерпевшему";
+}
+
+relation insured_liability_share(accident: TrafficAccident, owner: VehicleOwner,
+                                 numerator: Integer, denominator: Integer) kind empirical {
+    key(accident, owner);
+    label ru-KZ official "размер ответственности страхователя за причинённый потерпевшему вред, выраженный долей";
+}
+
+relation separate_payment_received(accident: TrafficAccident, victim: Victim,
+                                   insurer: Insurer) kind empirical {
+    label ru-KZ official "выгодоприобретатель получил страховую выплату от данного страховщика";
+}
+
+// ============================================================================
+// «Несколькими транспортными средствами, владельцы которых имеют договоры»
+// ============================================================================
+
+relation insured_harming_vehicle(accident: TrafficAccident, victim: Victim, vehicle: Vehicle)
+    kind institutional {
+    label ru-KZ official "транспортное средство, которым причинён вред потерпевшему и владелец которого имеет договор обязательного страхования ответственности владельцев транспортных средств";
+}
+
+@source(LAW_446_ART27)
+rule InsuredHarmingVehicle(
+    accident: TrafficAccident,
+    victim: Victim,
+    vehicle: Vehicle,
+    owner: VehicleOwner,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 27. Транспортное средство, причинившее вред, владелец которого имеет договор обязательного страхования ответственности владельцев транспортных средств";
+    when harm_caused_by_vehicle(accident, victim, vehicle);
+    when vehicle_owner_insurer(accident, vehicle, owner, insurer);
+    then insured_harming_vehicle(accident, victim, vehicle);
+}
+
+relation insured_harming_vehicle_count(accident: TrafficAccident, victim: Victim,
+                                       vehicles: Integer) kind institutional {
+    key(accident, victim);
+    label ru-KZ official "число причинивших вред потерпевшему транспортных средств, владельцы которых имеют договоры обязательного страхования ответственности владельцев транспортных средств";
+}
+
+@source(LAW_446_ART27)
+rule InsuredHarmingVehicleCount(
+    accident: TrafficAccident,
+    victim: Victim,
+    any_vehicle: Vehicle,
+) strict {
+    label ru-KZ official "Статья 27. Число причинивших вред застрахованных транспортных средств считается по данному потерпевшему";
+    when insured_harming_vehicle(accident, victim, any_vehicle);
+    then insured_harming_vehicle_count(accident, victim,
+        (count distinct vehicle: Vehicle
+             where insured_harming_vehicle(accident, victim, vehicle)));
+}
+
+relation harm_by_several_insured_vehicles(accident: TrafficAccident, victim: Victim)
+    kind institutional {
+    label ru-KZ official "лицу причинён вред несколькими транспортными средствами, владельцы которых имеют договоры обязательного страхования ответственности владельцев транспортных средств";
+}
+
+@source(LAW_446_ART27)
+rule HarmBySeveralInsuredVehicles(
+    accident: TrafficAccident,
+    victim: Victim,
+    vehicles: Integer,
+) strict {
+    label ru-KZ official "Статья 27. Вред причинён лицу несколькими транспортными средствами, владельцы которых имеют договоры обязательного страхования ответственности владельцев транспортных средств";
+    when insured_harming_vehicle_count(accident, victim, vehicles);
+    when vehicles >= 2;
+    then harm_by_several_insured_vehicles(accident, victim);
+}
+
+// ============================================================================
+// Предложение первое: право выгодоприобретателя (позиция §127)
+// ============================================================================
+
+@source(LAW_446_ART27, quote = "При причинении лицу вреда несколькими транспортными средствами, владельцы которых имеют договоры обязательного страхования ответственности владельцев транспортных средств, выгодоприобретатель вправе получить страховую выплату отдельно по каждому из них.")
+rule BeneficiaryMayClaimFromEachInsurer(
+    accident: TrafficAccident,
+    victim: Victim,
+    vehicle: Vehicle,
+    owner: VehicleOwner,
+    insurer: Insurer,
+    holder: Beneficiary,
+) strict {
+    label ru-KZ official "Статья 27. При причинении лицу вреда несколькими транспортными средствами, владельцы которых имеют договоры обязательного страхования ответственности владельцев транспортных средств, выгодоприобретатель вправе получить страховую выплату отдельно по каждому из них";
+    when harm_by_several_insured_vehicles(accident, victim);
+    when insured_harming_vehicle(accident, victim, vehicle);
+    when vehicle_owner_insurer(accident, vehicle, owner, insurer);
+    when beneficiary_of_victim(accident, victim, holder);
+    then liberty PoluchitVyplatuOtdelnoPoKazhdomuDogovoru {
+        holder holder;
+        action separate_payment_received(accident, victim, insurer);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// ============================================================================
+// Предложение второе: выплата каждого страховщика
+// ============================================================================
+
+relation insurer_share_payment(accident: TrafficAccident, victim: Victim, insurer: Insurer,
+                               amount: Money) kind institutional {
+    key(accident, victim, insurer);
+    label ru-KZ official "страховая выплата, производимая данным страховщиком потерпевшему при причинении вреда несколькими транспортными средствами";
+}
+
+@source(LAW_446_ART27, quote = "Каждый страховщик производит страховую выплату в пределах объема ответственности, установленного настоящим Законом, и соразмерно размеру ответственности страхователя.")
+rule InsurerPaysItsShareWithinTheLimit(
+    accident: TrafficAccident,
+    victim: Victim,
+    vehicle: Vehicle,
+    owner: VehicleOwner,
+    insurer: Insurer,
+    real_harm: Money,
+    limit: Money,
+    numerator: Integer,
+    denominator: Integer,
+) strict {
+    label ru-KZ official "Статья 27. Каждый страховщик производит страховую выплату в пределах объёма ответственности, установленного настоящим Законом, и соразмерно размеру ответственности страхователя";
+    when harm_by_several_insured_vehicles(accident, victim);
+    when insured_harming_vehicle(accident, victim, vehicle);
+    when vehicle_owner_insurer(accident, vehicle, owner, insurer);
+    when actual_harm_amount(accident, victim, real_harm);
+    when insurer_liability_limit(accident, victim, limit);
+    when insured_liability_share(accident, owner, numerator, denominator);
+    when denominator >= 1;
+    then insurer_share_payment(accident, victim, insurer,
+                               min(limit, (real_harm * numerator) / (denominator * 1.0)));
+}
+
+// ============================================================================
+// Предложение третье: ограничение на общую сумму (недеривационное, §14)
+// ============================================================================
+
+relation all_insurers_payment_total(accident: TrafficAccident, victim: Victim, amount: Money)
+    kind institutional {
+    key(accident, victim);
+    label ru-KZ official "общая сумма страховой выплаты, произведённой всеми страховщиками потерпевшему";
+}
+
+// Свидетель непустоты в теле обязателен: агрегат без него сработал бы на
+// пустом множестве и дал бы EMPTY_AGGREGATE на весь документ.
+@source(LAW_446_ART27)
+rule AllInsurersPaymentTotal(
+    accident: TrafficAccident,
+    victim: Victim,
+    any_insurer: Insurer,
+    any_amount: Money,
+) strict {
+    label ru-KZ official "Статья 27. Общая сумма страховой выплаты, произведённой всеми страховщиками, есть сумма выплат каждого из них";
+    when insurer_share_payment(accident, victim, any_insurer, any_amount);
+    then all_insurers_payment_total(accident, victim,
+        (sum all amount: Money for insurer: Insurer
+             where insurer_share_payment(accident, victim, insurer, amount)));
+}
+
+@source(LAW_446_ART27)
+constraint AllInsurersPaymentTotalDoesNotExceedRealHarm(
+    accident: TrafficAccident,
+    victim: Victim,
+    total: Money,
+    real_harm: Money,
+) {
+    when all_insurers_payment_total(accident, victim, total)
+        and actual_harm_amount(accident, victim, real_harm);
+    require total <= real_harm;
+    severity error;
+    message "общая сумма страховой выплаты, произведённой всеми страховщиками, превысила размер реального вреда, причинённого потерпевшему (статья 27)";
+}

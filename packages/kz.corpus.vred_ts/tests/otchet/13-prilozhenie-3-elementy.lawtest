@@ -1,0 +1,218 @@
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Annex 3 by form ELEMENTS: the title page (eight elements, a seal "if
+// present"), the calculation particulars (four), the appendices (three), and
+// the final amount without a fractional part (cl. 2).
+
+// The title page is complete, there is no seal, but its absence is
+// established and a signature is present — certification under the "if
+// present" proviso is satisfied.
+test "urn:query:vred-t13-a" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t13a-a0": otchet_nomer(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a1": otchet_data_sostavleniya(entity_ref("urn:case:vred:otchet-1"), @2026-08-30) { origin case_input; }
+        assert "t13a-a2-0": otchet_marka(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a2-1": otchet_model(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a2-2": otchet_gos_nomer(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a3": otchet_data_osmotra(entity_ref("urn:case:vred:otchet-1"), @2026-08-30) { origin case_input; }
+        assert "t13a-a4": otchet_zayavitel(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a5-0": otchet_strakhovshchik_naimenovanie(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a5-1": otchet_strakhovshchik_bin(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a5-2": otchet_strakhovshchik_rekvizity(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a5-3": otchet_strakhovshchik_adres(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a6": pechat_otsutstvuet(entity_ref("urn:case:vred:otchet-1")) { origin case_input; }
+        assert "t13a-a7": otchet_podpis_utverzhdayushchego(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13a-a8": otchet_opisanie_obekta(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_titulnyy_list(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    expect applied(OtchetZaverenPodpisyuBezPechati);
+}
+
+// There is a signature, no seal, and its absence is NOT established —
+// certification is not derived, the title page is incomplete.
+test "urn:query:vred-t13-b" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t13b-a0": otchet_nomer(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a1": otchet_data_sostavleniya(entity_ref("urn:case:vred:otchet-1"), @2026-08-30) { origin case_input; }
+        assert "t13b-a2-0": otchet_marka(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a2-1": otchet_model(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a2-2": otchet_gos_nomer(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a3": otchet_data_osmotra(entity_ref("urn:case:vred:otchet-1"), @2026-08-30) { origin case_input; }
+        assert "t13b-a4": otchet_zayavitel(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a5-0": otchet_strakhovshchik_naimenovanie(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a5-1": otchet_strakhovshchik_bin(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a5-2": otchet_strakhovshchik_rekvizity(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a5-3": otchet_strakhovshchik_adres(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a7": otchet_podpis_utverzhdayushchego(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13b-a8": otchet_opisanie_obekta(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_titulnyy_list(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// There is a seal, no signature of the approving person — certification is not derived.
+test "urn:query:vred-t13-c" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t13c-a6": otchet_pechat(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(otchet_zaveren(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Calculation particulars without the cost of materials — the sub-cl. 3 group is not derived.
+test "urn:query:vred-t13-d" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t13d-a0": otchet_stoimost_detaley(entity_ref("urn:case:vred:otchet-1"), 100000 KZT) { origin case_input; }
+        assert "t13d-a1-0": otchet_obemy_rabot(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13d-a1-1": otchet_stoimost_rabot(entity_ref("urn:case:vred:otchet-1"), 100000 KZT) { origin case_input; }
+        assert "t13d-a3": otchet_stoimost_remonta(entity_ref("urn:case:vred:otchet-1"), 100000 KZT) { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_stoimosti_i_obemy(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// All four calculation particulars and all three appendices — both groups are derived.
+test "urn:query:vred-t13-e" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t13e-a0": otchet_stoimost_detaley(entity_ref("urn:case:vred:otchet-1"), 100000 KZT) { origin case_input; }
+        assert "t13e-a1-0": otchet_obemy_rabot(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13e-a1-1": otchet_stoimost_rabot(entity_ref("urn:case:vred:otchet-1"), 100000 KZT) { origin case_input; }
+        assert "t13e-a2": otchet_stoimost_materialov(entity_ref("urn:case:vred:otchet-1"), 100000 KZT) { origin case_input; }
+        assert "t13e-a3": otchet_stoimost_remonta(entity_ref("urn:case:vred:otchet-1"), 100000 KZT) { origin case_input; }
+        assert "t13e-a4": otchet_kalkulyatsiya_spo(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13e-a5": otchet_fotografii_obekta(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13e-a6": otchet_iskhodnye_dannye(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_stoimosti_i_obemy(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(otchet_soderzhit_prilozheniya(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Appendices without photographs of the object — the sub-cl. 4 group is not derived.
+test "urn:query:vred-t13-f" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t13f-a4": otchet_kalkulyatsiya_spo(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13f-a6": otchet_iskhodnye_dannye(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_prilozheniya(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Annex 3 cl. 2: the final amount of 1,234,567 tenge without a fractional
+// part, spelled out in words — properly expressed.
+test "urn:query:vred-t13-g" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t13g-a0": itogovaya_stoimost_v_tenge(o: entity_ref("urn:case:vred:otchet-1"), amount: 1234567 KZT) { origin case_input; }
+        assert "t13g-a1": otchet_summa_propisyu(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_itogovuyu_velichinu(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Annex 3 cl. 2: an amount with a fractional part (1,234,567.50 tenge) is
+// not rounded to the tenge — the requirement is not met.
+test "urn:query:vred-t13-h" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t13h-a0": itogovaya_stoimost_v_tenge(o: entity_ref("urn:case:vred:otchet-1"), amount: 1234567.50 KZT) { origin case_input; }
+        assert "t13h-a1": otchet_summa_propisyu(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_itogovuyu_velichinu(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Annex 3 cl. 2: an amount of 0.01 tenge — not rounded; an amount of
+// 0 tenge — rounded (zero fractional part).
+test "urn:query:vred-t13-i" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t13i-a0": itogovaya_stoimost_v_tenge(o: entity_ref("urn:case:vred:otchet-1"), amount: 0.01 KZT) { origin case_input; }
+        assert "t13i-a1": otchet_summa_propisyu(entity_ref("urn:case:vred:otchet-1"), "образец") { origin case_input; }
+        assert "t13i-a2": itogovaya_stoimost_v_tenge(o: entity_ref("urn:case:vred:otchet-2"), amount: 0 KZT) { origin case_input; }
+        assert "t13i-a3": otchet_summa_propisyu(entity_ref("urn:case:vred:otchet-2"), "образец") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_itogovuyu_velichinu(entity_ref("urn:case:vred:otchet-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(otchet_soderzhit_itogovuyu_velichinu(entity_ref("urn:case:vred:otchet-2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

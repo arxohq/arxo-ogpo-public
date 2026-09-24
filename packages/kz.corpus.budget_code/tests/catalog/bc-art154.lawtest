@@ -1,0 +1,54 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 154 пункт 3 абзац третий. Запрещается размещать на депозитах и в других инструментах в банках второго уровня бюджетные средства, выданные на возвратной о
+test "CATALOG-NODEPOSITOFRETURNABLEFUNDS" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": returnable_funds_on_deposit(entity_ref("urn:kz:catalog:nodepositofreturnablefunds:v0"), entity_ref("urn:kz:catalog:nodepositofreturnablefunds:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(DepositReturnableBudgetFunds, ACTIVE);
+}
+
+// Статья 154 пункт 3. Бюджетные кредиты не предоставляются на цели участия в уставных капиталах юридических лиц, покрытие убытков хозяйственной деятельности заёмщ
+test "CATALOG-NOCREDITFORFORBIDDENPURPOSE" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": credit_lender(entity_ref("urn:kz:catalog:nocreditforforbiddenpurpose:v0"), entity_ref("urn:kz:catalog:nocreditforforbiddenpurpose:v1")) { origin case_input; }
+        assert "cat-1": credit_purpose_forbidden(entity_ref("urn:kz:catalog:nocreditforforbiddenpurpose:v0")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(GrantCreditForForbiddenPurpose, ACTIVE);
+}
+
+// Статья 154 пункт 4 подпункты 3) и 4). Бюджетный кредит предоставляется на условиях платности, предусматривающей оплату заёмщиком вознаграждения, и срочности, пр
+test "CATALOG-CREDITHASTERMANDREMUNERATION" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": credit_remuneration_set(entity_ref("urn:kz:catalog:credithastermandremuneration:v0"), 1.0) { origin case_input; }
+        assert "cat-1": credit_granted(entity_ref("urn:kz:catalog:credithastermandremuneration:v0")) { origin case_input; }
+        assert "cat-2": credit_term_set(entity_ref("urn:kz:catalog:credithastermandremuneration:v0"), @2026-01-15) { origin case_input; }
+    }
+    evaluate truth(credit_has_term_and_remuneration(entity_ref("urn:kz:catalog:credithastermandremuneration:v0")));
+    expect truth_status == TRUE_ONLY;
+}
+
+// Статья 154 пункт 5. Бюджетные кредиты предоставляются при отсутствии налоговой задолженности, наличии обеспечения исполнения обязательств и отсутствии просрочен
+test "CATALOG-CREDITCONDITIONSMET" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": obligations_secured(entity_ref("urn:kz:catalog:creditconditionsmet:v0")) { origin case_input; }
+        assert "cat-1": no_tax_arrears(entity_ref("urn:kz:catalog:creditconditionsmet:v0")) { origin case_input; }
+        assert "cat-2": no_overdue_credit_arrears(entity_ref("urn:kz:catalog:creditconditionsmet:v0")) { origin case_input; }
+    }
+    evaluate truth(credit_conditions_met(entity_ref("urn:kz:catalog:creditconditionsmet:v0")));
+    expect truth_status == TRUE_ONLY;
+}

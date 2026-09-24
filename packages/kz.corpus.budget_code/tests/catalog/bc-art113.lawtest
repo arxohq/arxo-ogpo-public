@@ -1,0 +1,17 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 113 пункт 9. Размещение бюджетных денег, в том числе полученных на возвратной основе, на банковских счетах не допускается, за исключением случаев, предус
+test "CATALOG-BUDGETMONEYPLACEMENTFORBIDDEN" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": budget_money_placed_on_account(entity_ref("urn:kz:catalog:budgetmoneyplacementforbidden:v0")) { origin case_input; }
+    }
+    evaluate truth(placement_forbidden(entity_ref("urn:kz:catalog:budgetmoneyplacementforbidden:v0")));
+    expect truth_status == TRUE_ONLY;
+}

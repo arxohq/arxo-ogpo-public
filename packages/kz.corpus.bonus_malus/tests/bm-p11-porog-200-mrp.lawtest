@@ -1,0 +1,68 @@
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// ПУНКТ 11 — ПОРОГ ДВУХСОТ МРП, ОБЕ ЕГО СТОРОНЫ.
+//
+// Независимый счёт: МРП 2026 года — 4 325 ₸ (закон о республиканском бюджете
+// на 2026 – 2028 годы, статья 9); 200 × 4 325 = 865 000 ₸. Слова «на сумму,
+// не превышающую двухсот месячных расчетных показателей» включают сам рубеж.
+//
+// Общий вход: действующий класс 3, один страховой случай по вине с выплатой,
+// 365 дней страхования. Строка «Класс 3» столбца «1 страховой случай» даёт
+// класс 1 — место 5, коэффициент 1,55; сдвиг пункта 11 даёт место 6, класс 2,
+// коэффициент 1,40.
+//
+// МИРУ НУЖЕН `kz.corpus.budget`: величина МРП приходит оттуда, и сцена
+// исполняется семейством со слитым миром.
+
+// BM-P11-1 — РОВНО 865 000 ₸: модификатор применяется.
+test "urn:query:bm-p11-rovno-200-mrp" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "a0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:p11:1"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "a1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:p11:1"), 1) { origin case_input; }
+        assert "a2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:p11:1"), Klass3) { origin case_input; }
+        assert "a3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:p11:1"), 365) { origin case_input; }
+        assert "a4": vyplata_po_imushchestvu(entity_ref("urn:kz:bm:p11:1"), 865000 KZT) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:p11:1"), 1.40));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// BM-P11-2 — 865 001 ₸: один тенге сверх порога снимает модификатор.
+test "urn:query:bm-p11-na-tenge-vyshe" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "b0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:p11:2"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "b1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:p11:2"), 1) { origin case_input; }
+        assert "b2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:p11:2"), Klass3) { origin case_input; }
+        assert "b3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:p11:2"), 365) { origin case_input; }
+        assert "b4": vyplata_po_imushchestvu(entity_ref("urn:kz:bm:p11:2"), 865001 KZT) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:p11:2"), 1.55));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// BM-P11-3 — ГИБЕЛЬ СНИМАЕТ МОДИФИКАТОР пункта 11 и уводит в пункт 7: класс
+// М2, коэффициент 3,50, несмотря на малую выплату по имуществу.
+test "urn:query:bm-p11-isklyuchenie-gibel" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "c0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:p11:3"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "c1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:p11:3"), 1) { origin case_input; }
+        assert "c2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:p11:3"), Klass3) { origin case_input; }
+        assert "c3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:p11:3"), 365) { origin case_input; }
+        assert "c4": vyplata_po_imushchestvu(entity_ref("urn:kz:bm:p11:3"), 100000 KZT) { origin case_input; }
+        assert "c5": gibel_po_vine_s_vyplatoy(entity_ref("urn:kz:bm:p11:3")) { origin case_input; }
+        assert "c6": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:p11:3")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:p11:3"), 3.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

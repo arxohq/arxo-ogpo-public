@@ -1,0 +1,97 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 17 п. 2 пп. 9) (тайна страхования) и ст. 21 п. 2-1 (безналичная оплата
+// через интернет-ресурс) — обязанности ПОДДЕРЖАНИЯ §124.2. У них, в отличие
+// от обязанностей достижения с открытым окном, ОДИН установленный
+// контрпример внутри окна даёт нарушение немедленно.
+//
+// Ст. 17 п. 2 пп. 5): регистрация происшествия и представление сведений в
+// базу данных — две обязанности, возникающие от уведомления страховщика.
+
+test "urn:query:ogpo-17-dlyashchiesya-active" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "dly-a-a0": insurer_of_compulsory_insurance(entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ObespechitTaynuStrakhovaniya, ACTIVE);
+    expect position(PredostavitVozmozhnostBeznalichnoyOplaty, ACTIVE);
+    expect not position(ObespechitTaynuStrakhovaniya, VIOLATED);
+    expect not position(PredostavitVozmozhnostBeznalichnoyOplaty, VIOLATED);
+}
+
+test "urn:query:ogpo-17-tayna-narushena" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "dly-b-a0": insurer_of_compulsory_insurance(entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "dly-b-a1": not insurance_secrecy_kept(entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ObespechitTaynuStrakhovaniya, VIOLATED);
+    expect position(PredostavitVozmozhnostBeznalichnoyOplaty, ACTIVE);
+}
+
+test "urn:query:ogpo-21-2-1-narushena" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "dly-c-a0": insurer_of_compulsory_insurance(entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "dly-c-a1": not cashless_online_premium_payment_available(entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredostavitVozmozhnostBeznalichnoyOplaty, VIOLATED);
+    expect not position(ObespechitTaynuStrakhovaniya, VIOLATED);
+}
+
+// Ст. 17 п. 2 пп. 5): уведомление о происшествии рождает две обязанности;
+// регистрация исполнена, представление сведений в базу данных — нет.
+test "urn:query:ogpo-17-2-5-registratsiya" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "dly-d-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "dly-d-a1": insurer_notified_of_accident(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "dly-d-a2": accident_registered_by_insurer(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ZaregistrirovatProisshestvie, SATISFIED);
+    expect position(PredstavitSvedeniyaVBazuDannykh, ACTIVE);
+    expect not position(PredstavitSvedeniyaVBazuDannykh, SATISFIED);
+}
+
+// Ст. 17 п. 2 пп. 7-4): обязанность принять меры по урегулированию возникает
+// от получения информации пункта 5 статьи 9.
+test "urn:query:ogpo-17-2-7-4-mery" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "dly-e-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "dly-e-a1": article9_information_received(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PrinyatMeryPoUregulirovaniyuSluchaya, ACTIVE);
+}

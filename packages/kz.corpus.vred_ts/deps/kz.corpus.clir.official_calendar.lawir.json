@@ -1,0 +1,45 @@
+{
+  "artifactHash": "sha256:0d2cbe8dd893c2a1b119471daf337e9f7fc464e856855e5afb35096a7fbf91a9",
+  "features": [
+    "core-executable"
+  ],
+  "imports": [],
+  "metadata": {},
+  "nodes": [
+    {
+      "anchors": [
+        "KZ-LAW-267-II-ART-5"
+      ],
+      "contentHash": "sha256:c0f2ad6980f464e6608631bad6fcb5b856e48eee2f7bc61f7ecdd0c72bc54aa2",
+      "datasetHash": "sha256:d04f48761d98cdcf2a094cc728fd160fbc3b73e2eb5ebbed6743d17e976fe9c6",
+      "format": "law.calendar/0.1",
+      "id": "urn:kz:corpus:clir:official-calendar#snapshot-2026",
+      "kind": "calendar_snapshot",
+      "package": "urn:kz:corpus:clir:official-calendar",
+      "resourceUri": "artifact:corpus/clir/kz-official-2026.calendar.json",
+      "sourceArtifacts": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "timezone": "Asia/Qyzylorda",
+      "timezoneDbSnapshot": "iana-tzdb@2026a",
+      "valid": {
+        "axis": "legal_time",
+        "end": "2027-01-01",
+        "endInclusive": false,
+        "start": "2025-01-01",
+        "startInclusive": true
+      }
+    }
+  ],
+  "package": {
+    "name": "kz.corpus.clir.official_calendar",
+    "namespace": "urn:kz:corpus:clir:official-calendar",
+    "semanticHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "version": "0.1.0"
+  },
+  "schemaVersion": "law.core.ir/0.2",
+  "semanticHash": "sha256:233846c8f48022e566f7fa839a1c4a6e33208745046fddcfbfdda79b283e2e32",
+  "semanticVersion": "0.2.1",
+  "strata": [],
+  "theoryHash": "sha256:6f33373dabe3eca5666510817eb347d70776323b0a408df1244b55a6e69d797e"
+}

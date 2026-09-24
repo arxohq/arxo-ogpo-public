@@ -1,0 +1,26 @@
+# Экземпляр шаблона `pinning` — ДАННЫЕ, не код.
+# Контракт: corpus/templates/pinning/TEMPLATE.ru.md
+# Фрагменты §194 порождаются из закреплённых байтов публикации.
+
+source    = "sources/ogpo-vts/ru.txt"
+target    = "sources.law"
+edition   = "LAW_446_EDITION"
+prefix    = "LAW_446_ART"
+profile   = "kz-adilet-article"
+kind      = "article"
+# Акт разбит на шесть глав обычной формы («Глава N.»), дефисных глав,
+# введённых поправками, у него нет — потому простой `chapter`, без
+# `chapter-amended` (ср. `kz/elections`, где дефисные главы есть и стоп без
+# них утянул бы заголовок следующей главы в последнюю статью предыдущей).
+stops     = ["chapter"]
+
+begin     = "// BEGIN GENERATED OGPO VTS FRAGMENTS"
+end       = "// END GENERATED OGPO VTS FRAGMENTS"
+
+# Обрывы — ЮРИДИЧЕСКИЕ решения о границе текста, каждое с причиной.
+
+# Последняя статья акта: за ней идут подпись Президента и хром портала.
+[[cut]]
+article = "32"
+before  = "Президент"
+reason  = "подпись Президента не входит во фрагмент статьи 32 — иначе покрытие текста притворится покрытием нормы"

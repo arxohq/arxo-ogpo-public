@@ -1,0 +1,17 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 102 пункт 1. Деньги от реализации государственными учреждениями товаров (работ, услуг), которым законами предоставлено право осуществлять приносящую дохо
+test "CATALOG-SALESPROCEEDSTOBUDGET" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": income_generating_right(entity_ref("urn:kz:catalog:salesproceedstobudget:v0")) { origin case_input; }
+    }
+    evaluate truth(credited_to_budget(entity_ref("urn:kz:catalog:salesproceedstobudget:v0")));
+    expect truth_status == TRUE_ONLY;
+}

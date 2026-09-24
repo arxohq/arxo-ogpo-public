@@ -1,0 +1,287 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 25: состав требования (п. 1), справка о принятых документах (п. 3),
+// кто выгодоприобретатель и кто потерпевший (п. 4), выплата услугодателю
+// (п. 5), запреты пунктов 2, 6 и 7, право на остатки (п. 8) и выплата по
+// протоколу (п. 9).
+
+test "urn:query:ogpo-st25-sostav-trebovaniya" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        // Требование c1 — полное: порядок получения назван наличными.
+        assert "st25-a-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st25-a-a1": claim_states_residence(entity_ref("urn:kz:ogpo:claim:c1")) { origin case_input; }
+        assert "st25-a-a2": claim_states_contact_phones(entity_ref("urn:kz:ogpo:claim:c1")) { origin case_input; }
+        assert "st25-a-a3": claim_requests_cash_payment(entity_ref("urn:kz:ogpo:claim:c1")) { origin case_input; }
+        assert "st25-a-a4": claim_documents_attached(entity_ref("urn:kz:ogpo:claim:c1")) { origin case_input; }
+        // Требование c2 — без порядка получения выплаты. Банковских реквизитов
+        // нет ни у того, ни у другого: пункт 1 требует их «при необходимости».
+        assert "st25-a-a5": payment_claim_of(entity_ref("urn:kz:ogpo:claim:c2"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st25-a-a6": claim_states_residence(entity_ref("urn:kz:ogpo:claim:c2")) { origin case_input; }
+        assert "st25-a-a7": claim_states_contact_phones(entity_ref("urn:kz:ogpo:claim:c2")) { origin case_input; }
+        assert "st25-a-a8": claim_documents_attached(entity_ref("urn:kz:ogpo:claim:c2")) { origin case_input; }
+        // Требование c3 — вторая ветвь дизъюнкции: перечисление на банковский
+        // счёт. Обе ветви дают одну и ту же голову (§206).
+        assert "st25-a-a9": payment_claim_of(entity_ref("urn:kz:ogpo:claim:c3"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st25-a-a10": claim_states_residence(entity_ref("urn:kz:ogpo:claim:c3")) { origin case_input; }
+        assert "st25-a-a11": claim_states_contact_phones(entity_ref("urn:kz:ogpo:claim:c3")) { origin case_input; }
+        assert "st25-a-a12": claim_requests_bank_transfer(entity_ref("urn:kz:ogpo:claim:c3")) { origin case_input; }
+        assert "st25-a-a13": claim_documents_attached(entity_ref("urn:kz:ogpo:claim:c3")) { origin case_input; }
+    }
+
+    evaluate truth(payment_claim_complete(entity_ref("urn:kz:ogpo:claim:c1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(payment_claim_complete(entity_ref("urn:kz:ogpo:claim:c2")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(payment_claim_complete(entity_ref("urn:kz:ogpo:claim:c3")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    // Запреты пунктов 2, 6 и 7 возникают от одного лишь предъявления
+    // требования: условий у них нет.
+    evaluate positions();
+    expect position(IstrebovatDopolnitelnyeDokumenty, ACTIVE);
+    expect position(TrebovatUsloviyaOgranichivayushchiePravoTrebovaniya, ACTIVE);
+}
+
+test "urn:query:ogpo-st25-spravka-i-originaly" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st25-b-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st25-b-a1": documents_accepted_by_insurer(entity_ref("urn:kz:ogpo:claim:c1")) { origin case_input; }
+        assert "st25-b-a2": applicant_applied_in_person(entity_ref("urn:kz:ogpo:claim:c1")) { origin case_input; }
+        assert "st25-b-a3": receipt_certificate_drawn_in_two_copies(entity_ref("urn:kz:ogpo:claim:c1")) { origin case_input; }
+        assert "st25-b-a4": originals_requested_by_insurer(entity_ref("urn:kz:ogpo:claim:c1")) { origin case_input; }
+        assert "st25-b-a5": documents_unavailable_in_state_systems(entity_ref("urn:kz:ogpo:claim:c1")) { origin case_input; }
+        // Требование c2 — то же принятие документов, но заявление отправлено
+        // ЭЛЕКТРОННЫМ способом: часть вторая пункта 3 даёт страховщику право
+        // представить справку в электронной форме.
+        assert "st25-b-a6": payment_claim_of(entity_ref("urn:kz:ogpo:claim:c2"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b2"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st25-b-a7": documents_accepted_by_insurer(entity_ref("urn:kz:ogpo:claim:c2")) { origin case_input; }
+        assert "st25-b-a8": claim_sent_electronically(entity_ref("urn:kz:ogpo:claim:c2")) { origin case_input; }
+    }
+
+    evaluate positions();
+    // Часть первая исполнена: справка составлена в двух экземплярах.
+    expect position(SostavitSpravkuOPrinyatykhDokumentakh, SATISFIED);
+    // Часть третья: обращение личное, экземпляр не выдан — обязанность
+    // действует, но VIOLATED не становится: срока пункт 3 не называет.
+    expect position(VydatEkzemplyarSpravkiZayavitelyu, ACTIVE);
+    expect not position(VydatEkzemplyarSpravkiZayavitelyu, SATISFIED);
+    expect not position(VydatEkzemplyarSpravkiZayavitelyu, VIOLATED);
+    // Часть вторая пункта 3 — право, а не обязанность, и возникает оно только
+    // у электронного заявления (требование c2), а не у личного обращения.
+    expect position(PredstavitSpravkuVElektronnoyForme, ACTIVE);
+    // Пункт 1 часть вторая: оригиналы затребованы, в системах их нет.
+    expect position(PredstavitOrigninalyDokumentov, ACTIVE);
+}
+
+test "urn:query:ogpo-st25-vygodopriobretatel-i-poterpevshiy" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        // Часть первая, три основания: сам потерпевший; лицо, имеющее право на
+        // возмещение в связи со смертью; лицо, возместившее вред.
+        assert "st25-c-a0": victim_recognized(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "st25-c-a1": beneficiary_is_the_victim(entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "st25-c-a2": harm_to_life_or_health(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), Death) { origin case_input; }
+        assert "st25-c-a3": beneficiary_entitled_on_victim_death(entity_ref("urn:kz:ogpo:beneficiary:b2"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "st25-c-a4": beneficiary_compensated_victim_harm(entity_ref("urn:kz:ogpo:beneficiary:b3"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        // Часть вторая: собственник повреждённого имущества признаётся
+        // потерпевшим; при его смерти — лица, имеющие право на возмещение.
+        assert "st25-c-a5": property_damaged_in_accident(entity_ref("urn:kz:ogpo:accident:a2")) { origin case_input; }
+        assert "st25-c-a6": damaged_property_owner(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:v2")) { origin case_input; }
+        assert "st25-c-a7": property_damaged_in_accident(entity_ref("urn:kz:ogpo:accident:a3")) { origin case_input; }
+        assert "st25-c-a8": damaged_property_owner_died(entity_ref("urn:kz:ogpo:accident:a3")) { origin case_input; }
+        assert "st25-c-a9": entitled_on_owner_death(entity_ref("urn:kz:ogpo:accident:a3"), entity_ref("urn:kz:ogpo:victim:v3")) { origin case_input; }
+    }
+
+    evaluate truth(beneficiary_recognized(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1")));
+    expect truth_status == TRUE_ONLY;
+
+    evaluate truth(beneficiary_recognized(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b2")));
+    expect truth_status == TRUE_ONLY;
+
+    evaluate truth(beneficiary_recognized(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b3")));
+    expect truth_status == TRUE_ONLY;
+
+    evaluate truth(victim_recognized(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:v2")));
+    expect truth_status == TRUE_ONLY;
+
+    evaluate truth(victim_recognized(entity_ref("urn:kz:ogpo:accident:a3"), entity_ref("urn:kz:ogpo:victim:v3")));
+    expect truth_status == TRUE_ONLY;
+
+    // Собственник ЧУЖОГО происшествия потерпевшим не становится: вред
+    // имуществу назван по каждому происшествию отдельно.
+    evaluate truth(victim_recognized(entity_ref("urn:kz:ogpo:accident:a3"), entity_ref("urn:kz:ogpo:victim:v2")));
+    expect truth_status == NEITHER;
+}
+
+test "urn:query:ogpo-st25-uslugodatel-ostatki-i-protokol" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st25-d-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        // Пункт 5, первое основание: письменное заявление потерпевшего.
+        assert "st25-d-a1": provider_rendered_restoration_services(entity_ref("urn:kz:ogpo:provider:s1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "st25-d-a2": victim_written_application_for_direct_service_payment(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:provider:s1")) { origin case_input; }
+        // Пункт 5, второе основание: нотариально удостоверенная доверенность.
+        assert "st25-d-a3": provider_rendered_restoration_services(entity_ref("urn:kz:ogpo:provider:s2"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "st25-d-a4": notarised_power_of_attorney_for_service_payment(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:provider:s2")) { origin case_input; }
+        // Пункт 8: выплата равна рыночной стоимости на день страхового случая.
+        assert "st25-d-a5": market_value_at_accident_day(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 500000 KZT) { origin case_input; }
+        assert "st25-d-a6": insurance_payment_made_by(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1"), 500000 KZT) { origin case_input; }
+        // Пункт 8, нижняя сторона: выплата МЕНЬШЕ рыночной стоимости.
+        assert "st25-d-a7": market_value_at_accident_day(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:victim:v2"), 500000 KZT) { origin case_input; }
+        assert "st25-d-a8": insurance_payment_made_by(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:insurer:i1"), 400000 KZT) { origin case_input; }
+        // Пункт 9: протокол со схемой, вреда жизни и здоровью нет.
+        assert "st25-d-a9": traffic_violation_protocol_with_scheme(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st25-d-a10": no_life_or_health_victims(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+
+    evaluate truth(payment_to_service_provider_permitted(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:provider:s1")));
+    expect truth_status == TRUE_ONLY;
+
+    evaluate truth(payment_to_service_provider_permitted(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:provider:s2")));
+    expect truth_status == TRUE_ONLY;
+
+    evaluate truth(insurer_entitled_to_property_or_remains(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1"), entity_ref("urn:kz:ogpo:victim:v1")));
+    expect truth_status == TRUE_ONLY;
+
+    evaluate truth(insurer_entitled_to_property_or_remains(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:insurer:i1"), entity_ref("urn:kz:ogpo:victim:v2")));
+    expect truth_status == NEITHER;
+
+    evaluate positions();
+    expect position(OsushchestvitVyplatuNeposredstvennoUslugodatelyu, ACTIVE);
+    expect position(OsushchestvitVyplatuPoProtokoluONarushenii, ACTIVE);
+}
+
+test "urn:query:ogpo-st25-nezavisimost-ot-drugikh-dogovorov" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st25-e-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st25-e-a1": harm_to_life_or_health(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), DisabilityGroupTwo) { origin case_input; }
+    }
+
+    evaluate truth(life_or_health_payment_independent(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate positions();
+    expect position(UmenshitVyplatuNaSummyPoDrugimDogovoram, ACTIVE);
+}
+
+// Закон № 352-VIII: первый официальный выпуск 21.08.2026;
+// шестидесятый календарный день истекает 20.10.2026.
+test "urn:query:ogpo-352-st25-do-vstupleniya" {
+    given {
+        context {
+            decision_time @2026-10-20T12:00:00+05:00;
+            knowledge_time @2026-10-20T12:00:00+05:00;
+            legal_time @2026-10-20;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "352-old-claim": payment_claim_of(entity_ref("urn:kz:ogpo:claim:352"), entity_ref("urn:kz:ogpo:accident:352"), entity_ref("urn:kz:ogpo:beneficiary:352"), entity_ref("urn:kz:ogpo:insurer:352")) { origin case_input; }
+        assert "352-old-residence": claim_states_residence(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+        assert "352-old-phone": claim_states_contact_phones(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+        assert "352-old-cash": claim_requests_cash_payment(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+        assert "352-old-docs": claim_documents_attached(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+    }
+    evaluate truth(payment_claim_complete(entity_ref("urn:kz:ogpo:claim:352")));
+    expect truth_status == TRUE_ONLY;
+    evaluate positions();
+    expect not position(PerechislitVyplatuNaSchetVygodopriobretatelya, ACTIVE);
+    expect not position(OplatitBankovskieUslugiPoVyplate, ACTIVE);
+}
+
+test "urn:query:ogpo-352-st25-posle-vstupleniya" {
+    given {
+        context {
+            decision_time @2026-10-21T12:00:00+05:00;
+            knowledge_time @2026-10-21T12:00:00+05:00;
+            legal_time @2026-10-21;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "352-new-claim": payment_claim_of(entity_ref("urn:kz:ogpo:claim:352"), entity_ref("urn:kz:ogpo:accident:352"), entity_ref("urn:kz:ogpo:beneficiary:352"), entity_ref("urn:kz:ogpo:insurer:352")) { origin case_input; }
+        assert "352-new-residence": claim_states_residence(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+        assert "352-new-phone": claim_states_contact_phones(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+        assert "352-new-cash": claim_requests_cash_payment(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+        assert "352-new-docs": claim_documents_attached(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+    }
+    evaluate truth(payment_claim_complete(entity_ref("urn:kz:ogpo:claim:352")));
+    expect truth_status == NEITHER;
+    evaluate positions();
+    expect position(PerechislitVyplatuNaSchetVygodopriobretatelya, ACTIVE);
+    expect position(OplatitBankovskieUslugiPoVyplate, ACTIVE);
+}
+
+test "urn:query:ogpo-352-st25-polnye-rekvizity" {
+    given {
+        context {
+            decision_time @2026-10-21T12:00:00+05:00;
+            knowledge_time @2026-10-21T12:00:00+05:00;
+            legal_time @2026-10-21;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "352-complete-claim": payment_claim_of(entity_ref("urn:kz:ogpo:claim:352"), entity_ref("urn:kz:ogpo:accident:352"), entity_ref("urn:kz:ogpo:beneficiary:352"), entity_ref("urn:kz:ogpo:insurer:352")) { origin case_input; }
+        assert "352-complete-residence": claim_states_residence(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+        assert "352-complete-phone": claim_states_contact_phones(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+        assert "352-complete-bank": claim_states_bank_details(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+        assert "352-complete-docs": claim_documents_attached(entity_ref("urn:kz:ogpo:claim:352")) { origin case_input; }
+    }
+    evaluate truth(payment_claim_complete(entity_ref("urn:kz:ogpo:claim:352")));
+    expect truth_status == TRUE_ONLY;
+}
+
+test "urn:query:ogpo-352-st25-pryamaya-vyplata-uslugodatelyu-zakryta" {
+    given {
+        context {
+            decision_time @2026-10-21T12:00:00+05:00;
+            knowledge_time @2026-10-21T12:00:00+05:00;
+            legal_time @2026-10-21;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "352-provider-service": provider_rendered_restoration_services(entity_ref("urn:kz:ogpo:provider:352"), entity_ref("urn:kz:ogpo:victim:352")) { origin case_input; }
+        assert "352-provider-application": victim_written_application_for_direct_service_payment(entity_ref("urn:kz:ogpo:claim:352"), entity_ref("urn:kz:ogpo:provider:352")) { origin case_input; }
+    }
+    evaluate truth(payment_to_service_provider_permitted(entity_ref("urn:kz:ogpo:claim:352"), entity_ref("urn:kz:ogpo:provider:352")));
+    expect truth_status == NEITHER;
+}

@@ -1,0 +1,53 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Пункт 4 статьи 19: «для иных городов и населенных пунктов В ОБЛАСТЯХ,
+// указанных в пункте 3… дополнительно используется коэффициент корректировки
+// в размере 0,8» (DECISION-0336). Ожидания выведены из текста пункта и строк
+// таблицы пункта 3, а не сняты с ответа движка: область — 1,78 × 0,8 × 1,00;
+// город республиканского значения областью не является, «иного населённого
+// пункта» в нём закон не знает, и коэффициент по этому основанию не выводится.
+// Поправочный коэффициент пункта 3-1 подан фактом дела: мир семейства не
+// включает пакет размеров, чтобы проверялась одна норма.
+
+test "urn:query:ogpo-19-p4-oblast-inoy-punkt" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "f0": territory_basis(entity_ref("urn:kz:ogpo:contract:p4-oblast"), OtherSettlement) { origin case_input; }
+        assert "f1": registration_territory(entity_ref("urn:kz:ogpo:contract:p4-oblast"), AlmatyOblast) { origin case_input; }
+        assert "f2": territory_adjustment_coefficient(entity_ref("urn:kz:ogpo:contract:p4-oblast"), 1.00) { origin case_input; }
+    }
+
+    evaluate truth(applicable_territory_coefficient(entity_ref("urn:kz:ogpo:contract:p4-oblast"), 1.424));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-19-p4-gorod-respublikanskogo-znacheniya" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "f0": territory_basis(entity_ref("urn:kz:ogpo:contract:p4-almaty"), OtherSettlement) { origin case_input; }
+        assert "f1": registration_territory(entity_ref("urn:kz:ogpo:contract:p4-almaty"), Almaty) { origin case_input; }
+        assert "f2": territory_adjustment_coefficient(entity_ref("urn:kz:ogpo:contract:p4-almaty"), 1.00) { origin case_input; }
+    }
+
+    // 2,96 × 0,8 × 1,00 — то, что пакет выводил до DECISION-0336.
+    evaluate truth(applicable_territory_coefficient(entity_ref("urn:kz:ogpo:contract:p4-almaty"), 2.368));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

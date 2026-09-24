@@ -1,0 +1,38 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 20 ч. 2: та же льготная категория и тот же стандартный договор, но
+// транспортное средство эксплуатируется ТАКЖЕ другими владельцами не из
+// категории — «страхование осуществляется без предоставления такой льготы».
+// Пара к ogpo-reduction-pensioner: дела различаются ОДНИМ фактом.
+//
+// Ответь этот тест TRUE_ONLY — часть вторая статьи 20 не работала бы, и
+// льготу получал бы всякий, кто вписал в полис пенсионера.
+
+test "urn:query:ogpo-reduction-barred" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-red-b-a0": standard_contract(entity_ref("urn:kz:ogpo:contract:c1")) {
+            origin case_input;
+        }
+        assert "ogpo-red-b-a1": owner_is_pensioner(entity_ref("urn:kz:ogpo:contract:c1")) {
+            origin case_input;
+        }
+        assert "ogpo-red-b-a2": vehicle_also_operated_by_owner_outside_category(entity_ref("urn:kz:ogpo:contract:c1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_reduction_applies(entity_ref("urn:kz:ogpo:contract:c1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

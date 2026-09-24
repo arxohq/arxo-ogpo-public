@@ -1,0 +1,129 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Досбор сцен: ст. 16 п. 2 пп. 3) часть третья (документальное подтверждение
+// уважительных причин), пп. 8) (обеспечить переход права обратного
+// требования), ст. 17 п. 1 пп. 5) (право предъявить обратное требование) и
+// ст. 17 п. 2 пп. 7-3) (перенаправление заявления омбудсману).
+
+context profile KZ_OGPO_DEADLINES {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+// Ст. 16 п. 2 пп. 3 ч. 3 и пп. 8).
+test "urn:query:ogpo-16-2-3-uvazhitelnye-prichiny" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "reg-a-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "reg-a-a1": accident_under_contract(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "reg-a-a2": valid_reasons_prevented_notification(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PodtverditUvazhitelnyePrichiny, ACTIVE);
+    expect position(ObespechitPerekhodPravaObratnogoTrebovaniya, ACTIVE);
+    expect not position(PodtverditUvazhitelnyePrichiny, SATISFIED);
+}
+
+test "urn:query:ogpo-16-2-3-prichiny-podtverzhdeny" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "reg-b-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "reg-b-a1": accident_under_contract(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "reg-b-a2": valid_reasons_prevented_notification(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "reg-b-a3": valid_reasons_documented(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "reg-b-a4": recourse_right_transfer_secured(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PodtverditUvazhitelnyePrichiny, SATISFIED);
+    expect position(ObespechitPerekhodPravaObratnogoTrebovaniya, SATISFIED);
+}
+
+// Ст. 17 п. 1 пп. 5): право предъявить обратное требование возникает от
+// притязания, исчисленного статьёй 28, — своего перечня оснований у
+// статьи 17 нет.
+test "urn:query:ogpo-17-1-5-regress" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "reg-c-a0": insurance_payment_made_by(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1"), 500000 KZT) { origin case_input; }
+        assert "reg-c-a1": accident_insured(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:owner:o1")) { origin case_input; }
+        assert "reg-c-a2": recourse_ground_established(entity_ref("urn:kz:ogpo:accident:a1"), DrivingUnderIntoxication) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredyavitObratnoeTrebovanie, ACTIVE);
+    expect position(VozmestitStrakhovshchikuSummuPoRegressu, ACTIVE);
+}
+
+// Без основания статьи 28 права предъявить обратное требование нет.
+test "urn:query:ogpo-17-1-5-bez-osnovaniya" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "reg-d-a0": insurance_payment_made_by(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1"), 500000 KZT) { origin case_input; }
+        assert "reg-d-a1": accident_insured(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:owner:o1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(PredyavitObratnoeTrebovanie, ACTIVE);
+}
+
+// Ст. 17 п. 2 пп. 7-3): редакция действует с 1 января 2027 года; срок — три
+// рабочих дня со дня получения заявления.
+//
+// ДЕНЬ ПОЛУЧЕНИЯ ВЗЯТ 28 ДЕКАБРЯ 2026 ГОДА НЕ ИЗ ФАБУЛЫ, А ИЗ КАЛЕНДАРЯ:
+// закреплённый снимок §85 корпуса покрывает только 2026 год
+// (valid [2026-01-01, 2027-01-01)), и любой счёт рабочих дней внутри 2027
+// года исполнить нечем. Сцена проверяет ровно то, что она может проверить:
+// правило живо на `legal_time` 2027 года и считает свой срок.
+// Расчёт вручную: 28 декабря 2026 — понедельник; три рабочих дня — 29, 30,
+// 31 декабря; последний день срока — 31 декабря 2026 года.
+test "urn:query:ogpo-17-7-3-2027" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2027-02-15T12:00:00+05:00;
+            knowledge_time @2027-02-15T12:00:00+05:00;
+            legal_time @2027-02-15;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "reg-e-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "reg-e-a1": ombudsman_application_received_on(entity_ref("urn:kz:ogpo:claim:d1"), @2026-12-28) { origin case_input; }
+        assert "reg-e-a2": not ombudsman_application_forwarded(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position("InsurerMustForwardApplicationToOmbudsman/duty/norm", VIOLATED);
+}
+
+test "urn:query:ogpo-17-7-3-due-day" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2027-02-15T12:00:00+05:00;
+            knowledge_time @2027-02-15T12:00:00+05:00;
+            legal_time @2027-02-15;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "reg-f-a0": ombudsman_application_received_on(entity_ref("urn:kz:ogpo:claim:d1"), @2026-12-28) { origin case_input; }
+    }
+    evaluate truth(ombudsman_forwarding_due_day(entity_ref("urn:kz:ogpo:claim:d1"), @2026-12-31));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,60 @@
+language "law.core" version "0.2";
+package law.expansions.examples.matter_deadline_duty_synthetic version "0.1.0";
+namespace "urn:law:expansions:examples:matter-deadline-duty-synthetic";
+
+// Окно: [@2026-03-02, @2026-03-05] по датам дела.
+
+test "в окне обе зеркальные обязанности ACTIVE" {
+    given {
+        context { decision_time @2026-03-03T12:00:00Z; knowledge_time @2026-03-03T12:00:00Z; legal_time @2026-03-03; timezone "UTC"; }
+        assert "i": accident_insurer(entity_ref("urn:x:acc"), entity_ref("urn:x:ins")) { origin case_input; }
+        assert "p": assessment_applicant(entity_ref("urn:x:acc"), entity_ref("urn:x:app")) { origin case_input; }
+        assert "f": application_filed_on(entity_ref("urn:x:acc"), @2026-03-02) { origin case_input; }
+        assert "d": scheduling_due_day(entity_ref("urn:x:acc"), @2026-03-05) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position("InsurerAgreesInspection/duty/norm", ACTIVE);
+    expect position("ApplicantAgreesInspection/duty/norm", ACTIVE);
+}
+
+test "согласование в окне — SATISFIED у обеих" {
+    given {
+        context { decision_time @2026-03-03T12:00:00Z; knowledge_time @2026-03-03T12:00:00Z; legal_time @2026-03-03; timezone "UTC"; }
+        assert "i": accident_insurer(entity_ref("urn:x:acc"), entity_ref("urn:x:ins")) { origin case_input; }
+        assert "p": assessment_applicant(entity_ref("urn:x:acc"), entity_ref("urn:x:app")) { origin case_input; }
+        assert "f": application_filed_on(entity_ref("urn:x:acc"), @2026-03-02) { origin case_input; }
+        assert "d": scheduling_due_day(entity_ref("urn:x:acc"), @2026-03-05) { origin case_input; }
+        assert "ok": inspection_agreed(entity_ref("urn:x:acc")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position("InsurerAgreesInspection/duty/norm", SATISFIED);
+    expect position("ApplicantAgreesInspection/duty/norm", SATISFIED);
+}
+
+test "после срока при установленном неисполнении — VIOLATED" {
+    given {
+        context { decision_time @2026-03-10T12:00:00Z; knowledge_time @2026-03-10T12:00:00Z; legal_time @2026-03-10; timezone "UTC"; }
+        assert "i": accident_insurer(entity_ref("urn:x:acc"), entity_ref("urn:x:ins")) { origin case_input; }
+        assert "p": assessment_applicant(entity_ref("urn:x:acc"), entity_ref("urn:x:app")) { origin case_input; }
+        assert "f": application_filed_on(entity_ref("urn:x:acc"), @2026-03-02) { origin case_input; }
+        assert "d": scheduling_due_day(entity_ref("urn:x:acc"), @2026-03-05) { origin case_input; }
+        assert "no": not inspection_agreed(entity_ref("urn:x:acc")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position("InsurerAgreesInspection/duty/norm", VIOLATED);
+}
+
+test "без срока в деле позиции нет" {
+    given {
+        context { decision_time @2026-03-03T12:00:00Z; knowledge_time @2026-03-03T12:00:00Z; legal_time @2026-03-03; timezone "UTC"; }
+        assert "i": accident_insurer(entity_ref("urn:x:acc"), entity_ref("urn:x:ins")) { origin case_input; }
+        assert "p": assessment_applicant(entity_ref("urn:x:acc"), entity_ref("urn:x:app")) { origin case_input; }
+        assert "f": application_filed_on(entity_ref("urn:x:acc"), @2026-03-02) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("InsurerAgreesInspection/duty/norm", ACTIVE);
+}

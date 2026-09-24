@@ -1,0 +1,53 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 26 п. 3 — перерасчёт при ухудшении здоровья с зачётом ранее
+// выплаченных сумм. МРП дня выплаты (2026 год) — 4 325 ₸.
+
+// OGPO-P26-1 — СУММА РАНЕЕ ВЫПЛАЧЕННОГО (агрегат по прошлым выплатам).
+// По требованию произведены две выплаты: 2 000 000 ₸ и 162 500 ₸.
+// В зачёт принимается 2 162 500 ₸ — это ровно пятьсот МРП, то есть
+// предел третьей группы инвалидности (500 × 4 325).
+test "urn:query:ogpo-p26-prior-payments-total" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p26a-0": prior_insurance_payment(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:payment:pay-1"), 2000000 KZT) { origin case_input; }
+        assert "p26a-1": prior_insurance_payment(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:payment:pay-2"), 162500 KZT) { origin case_input; }
+    }
+    evaluate truth(prior_payments_total(entity_ref("urn:kz:ogpo:claim:d1"), 2162500 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// OGPO-P26-2 — ПЕРЕРАСЧЁТ. После выплаты по третьей группе потерпевшему
+// установлена ПЕРВАЯ группа инвалидности. Размер по закону — предельный
+// объём ответственности первой группы: 1600 × 4 325 = 6 920 000 ₸.
+// В зачёт принимаются ранее выплаченные 2 162 500 ₸.
+// Перерасчёт: 6 920 000 − 2 162 500 = 4 757 500 ₸.
+test "urn:query:ogpo-p26-recalculated-amount" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p26b-0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:accident:a4"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p26b-1": payment_claim_victim(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "p26b-2": health_deterioration_reported(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+        assert "p26b-3": health_deterioration_outcome(entity_ref("urn:kz:ogpo:claim:d1"), DisabilityGroupOne) { origin case_input; }
+        assert "p26b-4": prior_insurance_payment(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:payment:pay-1"), 2000000 KZT) { origin case_input; }
+        assert "p26b-5": prior_insurance_payment(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:payment:pay-2"), 162500 KZT) { origin case_input; }
+    }
+    evaluate truth(recalculated_payment_amount(entity_ref("urn:kz:ogpo:claim:d1"), 4757500 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

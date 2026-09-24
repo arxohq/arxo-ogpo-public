@@ -1,0 +1,122 @@
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// ПУНКТ 3 И ПРИЛОЖЕНИЕ — СНИЖЕНИЕ ПО СТОЛБЦАМ 1, 2, 3 И «4 И БОЛЕЕ».
+//
+// Ожидаемые классы прочитаны из строки «Класс 3» приложения: один случай — 1
+// (1,55), два — М (2,45), три — М1 (3,00), четыре и более — М2 (3,50).
+// Доступ к сведениям пункта 3 в деле есть, но модификаторы пунктов 12—14 не
+// заявлены, поэтому сдвига нет.
+
+test "urn:query:bm-p3-odin-sluchay" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "a0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:s:1"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "a1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:s:1"), 1) { origin case_input; }
+        assert "a2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:s:1"), Klass3) { origin case_input; }
+        assert "a3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:s:1"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:s:1"), 1.55));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:bm-p3-dva-sluchaya" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "b0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:s:2"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "b1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:s:2"), 2) { origin case_input; }
+        assert "b2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:s:2"), Klass3) { origin case_input; }
+        assert "b3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:s:2"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:s:2"), 2.45));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:bm-p3-tri-sluchaya" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "c0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:s:3"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "c1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:s:3"), 3) { origin case_input; }
+        assert "c2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:s:3"), Klass3) { origin case_input; }
+        assert "c3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:s:3"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:s:3"), 3.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПОРОГ СТОЛБЦА «4 И БОЛЕЕ»: четыре и семь случаев дают ОДИН ответ — М2.
+// Пара стережёт приведение числа случаев к номеру столбца: потеряйся оно,
+// седьмой случай не нашёл бы клетки вовсе.
+test "urn:query:bm-p3-chetyre-sluchaya" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "d0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:s:4"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "d1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:s:4"), 4) { origin case_input; }
+        assert "d2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:s:4"), Klass3) { origin case_input; }
+        assert "d3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:s:4"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:s:4"), 3.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:bm-p3-sem-sluchaev" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "e0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:s:5"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "e1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:s:5"), 7) { origin case_input; }
+        assert "e2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:s:5"), Klass13) { origin case_input; }
+        assert "e3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:s:5"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:s:5"), 3.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ВЕРХНИЙ ПРЕДЕЛ ПОРЯДКА КЛАССОВ: строка «Класс 13» столбца «0» ведёт снова в
+// класс 13 — приложение не знает класса выше. Коэффициент 0,50.
+test "urn:query:bm-p3-klass-13-ne-rastet" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "f0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:s:6"), OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "f1": deystvuyushchiy_klass(entity_ref("urn:kz:bm:s:6"), Klass13) { origin case_input; }
+        assert "f2": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:s:6"), 400) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:s:6"), 0.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПРОТИВОРЕЧИВЫЕ СВЕДЕНИЯ: база данных дала о том же договоре два разных
+// числа страховых случаев. Ключ `key(dogovor)` отвечает ОТКАЗОМ СЧИТАТЬ —
+// документ становится NON_EXECUTABLE, — а не вторым ответом о премии и не
+// выбором одного из двух чисел.
+//
+// Три состояния знания различены тремя РАЗНЫМИ ответами пакета, и сцены
+// стерегут все три: сведений нет вовсе — пустая выборка при исполнимом
+// документе (`bm-p2-net-svedeniy`); отсутствие случаев подтверждено базой —
+// коэффициент выведен (`bm-p3-rovno-270`); сведения противоречивы — документ
+// неисполним (эта сцена).
+test "urn:query:bm-p2-protivorechivye-svedeniya" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "g0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:s:7"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "g1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:s:7"), 1) { origin case_input; }
+        assert "g2": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:s:7"), 3) { origin case_input; }
+        assert "g3": deystvuyushchiy_klass(entity_ref("urn:kz:bm:s:7"), Klass3) { origin case_input; }
+        assert "g4": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:s:7"), 365) { origin case_input; }
+    }
+    evaluate collect k: Decimal where koeffitsient_bonus_malus(entity_ref("urn:kz:bm:s:7"), k);
+    expect result_kind == COLLECTION;
+    expect evaluation_status == NON_EXECUTABLE;
+}

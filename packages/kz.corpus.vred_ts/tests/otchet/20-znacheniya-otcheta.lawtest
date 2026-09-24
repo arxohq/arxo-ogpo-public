@@ -1,0 +1,148 @@
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Annex 3 by field VALUES (10.09.2026). Expectations follow the form's
+// checklist: the presence of each piece of information is derived from its
+// value via a bridge; information composed of several values (make, model
+// and plate number; four pieces of insurer information; work volumes and
+// cost) requires all of them; the final amount is still checked for the
+// absence of a fractional part.
+
+// Full report by values: seal and signature, calculation particulars'
+// amounts, an integer final amount — TRUE_ONLY, the bridges apply.
+test "urn:query:vred-t20-a" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t20a-a0": otchet_nomer(entity_ref("urn:case:vred:otchet-2"), "ОВ-2026-0917") { origin case_input; }
+        assert "t20a-a1": otchet_data_sostavleniya(entity_ref("urn:case:vred:otchet-2"), @2026-09-01) { origin case_input; }
+        assert "t20a-a2": otchet_marka(entity_ref("urn:case:vred:otchet-2"), "Toyota") { origin case_input; }
+        assert "t20a-a3": otchet_model(entity_ref("urn:case:vred:otchet-2"), "Camry") { origin case_input; }
+        assert "t20a-a4": otchet_gos_nomer(entity_ref("urn:case:vred:otchet-2"), "123ABC02") { origin case_input; }
+        assert "t20a-a5": otchet_data_osmotra(entity_ref("urn:case:vred:otchet-2"), @2026-08-30) { origin case_input; }
+        assert "t20a-a6": otchet_zayavitel(entity_ref("urn:case:vred:otchet-2"), "Иванов Иван Иванович") { origin case_input; }
+        assert "t20a-a7": otchet_strakhovshchik_naimenovanie(entity_ref("urn:case:vred:otchet-2"), "АО «Страховая компания»") { origin case_input; }
+        assert "t20a-a8": otchet_strakhovshchik_bin(entity_ref("urn:case:vred:otchet-2"), "990140000123") { origin case_input; }
+        assert "t20a-a9": otchet_strakhovshchik_rekvizity(entity_ref("urn:case:vred:otchet-2"), "KZ00 0000 0000 0000 0000, БИК ABCDKZKX") { origin case_input; }
+        assert "t20a-a10": otchet_strakhovshchik_adres(entity_ref("urn:case:vred:otchet-2"), "г. Алматы, ул. Примерная, 1") { origin case_input; }
+        assert "t20a-a11": otchet_pechat(entity_ref("urn:case:vred:otchet-2"), "Сидоров Сидор Сидорович") { origin case_input; }
+        assert "t20a-a12": otchet_podpis_utverzhdayushchego(entity_ref("urn:case:vred:otchet-2"), "Сидоров Сидор Сидорович") { origin case_input; }
+        assert "t20a-a13": otchet_opisanie_obekta(entity_ref("urn:case:vred:otchet-2"), "легковой автомобиль, повреждена передняя часть") { origin case_input; }
+        assert "t20a-a14": otchet_raschet_iznosa(entity_ref("urn:case:vred:otchet-2"), "износ 23 % по методике СПО") { origin case_input; }
+        assert "t20a-a15": otchet_stoimost_detaley(entity_ref("urn:case:vred:otchet-2"), 350000 KZT) { origin case_input; }
+        assert "t20a-a16": otchet_obemy_rabot(entity_ref("urn:case:vred:otchet-2"), "замена бампера, окраска крыла") { origin case_input; }
+        assert "t20a-a17": otchet_stoimost_rabot(entity_ref("urn:case:vred:otchet-2"), 80000 KZT) { origin case_input; }
+        assert "t20a-a18": otchet_stoimost_materialov(entity_ref("urn:case:vred:otchet-2"), 25000 KZT) { origin case_input; }
+        assert "t20a-a19": otchet_stoimost_remonta(entity_ref("urn:case:vred:otchet-2"), 455000 KZT) { origin case_input; }
+        assert "t20a-a20": otchet_kalkulyatsiya_spo(entity_ref("urn:case:vred:otchet-2"), "kalk.pdf") { origin case_input; }
+        assert "t20a-a21": otchet_fotografii_obekta(entity_ref("urn:case:vred:otchet-2"), "photo-1.jpg, photo-2.jpg") { origin case_input; }
+        assert "t20a-a22": otchet_iskhodnye_dannye(entity_ref("urn:case:vred:otchet-2"), "заявление, акт осмотра") { origin case_input; }
+        assert "t20a-a23": itogovaya_stoimost_v_tenge(entity_ref("urn:case:vred:otchet-2"), 455000 KZT) { origin case_input; }
+        assert "t20a-a24": otchet_summa_propisyu(entity_ref("urn:case:vred:otchet-2"), "четыреста пятьдесят пять тысяч тенге") { origin case_input; }
+        assert "t20a-a25": otchet_predusmatrivaet_otmetku_o_soglasii(entity_ref("urn:case:vred:otchet-2")) { origin case_input; }
+        assert "t20a-a26": otchet_predusmatrivaet_otmetku_ob_otsutstvii_zhalob(entity_ref("urn:case:vred:otchet-2")) { origin case_input; }
+        assert "t20a-a27": otchet_utverdil_rukovoditel(entity_ref("urn:case:vred:otchet-2"), "Сидоров Сидор Сидорович") { origin case_input; }
+        assert "t20a-a28": otchet_predostavlen_v_elektronnom_vide(entity_ref("urn:case:vred:otchet-2")) { origin case_input; }
+        assert "t20a-a29": format_ne_pozvolyaet_vnosit_izmeneniya(entity_ref("urn:case:vred:otchet-2")) { origin case_input; }
+    }
+    evaluate truth(otchet_oformlen_po_prilozheniyu_3(entity_ref("urn:case:vred:otchet-2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    expect applied(OtchetZaverenPechatyuIPodpisyu);
+    expect applied(OtchetVElektronnomVide);
+}
+
+// Three of four pieces of insurer information: without the address the information is incomplete.
+test "urn:query:vred-t20-b" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t20b-a0": otchet_strakhovshchik_naimenovanie(entity_ref("urn:case:vred:otchet-2"), "АО «Страховая компания»") { origin case_input; }
+        assert "t20b-a1": otchet_strakhovshchik_bin(entity_ref("urn:case:vred:otchet-2"), "990140000123") { origin case_input; }
+        assert "t20b-a2": otchet_strakhovshchik_rekvizity(entity_ref("urn:case:vred:otchet-2"), "KZ00 0000 0000 0000 0000") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_titulnyy_list(entity_ref("urn:case:vred:otchet-2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Work volumes without their cost: the sub-cl. 3 calculation particular is not closed.
+test "urn:query:vred-t20-c" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t20c-a0": otchet_obemy_rabot(entity_ref("urn:case:vred:otchet-2"), "замена бампера") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_stoimosti_i_obemy(entity_ref("urn:case:vred:otchet-2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Certification without a seal: a signature by value plus an established
+// absence of the seal — the second ground of the "if present" proviso.
+test "urn:query:vred-t20-d" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t20d-a0": otchet_podpis_utverzhdayushchego(entity_ref("urn:case:vred:otchet-2"), "Сидоров Сидор Сидорович") { origin case_input; }
+        assert "t20d-a1": pechat_otsutstvuet(entity_ref("urn:case:vred:otchet-2")) { origin case_input; }
+    }
+    evaluate truth(otchet_zaveren(entity_ref("urn:case:vred:otchet-2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    expect applied(OtchetZaverenPodpisyuBezPechati);
+    expect not applied(OtchetZaverenPechatyuIPodpisyu);
+}
+
+// Mixed title page: some elements by values, some — by the earlier
+// presence assertions. Both layers are read together.
+test "urn:query:vred-t20-e" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t20e-a0": otchet_nomer(entity_ref("urn:case:vred:otchet-3"), "ОВ-2026-0918") { origin case_input; }
+        assert "t20e-a1": otchet_data_sostavleniya(entity_ref("urn:case:vred:otchet-3"), @2026-09-02) { origin case_input; }
+        assert "t20e-a2-0": otchet_marka(entity_ref("urn:case:vred:otchet-3"), "образец") { origin case_input; }
+        assert "t20e-a2-1": otchet_model(entity_ref("urn:case:vred:otchet-3"), "образец") { origin case_input; }
+        assert "t20e-a2-2": otchet_gos_nomer(entity_ref("urn:case:vred:otchet-3"), "образец") { origin case_input; }
+        assert "t20e-a3": otchet_data_osmotra(entity_ref("urn:case:vred:otchet-3"), @2026-08-30) { origin case_input; }
+        assert "t20e-a4": otchet_zayavitel(entity_ref("urn:case:vred:otchet-3"), "образец") { origin case_input; }
+        assert "t20e-a5-0": otchet_strakhovshchik_naimenovanie(entity_ref("urn:case:vred:otchet-3"), "образец") { origin case_input; }
+        assert "t20e-a5-1": otchet_strakhovshchik_bin(entity_ref("urn:case:vred:otchet-3"), "образец") { origin case_input; }
+        assert "t20e-a5-2": otchet_strakhovshchik_rekvizity(entity_ref("urn:case:vred:otchet-3"), "образец") { origin case_input; }
+        assert "t20e-a5-3": otchet_strakhovshchik_adres(entity_ref("urn:case:vred:otchet-3"), "образец") { origin case_input; }
+        assert "t20e-a6": otchet_pechat(entity_ref("urn:case:vred:otchet-3"), "образец") { origin case_input; }
+        assert "t20e-a7": otchet_podpis_utverzhdayushchego(entity_ref("urn:case:vred:otchet-3"), "Сидоров Сидор Сидорович") { origin case_input; }
+        assert "t20e-a8": otchet_opisanie_obekta(entity_ref("urn:case:vred:otchet-3"), "легковой автомобиль") { origin case_input; }
+    }
+    evaluate truth(otchet_soderzhit_titulnyy_list(entity_ref("urn:case:vred:otchet-3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    expect applied(OtchetSoderzhitTitulnyyList);
+}

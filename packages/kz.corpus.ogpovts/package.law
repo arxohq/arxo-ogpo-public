@@ -1,0 +1,407 @@
+// ОГПО ВТС — обязательное страхование гражданско-правовой ответственности
+// владельцев транспортных средств. Закон РК от 01.07.2003 № 446-II.
+//
+// КАРТА ПАКЕТА
+//
+//   sources.law          источник, редакция, публикация и фрагменты §194
+//                        на ВСЕ 46 статей акта (адресуемость §33.1)
+//   package.law          этот файл: типы и словарь, нужные ≥2 модулям
+//   19-premium.law       статья 19 — размер годовой страховой премии
+//   20-reduction.law     статья 20 — уменьшение размера страховых премий
+//   age-experience-coefficient.lawtable.json   статья 19 пункт 7 (A3)
+//   operation-term-coefficient.lawtable.json   статья 19 пункт 9 (A3)
+//   tests/*.lawtest      сценарии §267
+//
+// ЧТО ВЫВОДИТСЯ, А ЧТО ТОЛЬКО АДРЕСУЕТСЯ. Право пакет выводит ИЗ ДВУХ СТАТЕЙ
+// — 19-й и 20-й: годовая страховая премия и льгота в пятьдесят процентов.
+// Остальные сорок четыре статьи адресуемы фрагментами и объявлены границами с
+// причиной у каждой группы — `README.ru.md`, раздел «Границы среза». Заголовок
+// «полная формализация» пакету НЕ принадлежит и в STATUS/CHANGELOG не пишется.
+
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// МРП устанавливается НЕ этим законом, а законом о республиканском бюджете на
+// соответствующий год, и потому читается из чужого пакета — тем же приёмом,
+// каким его читает `kz.corpus.incometax` (см. `01-parameters.law` там).
+import kz.corpus.budget version "0.1.0";
+
+// Коэффициент «бонус-малус» пункта 10 устанавливает НЕ этот закон, а
+// нормативный правовой акт уполномоченного органа — постановление Правления
+// Национального Банка от 30 мая 2016 года № 140. До 13.09.2026 множитель
+// входил ФАКТОМ ДЕЛА с записанной причиной «автомат состояний §160 здесь
+// выдуман БЫЛ БЫ, а не формализован»; причина была верна в отношении ЗАКОНА
+// и неверна в отношении ПРАВА — делегированный акт существует, у него
+// шестнадцать пунктов и приложение из семнадцати классов. Норма переехала к
+// своему владельцу, а статья 19 читает готовую величину через границу.
+import kz.corpus.bonus_malus version "0.2.0";
+
+// Общий словарь регионов §139: им называются территории пункта 3 для
+// соседей, которым перечисление закона не видно (`pub enum` членов не
+// экспортирует). Мост — в конце файла.
+import vocab.geo version "0.1.0";
+
+// Общий словарь транспортных средств §139: собственный `entity Vehicle` снят
+// в пользу словарного типа (алиас ниже), а срез видов пункта 6 статьи 19
+// связан с видами словаря отношением `vehicle_type_kind` в конце файла.
+import vocab.vehicle version "0.1.0";
+
+// §86: явные политики для сроков, названных в главах 2 и 4 закона. Их
+// выбор остаётся осью дела; три формы совпадают с ранее проверенными
+// сценарными правилами счёта рабочих дней, календарных дней и месяцев.
+pub deadline policy KZ_OGPO_BUSINESS_DAY_DEADLINES {
+    start_count next_day;
+    include_end true;
+    roll next_working_day;
+}
+
+pub deadline policy KZ_OGPO_CALENDAR_DAY_DEADLINES {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+}
+
+pub deadline policy KZ_OGPO_CALENDAR_MONTH_DEADLINES {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+// --- Сущности ---------------------------------------------------------------
+
+// `pub` — договор назван в правилах двух делегированных актов:
+// `kz.corpus.popravochnye_koeffitsienty` производит поправочный коэффициент
+// пункта 3-1 прямо на этом договоре (см. шапку того пакета).
+pub entity InsuranceContract {
+    label ru-KZ official "договор обязательного страхования гражданско-правовой ответственности владельцев транспортных средств";
+}
+
+// --- Оси коэффициентов статьи 19 --------------------------------------------
+//
+// ВСЕ ЧЕТЫРЕ ОСИ, КРОМЕ ДВУХ ЧИСЛОВЫХ, — ДОМЕННЫЕ КОНСТАНТЫ, И ЭТО НЕ ВЫБОР
+// УДОБСТВА. Схема A3-таблицы знает в ячейке только литерал
+// (`{"kind": "value", …}`); `const_ref` она не знает вовсе. Положить область
+// регистрации или тип транспортного средства текстовой колонкой значило бы
+// перенести тождество значения со символа на строку — и опечатка перестала бы
+// быть ошибкой. Поэтому обе перечислимые оси остаются перечислениями и
+// правилами, а таблицами заведены ровно те две оси, входы которых и без того
+// числовые: возраст со стажем (пункт 7) и срок эксплуатации (пункт 9).
+
+// Пункт 3: двадцать строк — семнадцать областей, столица и два города
+// республиканского значения. Порядок членов повторяет порядок строк таблицы
+// закона, а не алфавит: строка «№ п/п» есть часть нормы, и переупорядочение
+// сделало бы сверку с источником глазами невозможной.
+// `pub` — те же двадцать территорий перечисляет таблица размеров
+// поправочных коэффициентов АРРФР; второй перечень был бы копией закона в
+// подзаконном пакете.
+pub enum RegistrationTerritory {
+    label ru-KZ official "территория регистрации транспортного средства (статья 19 пункт 3)";
+    AlmatyOblast;
+    TurkestanOblast;
+    EastKazakhstanOblast;
+    KostanayOblast;
+    KaragandaOblast;
+    NorthKazakhstanOblast;
+    AkmolaOblast;
+    PavlodarOblast;
+    ZhambylOblast;
+    AktobeOblast;
+    WestKazakhstanOblast;
+    KyzylordaOblast;
+    AtyrauOblast;
+    MangistauOblast;
+    AbayOblast;
+    UlytauOblast;
+    ZhetisuOblast;
+    Almaty;
+    Astana;
+    Shymkent;
+}
+
+// Пункты 3, 4 и 5 — ТРИ ВЗАИМОИСКЛЮЧАЮЩИХ ОСНОВАНИЯ территориального
+// коэффициента, а не одно с исключениями. Перечислением они сделаны затем,
+// чтобы обойтись без отрицания: дело называет ровно одно основание, три
+// правила не пересекаются по построению, и ни одному из них не нужен ни
+// `not`, ни замыкание. Наложение (дело, назвавшее два основания) невозможно
+// потому, что предикат `territory_basis` в деле один.
+enum TerritoryBasis {
+    label ru-KZ official "основание территориального коэффициента: город областного значения и выше, иной населённый пункт либо временный въезд";
+    CityOfOblastSignificance;
+    OtherSettlement;
+    TemporaryEntry;
+}
+
+// Пункт 6: семь строк. Столбец «Классификация в соответствии с нормативным
+// правовым актом Министерства внутренних дел» во ФРАГМЕНТЕ статьи есть, но
+// нормой этого закона он не является — это отсылка к чужому акту, и в
+// перечень он не понижается.
+enum VehicleType {
+    label ru-KZ official "тип транспортного средства (статья 19 пункт 6)";
+    PassengerCar;
+    BusUpToSixteenSeats;
+    BusOverSixteenSeats;
+    FreightVehicle;
+    TrolleybusOrTram;
+    MotorVehicle;
+    Trailer;
+}
+
+// Пункты 7 и 8 расходятся по ЛИЦУ страхователя, а не по обстоятельству:
+// физическому лицу коэффициент даёт сетка «возраст/стаж», юридическому —
+// одно число 1,2. Ось выражена перечислением по той же причине, что и
+// остальные: это доменная константа.
+enum InsuredKind {
+    label ru-KZ official "вид страхователя: физическое либо юридическое лицо";
+    NaturalPerson;
+    LegalEntity;
+}
+
+// --- Месячный расчётный показатель ------------------------------------------
+//
+// СТАТЬЯ 19 НЕ НАЗЫВАЕТ, МРП КАКОГО ДНЯ БЕРЁТСЯ. Пункт 2 говорит «1,9
+// месячного расчетного показателя» и умолкает; сравните со статьёй 24
+// пунктом 3 того же закона, где день назван прямо («на день осуществления
+// страховой выплаты»). Молчание здесь — свойство текста, и выдумывать за него
+// правило выбора нельзя.
+//
+// Поэтому выбор сделан МИНИМАЛЬНЫЙ и записан вслух: пакет отвечает по МРП
+// того года, к которому относится расчёт, и выражает это окном `effective`
+// правила-моста — ровно так же, как `kz.corpus.incometax`, с той разницей,
+// что там окно повторяет норму Кодекса, а здесь замещает молчание закона.
+// Прочтение названо в `README.ru.md` строкой очереди: договор, заключаемый
+// 31 декабря на год вперёд, у этого прочтения считается по МРП года
+// заключения, и текст закона другого прочтения не запрещает.
+//
+// ОКНО ОДНО, и это тоже честность, а не экономия: закреплённая редакция
+// действует с 23 июля 2026 года (sources.law, DECISION-0339), закон о республиканском
+// бюджете закреплён на 2026 год, и за пределами их пересечения пакет не
+// отвечает НИЧЕГО вместо того, чтобы отвечать по чужому показателю.
+relation applicable_mrp(amount: Money) kind institutional {
+    label ru-KZ official "месячный расчётный показатель, применяемый для расчёта страховой премии";
+}
+
+@source(LAW_446_ART19)
+rule ApplicableMrp2026(amount: Money) strict {
+    label ru-KZ official "За расчёты 2026 года применяется месячный расчётный показатель, установленный законом о республиканском бюджете на 2026 – 2028 годы";
+    effective [@2026-01-01, @2027-01-01);
+    when kz.corpus.budget::mrp(2026, amount);
+    then applicable_mrp(amount);
+}
+
+// ============================================================================
+// Сущности статей 5, 24, 26 и 28–29 (добавлены 05.09.2026)
+// ============================================================================
+//
+// Раньше пакет знал одну сущность — договор: он отвечал только о цене полиса.
+// Обязанность страховать, страховая сумма, порядок выплаты, регресс и отказ
+// говорят о ЛЮДЯХ и СОБЫТИИ, и потому сущности заведены здесь, а не в модуле:
+// каждая нужна не менее чем двум модулям (владелец — статьям 5 и 28,
+// потерпевший — 24 и 26, страховщик — 26, 28 и 29).
+//
+// Своего `Person` пакет НЕ заводит: хаб лиц корпуса — `kz.corpus.civilcode`, и
+// когда мост туда понадобится, `VehicleOwner` объявляется его подтипом. Пока
+// моста нет, дублировать хаб импортом ради одного отношения было бы дороже,
+// чем назвать роль своим именем.
+
+// Транспортное средство — ОБЩИЙ тип словаря `vocab.vehicle`, а не собственная
+// сущность закона (13.09.2026). Своего у закона здесь ничего не было: ни
+// атрибута, ни нормы о самом ТС — только роль аргумента у полутора десятков
+// отношений статей 5, 19, 22 и 27. Алиас без `pub`: за границу пакета тип не
+// экспортировался и раньше, а соседу он доступен прямо из словаря.
+type Vehicle = vocab.vehicle::Vehicle;
+
+entity VehicleOwner {
+    label ru-KZ official "владелец транспортного средства (страхователь, застрахованный)";
+}
+
+entity Insurer {
+    label ru-KZ official "страховщик";
+}
+
+entity Victim {
+    label ru-KZ official "потерпевший";
+}
+
+entity Beneficiary {
+    label ru-KZ official "выгодоприобретатель";
+}
+
+pub entity TrafficAccident {
+    label ru-KZ official "транспортное происшествие, повлёкшее наступление страхового случая";
+}
+
+// `pub` — требование о выплате есть узел, по которому пакет-мост
+// `kz.corpus.strakhovaya_neustoyka` считает неустойку статьи 353 ГК.
+pub entity PaymentClaim {
+    label ru-KZ official "требование о страховой выплате с приложенными документами (статья 25)";
+}
+
+// --- Перечисления статьи 5 ---------------------------------------------------
+
+enum CompulsoryInsuranceGround {
+    label ru-KZ official "основание, по которому гражданско-правовая ответственность владельца подлежит обязательному страхованию (статья 5 пункт 1)";
+    RegisteredVehicle;
+    TemporaryEntry;
+    DeliveredUnderOwnPower;
+}
+
+enum InternationalMovementStatus {
+    label ru-KZ official "положение транспортного средства относительно международного движения по территории Республики Казахстан (статья 5 пункт 4)";
+    InInternationalMovement;
+    NotInInternationalMovement;
+}
+
+// --- Перечисление статьи 24 --------------------------------------------------
+//
+// Пункт 1 подпункт 1) разводит ПЯТЬ последствий вреда жизни или здоровью с
+// разными предельными суммами и ШЕСТОЕ — увечье без установления инвалидности,
+// у которого предел не абсолютный, а «в размере фактических расходов, но не
+// более 300». Шестое стоит в том же перечислении: это последствие того же
+// рода, и правило о нём отличается не входом, а формулой.
+enum HarmToLifeOrHealthOutcome {
+    label ru-KZ official "последствие вреда, причинённого жизни или здоровью потерпевшего (статья 24 пункт 1 подпункт 1))";
+    Death;
+    DisabilityGroupOne;
+    DisabilityGroupTwo;
+    DisabilityGroupThree;
+    ChildWithDisability;
+    InjuryWithoutDisability;
+}
+
+// --- Перечисление статьи 25 --------------------------------------------------
+//
+// Пункт 2 перечисляет ВОСЕМЬ подпунктов, из которых 1), 5) и 8) исключены
+// поправками 2015 и 2018 годов — от них в закреплённом тексте осталась одна
+// строка об исключении. Исключённые подпункты в перечисление НЕ входят:
+// перечисление есть состав действующей нормы, а не история её редакций.
+enum RequiredDocumentKind {
+    label ru-KZ official "вид документа, прилагаемого к заявлению о страховой выплате (статья 25 пункт 2)";
+    HarmAndAmountEvidence;
+    IncapacityOrDisabilityCertificate;
+    DeathCertificate;
+    BeneficiaryEntitlementDocument;
+    HarmAssessmentApplication;
+    BeneficiaryIdentityDocument;
+    LossPreventionExpensesEvidence;
+}
+
+// --- Перечисления статей 28 и 29 ---------------------------------------------
+//
+// Три перечисления, а не одно, и это юридическое различие, а не порядок:
+// основания регресса (статья 28 пункт 1) обращены к страхователю и не
+// затрагивают потерпевшего; основания ОТКАЗА (статья 29 пункты 1 и 2)
+// оставляют страховщику право отказать полностью либо частично; основания
+// ОСВОБОЖДЕНИЯ (статья 29 пункт 5) действуют без его решения вовсе.
+// Сложить их в один перечень значило бы стереть, кто и что решает.
+enum RecourseGround {
+    label ru-KZ official "основание права обратного требования страховщика к страхователю (застрахованному) (статья 28 пункт 1)";
+    IntentionalActs;
+    DrivingUnderIntoxication;
+    NoRightToDrive;
+    KnownTechnicalFaults;
+    UseOutsideTechnicalPurpose;
+    IntentionalFailureToReduceLosses;
+    LeftAccidentScene;
+    RefusedIntoxicationExamination;
+}
+
+enum RefusalGround {
+    label ru-KZ official "основание полного либо частичного отказа страховщика в страховой выплате (статья 29 пункты 1 и 2)";
+    BeneficiaryIntentionalActs;
+    BeneficiaryUnlawfulActs;
+    CompensationReceivedFromTortfeasor;
+    CompetitionsTestsOrDrivingTraining;
+    HarmDuringLoadingOrUnloading;
+    HarmToValuables;
+    VictimBreachedInspectionDuties;
+    SimplifiedProcedureDocumentsNonCompliant;
+}
+
+enum ReleaseGround {
+    label ru-KZ official "основание освобождения страховщика от осуществления страховой выплаты (статья 29 пункт 5)";
+    NuclearExplosionOrRadiation;
+    MilitaryAction;
+    CivilWarOrCivilUnrest;
+}
+
+
+// --- Мост словаря территорий (13.09.2026) ------------------------------------
+//
+// ЗАЧЕМ. Размеры поправочных коэффициентов пункта 3-1 утверждает АРРФР по ТЕМ
+// ЖЕ двадцати территориям, что перечислены в пункте 3, но НАЗЫВАЕТ их своим
+// текстом. Сосед, которому нужно привязать величину к территории, назвать
+// члена этого перечисления не может: `pub enum` членов НЕ экспортирует
+// (§24; та же оговорка записана в `fiqh/nikah`, «словарь без слов»).
+//
+// Поэтому перечисление закона связывается с общим словарём регионов
+// `vocab.geo` (DECISION-0139): двадцать строк — двадцать нормативных фактов,
+// у каждой явный `id`. Соответствие есть решение о ПРАВЕ, а не о похожести
+// строк: пункт 3 и таблица АРРФР перечисляют один и тот же набор территорий
+// Республики Казахстан, и каждая строка сверена с обеими таблицами глазами
+// автора, а сами величины — независимым чтением
+// `kz/popravochnye-koeffitsienty/tools/tables.py`.
+pub relation territoriya_registratsii_regiona(
+    territory: RegistrationTerritory, region: vocab.geo::Region
+) kind institutional {
+    key(territory);
+    label ru-KZ official "территория регистрации транспортного средства (статья 19 пункт 3) как регион общего словаря";
+}
+
+@source(LAW_446_ART19) {
+    assert "region-AlmatyOblast": territoriya_registratsii_regiona(AlmatyOblast, vocab.geo::ALMATY);  // Алматинская область
+    assert "region-TurkestanOblast": territoriya_registratsii_regiona(TurkestanOblast, vocab.geo::TURKISTAN);  // Туркестанская область
+    assert "region-EastKazakhstanOblast": territoriya_registratsii_regiona(EastKazakhstanOblast, vocab.geo::EAST_KAZAKHSTAN);  // Восточно-Казахстанская область
+    assert "region-KostanayOblast": territoriya_registratsii_regiona(KostanayOblast, vocab.geo::KOSTANAY);  // Костанайская область
+    assert "region-KaragandaOblast": territoriya_registratsii_regiona(KaragandaOblast, vocab.geo::KARAGANDA);  // Карагандинская область
+    assert "region-NorthKazakhstanOblast": territoriya_registratsii_regiona(NorthKazakhstanOblast, vocab.geo::NORTH_KAZAKHSTAN);  // Северо-Казахстанская область
+    assert "region-AkmolaOblast": territoriya_registratsii_regiona(AkmolaOblast, vocab.geo::AKMOLA);  // Акмолинская область
+    assert "region-PavlodarOblast": territoriya_registratsii_regiona(PavlodarOblast, vocab.geo::PAVLODAR);  // Павлодарская область
+    assert "region-ZhambylOblast": territoriya_registratsii_regiona(ZhambylOblast, vocab.geo::ZHAMBYL);  // Жамбылская область
+    assert "region-AktobeOblast": territoriya_registratsii_regiona(AktobeOblast, vocab.geo::AKTOBE);  // Актюбинская область
+    assert "region-WestKazakhstanOblast": territoriya_registratsii_regiona(WestKazakhstanOblast, vocab.geo::WEST_KAZAKHSTAN);  // Западно-Казахстанская область
+    assert "region-KyzylordaOblast": territoriya_registratsii_regiona(KyzylordaOblast, vocab.geo::KYZYLORDA);  // Кызылординская область
+    assert "region-AtyrauOblast": territoriya_registratsii_regiona(AtyrauOblast, vocab.geo::ATYRAU);  // Атырауская область
+    assert "region-MangistauOblast": territoriya_registratsii_regiona(MangistauOblast, vocab.geo::MANGYSTAU);  // Мангистауская область
+    assert "region-AbayOblast": territoriya_registratsii_regiona(AbayOblast, vocab.geo::ABAI);  // Абайская область
+    assert "region-UlytauOblast": territoriya_registratsii_regiona(UlytauOblast, vocab.geo::ULYTAU);  // Улытауская область
+    assert "region-ZhetisuOblast": territoriya_registratsii_regiona(ZhetisuOblast, vocab.geo::ZHETISU);  // Жетысуская область
+    assert "region-Almaty": territoriya_registratsii_regiona(Almaty, vocab.geo::ALMATY_CITY);  // город Алматы
+    assert "region-Astana": territoriya_registratsii_regiona(Astana, vocab.geo::ASTANA);  // город Астана
+    assert "region-Shymkent": territoriya_registratsii_regiona(Shymkent, vocab.geo::SHYMKENT);  // город Шымкент
+}
+
+
+// --- Мост словаря транспортных средств (13.09.2026) --------------------------
+//
+// ЗАЧЕМ. Перечисление `VehicleType` пункта 6 статьи 19 — СРЕЗ закона, а не
+// домен видов: автобусы оно делит порогом шестнадцати мест, потому что от
+// порога зависит коэффициент, а не потому, что автобус до и свыше шестнадцати
+// мест — разные виды транспорта. Порог остаётся нормой этого закона (§38,
+// перечисление в акте), а связь среза с общим доменом выражается отношением —
+// тем же приёмом, каким пункт 3 связан с `vocab.geo` выше.
+//
+// КЛЮЧА ПО `vehicle_type` ЗДЕСЬ НЕТ, и это следствие ТЕКСТА статьи. Шестая
+// строка таблицы называет «троллейбусы и трамваи» ОДНОЙ строкой с одним
+// коэффициентом, а словарь знает их двумя видами (`TROLLEYBUS` и `TRAM`):
+// закон их не различает, словарь различает. Ключ `key(vehicle_type)` объявил
+// бы соответствие функциональным и превратил бы две верные ассерции в
+// диагностику конфликта. Обратное направление функционально не более: два
+// вида автобуса среза отображаются в один `BUS`.
+relation vehicle_type_kind(
+    vehicle_type: VehicleType, kind: vocab.vehicle::Kind
+) kind institutional {
+    label ru-KZ official "тип транспортного средства (статья 19 пункт 6) как вид общего словаря";
+}
+
+@source(LAW_446_ART19) {
+    assert "kind-PassengerCar": vehicle_type_kind(PassengerCar, vocab.vehicle::PASSENGER_CAR);  // легковые автомобили
+    assert "kind-BusUpToSixteenSeats": vehicle_type_kind(BusUpToSixteenSeats, vocab.vehicle::BUS);  // автобусы до 16 мест
+    assert "kind-BusOverSixteenSeats": vehicle_type_kind(BusOverSixteenSeats, vocab.vehicle::BUS);  // автобусы свыше 16 мест
+    assert "kind-FreightVehicle": vehicle_type_kind(FreightVehicle, vocab.vehicle::FREIGHT_VEHICLE);  // грузовые автомобили
+    assert "kind-TrolleybusOrTram-trolleybus": vehicle_type_kind(TrolleybusOrTram, vocab.vehicle::TROLLEYBUS);  // троллейбусы
+    assert "kind-TrolleybusOrTram-tram": vehicle_type_kind(TrolleybusOrTram, vocab.vehicle::TRAM);  // трамваи
+    assert "kind-MotorVehicle": vehicle_type_kind(MotorVehicle, vocab.vehicle::MOTOR_VEHICLE);  // мототранспорт
+    assert "kind-Trailer": vehicle_type_kind(Trailer, vocab.vehicle::TRAILER);  // прицепы и полуприцепы
+}

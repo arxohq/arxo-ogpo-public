@@ -1,0 +1,118 @@
+// Бюджетный кодекс Республики Казахстан от 15.03.2025 № 171-VIII.
+// Общие типы пакета — только то, что нужно ДВУМ И БОЛЕЕ модулям
+// (docs/PACKAGE-LAYOUT.ru.md). Предметные отношения объявлены при своих
+// разделах: константы и словарь живут при модуле-владельце.
+//
+// Разрез модулей ЗЕРКАЛИТ источник: кодекс структурирован разделами
+// (8 штук) и главами (33), и каждый файл 01…08 — один раздел. Номер в имени
+// файла источниковый, глобального счётчика нет.
+
+language "law.core" version "0.2";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// --- Действующие лица бюджетного процесса (ст. 5) ---------------------------
+
+entity Body {
+    label ru-KZ official "участник бюджетного процесса";
+}
+
+entity Administrator {
+    label ru-KZ official "администратор бюджетных программ";
+}
+
+entity Budget {
+    label ru-KZ official "бюджет";
+}
+
+entity BudgetProgramme {
+    label ru-KZ official "бюджетная программа";
+}
+
+entity Reserve {
+    label ru-KZ official "резерв бюджета";
+}
+
+entity Transfer {
+    label ru-KZ official "трансферт";
+}
+
+entity BudgetCredit {
+    label ru-KZ official "бюджетный кредит";
+}
+
+entity Guarantee {
+    label ru-KZ official "государственная гарантия либо поручительство государства";
+}
+
+entity InvestmentProject {
+    label ru-KZ official "государственный инвестиционный проект";
+}
+
+entity Grant {
+    label ru-KZ official "грант";
+}
+
+entity QuasiEntity {
+    label ru-KZ official "субъект квазигосударственного сектора";
+}
+
+entity Draft {
+    label ru-KZ official "проект бюджета либо проект решения о бюджете";
+}
+
+entity Report {
+    label ru-KZ official "отчёт об исполнении бюджета либо отчёт участника бюджетного процесса";
+}
+
+entity Proposal {
+    label ru-KZ official "предложение, вносимое участником бюджетного процесса";
+}
+
+// --- Уровни бюджета (ст. 7) -------------------------------------------------
+// Перечисление, а не свободная строка: уровень определяет и состав
+// поступлений (гл. 6), и состав расходов (гл. 7), и то, чей это бюджет.
+
+enum BudgetLevel {
+    Republican,
+    Regional,
+    District,
+    Rural;
+    label ru-KZ official "уровень бюджета";
+}
+
+// --- Виды резервов (ст. 19, ст. 20) -----------------------------------------
+
+enum ReserveKind {
+    PresidentInitiatives,
+    Government,
+    LocalExecutive;
+    label ru-KZ official "вид резерва бюджета";
+}
+
+// --- Сквозной словарь -------------------------------------------------------
+// Эти отношения читают модули РАЗНЫХ разделов, поэтому они здесь, а не при
+// первом использовавшем.
+
+relation budget_level(b: Budget, level: BudgetLevel) kind institutional {
+    key(b);
+    label ru-KZ official "бюджет относится к названному уровню бюджетной системы";
+}
+
+relation budget_year(b: Budget, year: Integer) kind institutional {
+    key(b);
+    label ru-KZ official "бюджет утверждён на названный финансовый год";
+}
+
+relation programme_of(p: BudgetProgramme, b: Budget) kind institutional {
+    label ru-KZ official "бюджетная программа предусмотрена названным бюджетом";
+}
+
+relation programme_administrator(p: BudgetProgramme, a: Administrator) kind institutional {
+    label ru-KZ official "бюджетную программу администрирует названный администратор бюджетных программ";
+}
+
+relation programme_expenditure(p: BudgetProgramme, amount: Money) kind empirical {
+    key(p);
+    label ru-KZ official "объём расходов бюджетной программы составляет названную сумму";
+}

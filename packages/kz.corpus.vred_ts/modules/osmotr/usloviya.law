@@ -1,0 +1,63 @@
+// Conditions for the feasibility and admissibility of the inspection: clause 7.
+//
+// PURPOSE. The seven conditions for the feasibility of the inspection and a separate condition
+// for admissibility when determining the cost of the restorative repair.
+//
+// SOURCE PROVISIONS: clause 7 (first and second parts).
+//
+// MODEL BOUNDARY. The second part of clause 7 adds a SEPARATE condition for exactly
+// one case, so the cases are kept apart by rules rather than by `or` in the body (§206):
+// they have different grounds, and they must not merge in the proof.
+
+// --- Clause 7. Conditions for the feasibility of the inspection -----------------------------------
+relation dostup_k_ts_besprepyatstvennyy(r: RaschetVreda) kind empirical { label ru official "Обеспечен беспрепятственный доступ к транспортному средству"; }
+relation identifikatsiya_ts_provodima(r: RaschetVreda) kind empirical { label ru official "Возможно проведение идентификации транспортного средства"; }
+relation probeg_po_odometru_ustanovim(r: RaschetVreda) kind empirical { label ru official "Возможно установление величины пробега по показанию одометра"; }
+relation komplektnost_ustanovima(r: RaschetVreda) kind empirical { label ru official "Возможно установление комплектности, комплектации и наличия дополнительного оборудования"; }
+relation perechen_defektov_ustanovim(r: RaschetVreda) kind empirical { label ru official "Возможно установление перечня и объёма дефектов и повреждений, обусловленных данным происшествием"; }
+relation fotosemka_povrezhdeniy_provodima(r: RaschetVreda) kind empirical { label ru official "Возможно проведение фотосъёмки повреждений в соответствии с установленными требованиями"; }
+relation priznaki_prezhnikh_remontov_ustanovimy(r: RaschetVreda) kind empirical { label ru official "Возможно установление признаков ранее проведённых ремонтов и замены агрегатов без разбора транспортного средства"; }
+relation osmotr_vozmozhen(r: RaschetVreda) kind institutional { label ru official "Соблюдены все условия возможности проведения осмотра транспортного средства"; }
+relation opredelyaetsya_stoimost_vosstanovitelnogo_remonta(r: RaschetVreda) kind empirical { label ru official "Расчёт ведётся для определения стоимости восстановительного ремонта транспортного средства"; }
+relation dokumenty_o_povrezhdeniyakh_v_dtp_predstavleny(r: RaschetVreda) kind empirical { label ru official "Представлены документы, подтверждающие получение повреждений в данном дорожно-транспортном происшествии"; }
+relation osmotr_dopustim(r: RaschetVreda) kind institutional { label ru official "Проведение осмотра транспортного средства допустимо"; }
+
+@source(VRED_TS_PT_7) {
+    rule OsmotrVozmozhen(r: RaschetVreda) strict {
+        label ru official "Пункт 7. Осмотр проводится при одновременном соблюдении семи названных условий возможности";
+        when dostup_k_ts_besprepyatstvennyy(r);
+        when identifikatsiya_ts_provodima(r);
+        when probeg_po_odometru_ustanovim(r);
+        when komplektnost_ustanovima(r);
+        when perechen_defektov_ustanovim(r);
+        when fotosemka_povrezhdeniy_provodima(r);
+        when priznaki_prezhnikh_remontov_ustanovimy(r);
+        then osmotr_vozmozhen(r);
+    }
+
+    // The second part of clause 7 adds a SEPARATE condition for exactly one case —
+    // determining the cost of the restorative repair. Two rules rather than `or` in
+    // the body (§206): the cases have different grounds, and they must not
+    // merge in the proof.
+    rule OsmotrDopustimPriOpredeleniiStoimostiRemonta(r: RaschetVreda) strict {
+        label ru official "Пункт 7. При определении стоимости восстановительного ремонта осмотр допустим при наличии документов о получении повреждений в данном происшествии";
+        when osmotr_vozmozhen(r);
+        when opredelyaetsya_stoimost_vosstanovitelnogo_remonta(r);
+        when dokumenty_o_povrezhdeniyakh_v_dtp_predstavleny(r);
+        then osmotr_dopustim(r);
+    }
+
+    rule OsmotrDopustimVneOpredeleniyaStoimostiRemonta(r: RaschetVreda) strict {
+        label ru official "Пункт 7. Вне определения стоимости восстановительного ремонта осмотр допустим при соблюдении условий возможности";
+        when osmotr_vozmozhen(r);
+        when not opredelyaetsya_stoimost_vosstanovitelnogo_remonta(r);
+        then osmotr_dopustim(r);
+    }
+
+    rule OsmotrNedopustimBezDokumentovODtp(r: RaschetVreda) defeasible {
+        label ru official "Пункт 7. При определении стоимости восстановительного ремонта осмотр без документов о получении повреждений в данном происшествии недопустим";
+        when opredelyaetsya_stoimost_vosstanovitelnogo_remonta(r);
+        when not dokumenty_o_povrezhdeniyakh_v_dtp_predstavleny(r);
+        then not osmotr_dopustim(r);
+    }
+}

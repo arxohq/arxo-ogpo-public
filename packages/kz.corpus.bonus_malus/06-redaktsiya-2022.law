@@ -1,0 +1,213 @@
+// РЕДАКЦИЯ ПРАВИЛ 2022–2025 ГОДОВ (постановление АРРФР от 23.11.2022 № 102):
+// ПЯТЬ ПУНКТОВ И ПРИЛОЖЕНИЕ ИЗ ПЯТНАДЦАТИ СТРОК.
+//
+// Редакция закреплена состоянием портала «Әділет» (`sources.law`, блок
+// генератора `tools/build_rules_states.py`) и действует в окне
+// [2022-11-23, 2025-04-08) — по состояниям портала, см. DECISION-0333. Нормы
+// действующей редакции стоят под якорями `BM_POINT_*`/`BM_ANNEX_TABLE` и в
+// этом окне по §92 усл. 3 не участвуют; нормы этого модуля стоят под якорями
+// `BM2022_*` и не участвуют вне его. Отношения — те же, что у действующей
+// редакции: класс, столбец, класс по таблице, присвоенный класс, коэффициент.
+//
+// ЧЕМ РЕДАКЦИЯ 2022 ГОДА ОТЛИЧАЕТСЯ (по тексту, не по памяти):
+//   * самый низкий класс — М; классов М1 и М2 нет (пункт 3, приложение);
+//   * модификаторов пунктов 10–13 действующей редакции нет вовсе, как нет
+//     пунктов 7 (гибель), 14 (опьянение) и 16 (собственная оценка);
+//   * при первом заключении договора — класс 3 без повышающего коэффициента
+//     (пункт 2, часть вторая); при временном въезде — класс 3 (пункт 4);
+//   * ЮРИДИЧЕСКИЕ ЛИЦА и лица, чья ответственность наступила в случаях
+//     пункта 5 статьи 11 и пункта 5 статьи 12 Закона, из системы исключены
+//     (пункт 2, часть первая): класс им Правилами не присваивается, и пакет
+//     на такой договор коэффициента не выводит — это ответ «право
+//     молчит», а не пропуск;
+//   * повышение класса не знает оговорки о лишении права управления
+//     (пункт 3), а основание — страховой отчёт из базы данных (пункт 5).
+//
+// ПЯТНАДЦАТЬ КОЭФФИЦИЕНТОВ, ПЯТНАДЦАТЬ МЕСТ И СЕМЬДЕСЯТ ПЯТЬ ПЕРЕХОДОВ НАБРАНЫ
+// НЕ ГЛАЗАМИ: `tools/annex_table.py --state 2022 --emit` печатает блок из
+// закреплённых байтов `sources/bonus-malus/v2022-11-23.txt`, `--check --state
+// 2022` сверяет. У каждого факта явный id (§207): те же литералы стоят под
+// якорем действующей редакции, и без id их digest был бы неоднозначен.
+
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// --- Понятия, которые редакция 2022 года вводит и не определяет ---------------
+
+pub relation pervoe_zaklyuchenie_dogovora(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "договор обязательного страхования заключается страхователем впервые (редакция 2022 года, пункт 2, часть вторая; понятие Правила той редакции не определяют — входит фактом дела)";
+}
+
+pub relation otvetstvennost_po_p5_st11_ili_p5_st12(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "гражданско-правовая ответственность физического лица наступила в случаях, предусмотренных пунктом 5 статьи 11 и пунктом 5 статьи 12 Закона об обязательном страховании ответственности владельцев транспортных средств (редакция 2022 года, пункт 2, часть первая)";
+}
+
+// --- Пункт 5: основание — страховой отчёт из базы данных ----------------------
+
+@source(BM2022_POINT_5) {
+    rule SluchaevPoSvedeniyamBazy2022(dogovor: Dogovor, chislo: Integer) strict {
+        label ru-KZ official "Пункт 5 (редакция 2022 года). Основанием для применения страховщиком коэффициентов является страховой отчёт, содержащий информацию о страховом случае (страховых случаях), произошедшем (произошедших) по вине страхователя (застрахованного), полученный страховщиком из базы данных";
+        when osnovanie_iz_bazy_dannykh(dogovor, InformatsiyaOSluchayakh);
+        when sluchaev_v_baze_dannykh(dogovor, chislo);
+        then sluchaev_po_vine(dogovor, chislo);
+    }
+
+    rule SluchaevNetPoPodtverzhdennomuOtsutstviyu2022(dogovor: Dogovor) strict {
+        label ru-KZ official "Пункт 5 (редакция 2022 года). Основанием является также страховой отчёт об отсутствии информации о страховом случае (страховых случаях) по вине страхователя (застрахованного)";
+        when osnovanie_iz_bazy_dannykh(dogovor, OtsutstvieInformatsiiOSluchayakh);
+        then sluchaev_po_vine(dogovor, 0);
+    }
+}
+
+// --- Пункт 3 и приложение: столбец, повышение, класс по таблице ---------------
+
+@source(BM2022_POINT_3) {
+    rule StolbetsPoChisluSluchaev2022(dogovor: Dogovor, chislo: Integer) strict {
+        label ru-KZ official "Приложение (редакция 2022 года): столбец выбирается по числу страховых случаев, произошедших по вине страхователя (застрахованного)";
+        when sluchaev_po_vine(dogovor, chislo);
+        when chislo < 4;
+        then stolbets_perekhoda(dogovor, chislo);
+    }
+
+    rule StolbetsChetyreIBolee2022(dogovor: Dogovor, chislo: Integer) strict {
+        label ru-KZ official "Приложение (редакция 2022 года): четыре и более страховых случая читаются последним столбцом";
+        when sluchaev_po_vine(dogovor, chislo);
+        when chislo >= 4;
+        then stolbets_perekhoda(dogovor, 4);
+    }
+
+    rule PovyshenieDopustimo2022(dogovor: Dogovor, dney: Integer) strict {
+        label ru-KZ official "Пункт 3 (редакция 2022 года). Изменение класса на более высокий класс осуществляется при выполнении следующих условий: отсутствие информации о страховом случае (страховых случаях) по вине страхователя (застрахованного) и наличие информации в базе данных о не менее 270 (двухста семидесяти) календарных днях со дня последнего изменения класса, в течение которых ответственность была застрахована";
+        when sluchaev_po_vine(dogovor, 0);
+        when dney_strakhovaniya_s_poslednego_izmeneniya(dogovor, dney);
+        when dney >= 270;
+        then povyshenie_klassa_dopustimo(dogovor);
+    }
+
+    rule KlassPoTablitsePriPovyshenii2022(dogovor: Dogovor, deystvuyushchiy: Klass,
+                                          novyy: Klass) strict {
+        label ru-KZ official "Пункт 3 и приложение (редакция 2022 года): при нуле страховых случаев и соблюдении условий повышения класс меняется на более высокий согласно приложению";
+        when povyshenie_klassa_dopustimo(dogovor);
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when perekhod_klassa(deystvuyushchiy, 0, novyy);
+        then klass_po_tablitse(dogovor, novyy);
+    }
+
+    rule KlassBezPovysheniya2022(dogovor: Dogovor, deystvuyushchiy: Klass,
+                                 dney: Integer) strict {
+        label ru-KZ official "Пункт 3 (редакция 2022 года). При отсутствии страховых случаев, но без информации о 270 календарных днях страхования со дня последнего изменения класса, класс на более высокий не меняется";
+        when sluchaev_po_vine(dogovor, 0);
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when dney_strakhovaniya_s_poslednego_izmeneniya(dogovor, dney);
+        when dney < 270;
+        then klass_po_tablitse(dogovor, deystvuyushchiy);
+    }
+
+    rule KlassPoTablitsePriSnizhenii2022(dogovor: Dogovor, deystvuyushchiy: Klass,
+                                         stolbets: Integer, novyy: Klass) strict {
+        label ru-KZ official "Пункт 3 и приложение (редакция 2022 года): при наличии страхового случая (страховых случаев) по вине страхователя (застрахованного) класс изменяется на более низкий согласно приложению, до самого низкого — М";
+        when stolbets_perekhoda(dogovor, stolbets);
+        when stolbets >= 1;
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when perekhod_klassa(deystvuyushchiy, stolbets, novyy);
+        then klass_po_tablitse(dogovor, novyy);
+    }
+}
+
+// --- Пункты 2 и 4: присвоенный класс -------------------------------------------
+//
+// Исключение пункта 2 (часть первая) стоит посылкой КАЖДОГО правила
+// присвоения: юридическому лицу и лицам пункта 5 статьи 11 / пункта 5 статьи
+// 12 Закона класс этой редакцией не присваивается вовсе.
+
+@source(BM2022_POINT_2) {
+    rule PrisvoenieVpervye2022(dogovor: Dogovor) strict {
+        label ru-KZ official "Пункт 2, часть вторая (редакция 2022 года). При заключении договора обязательного страхования ответственности владельцев транспортных средств впервые страхователю присваивается класс 3";
+        when pervoe_zaklyuchenie_dogovora(dogovor);
+        when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+        when not_known(strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor));
+        when not_known(otvetstvennost_po_p5_st11_ili_p5_st12(dogovor));
+        then prisvoennyy_klass(dogovor, Klass3);
+    }
+
+    rule PrisvoeniePoPrilozheniyu2022(dogovor: Dogovor, klass: Klass) strict {
+        label ru-KZ official "Пункт 2, часть первая (редакция 2022 года). Коэффициенты с присвоением соответствующего класса устанавливаются для страхователя (застрахованного) в соответствии с приложением к Правилам, за исключением юридических лиц и физических лиц, чья ответственность наступила в случаях пункта 5 статьи 11 и пункта 5 статьи 12 Закона";
+        when klass_po_tablitse(dogovor, klass);
+        when not_known(pervoe_zaklyuchenie_dogovora(dogovor));
+        when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+        when not_known(strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor));
+        when not_known(otvetstvennost_po_p5_st11_ili_p5_st12(dogovor));
+        then prisvoennyy_klass(dogovor, klass);
+    }
+}
+
+@source(BM2022_POINT_4)
+rule PrisvoenieVremennogoVezda2022(dogovor: Dogovor) strict {
+    label ru-KZ official "Пункт 4 (редакция 2022 года). При заключении договора обязательного страхования с владельцами транспортных средств, временно въехавших (ввезенных) на территорию Республики Казахстан, присваивается класс 3";
+    when vremennyy_vezd_na_territoriyu_rk(dogovor);
+    when not_known(strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor));
+    when not_known(otvetstvennost_po_p5_st11_ili_p5_st12(dogovor));
+    then prisvoennyy_klass(dogovor, Klass3);
+}
+
+// --- Приложение: коэффициент, места и переходы ---------------------------------
+
+@source(BM2022_ANNEX_TABLE) {
+    rule KoeffitsientPoPrilozheniyu2022(dogovor: Dogovor, klass: Klass,
+                                        bazovyy: Decimal) strict {
+        label ru-KZ official "Коэффициент есть размер коэффициента присвоенного класса, установленный приложением к Правилам (редакция 2022 года); повышающих коэффициентов эта редакция не знает";
+        when prisvoennyy_klass(dogovor, klass);
+        when koeffitsient_klassa(klass, bazovyy);
+        then koeffitsient_bonus_malus(dogovor, bazovyy);
+    }
+
+    assert "bm2022-koef-KlassM": koeffitsient_klassa(KlassM, 2.45);
+    assert "bm2022-koef-Klass0": koeffitsient_klassa(Klass0, 2.30);
+    assert "bm2022-koef-Klass1": koeffitsient_klassa(Klass1, 1.55);
+    assert "bm2022-koef-Klass2": koeffitsient_klassa(Klass2, 1.40);
+    assert "bm2022-koef-Klass3": koeffitsient_klassa(Klass3, 1.00);
+    assert "bm2022-koef-Klass4": koeffitsient_klassa(Klass4, 0.95);
+    assert "bm2022-koef-Klass5": koeffitsient_klassa(Klass5, 0.90);
+    assert "bm2022-koef-Klass6": koeffitsient_klassa(Klass6, 0.85);
+    assert "bm2022-koef-Klass7": koeffitsient_klassa(Klass7, 0.80);
+    assert "bm2022-koef-Klass8": koeffitsient_klassa(Klass8, 0.75);
+    assert "bm2022-koef-Klass9": koeffitsient_klassa(Klass9, 0.70);
+    assert "bm2022-koef-Klass10": koeffitsient_klassa(Klass10, 0.65);
+    assert "bm2022-koef-Klass11": koeffitsient_klassa(Klass11, 0.60);
+    assert "bm2022-koef-Klass12": koeffitsient_klassa(Klass12, 0.55);
+    assert "bm2022-koef-Klass13": koeffitsient_klassa(Klass13, 0.50);
+
+    assert "bm2022-mesto-KlassM": poryadok_klassa(KlassM, 1);
+    assert "bm2022-mesto-Klass0": poryadok_klassa(Klass0, 2);
+    assert "bm2022-mesto-Klass1": poryadok_klassa(Klass1, 3);
+    assert "bm2022-mesto-Klass2": poryadok_klassa(Klass2, 4);
+    assert "bm2022-mesto-Klass3": poryadok_klassa(Klass3, 5);
+    assert "bm2022-mesto-Klass4": poryadok_klassa(Klass4, 6);
+    assert "bm2022-mesto-Klass5": poryadok_klassa(Klass5, 7);
+    assert "bm2022-mesto-Klass6": poryadok_klassa(Klass6, 8);
+    assert "bm2022-mesto-Klass7": poryadok_klassa(Klass7, 9);
+    assert "bm2022-mesto-Klass8": poryadok_klassa(Klass8, 10);
+    assert "bm2022-mesto-Klass9": poryadok_klassa(Klass9, 11);
+    assert "bm2022-mesto-Klass10": poryadok_klassa(Klass10, 12);
+    assert "bm2022-mesto-Klass11": poryadok_klassa(Klass11, 13);
+    assert "bm2022-mesto-Klass12": poryadok_klassa(Klass12, 14);
+    assert "bm2022-mesto-Klass13": poryadok_klassa(Klass13, 15);
+
+    assert "bm2022-perekhod-KlassM-0": perekhod_klassa(KlassM, 0, Klass0); assert "bm2022-perekhod-KlassM-1": perekhod_klassa(KlassM, 1, KlassM); assert "bm2022-perekhod-KlassM-2": perekhod_klassa(KlassM, 2, KlassM); assert "bm2022-perekhod-KlassM-3": perekhod_klassa(KlassM, 3, KlassM); assert "bm2022-perekhod-KlassM-4": perekhod_klassa(KlassM, 4, KlassM);
+    assert "bm2022-perekhod-Klass0-0": perekhod_klassa(Klass0, 0, Klass1); assert "bm2022-perekhod-Klass0-1": perekhod_klassa(Klass0, 1, KlassM); assert "bm2022-perekhod-Klass0-2": perekhod_klassa(Klass0, 2, KlassM); assert "bm2022-perekhod-Klass0-3": perekhod_klassa(Klass0, 3, KlassM); assert "bm2022-perekhod-Klass0-4": perekhod_klassa(Klass0, 4, KlassM);
+    assert "bm2022-perekhod-Klass1-0": perekhod_klassa(Klass1, 0, Klass2); assert "bm2022-perekhod-Klass1-1": perekhod_klassa(Klass1, 1, KlassM); assert "bm2022-perekhod-Klass1-2": perekhod_klassa(Klass1, 2, KlassM); assert "bm2022-perekhod-Klass1-3": perekhod_klassa(Klass1, 3, KlassM); assert "bm2022-perekhod-Klass1-4": perekhod_klassa(Klass1, 4, KlassM);
+    assert "bm2022-perekhod-Klass2-0": perekhod_klassa(Klass2, 0, Klass3); assert "bm2022-perekhod-Klass2-1": perekhod_klassa(Klass2, 1, Klass1); assert "bm2022-perekhod-Klass2-2": perekhod_klassa(Klass2, 2, KlassM); assert "bm2022-perekhod-Klass2-3": perekhod_klassa(Klass2, 3, KlassM); assert "bm2022-perekhod-Klass2-4": perekhod_klassa(Klass2, 4, KlassM);
+    assert "bm2022-perekhod-Klass3-0": perekhod_klassa(Klass3, 0, Klass4); assert "bm2022-perekhod-Klass3-1": perekhod_klassa(Klass3, 1, Klass1); assert "bm2022-perekhod-Klass3-2": perekhod_klassa(Klass3, 2, KlassM); assert "bm2022-perekhod-Klass3-3": perekhod_klassa(Klass3, 3, KlassM); assert "bm2022-perekhod-Klass3-4": perekhod_klassa(Klass3, 4, KlassM);
+    assert "bm2022-perekhod-Klass4-0": perekhod_klassa(Klass4, 0, Klass5); assert "bm2022-perekhod-Klass4-1": perekhod_klassa(Klass4, 1, Klass2); assert "bm2022-perekhod-Klass4-2": perekhod_klassa(Klass4, 2, Klass1); assert "bm2022-perekhod-Klass4-3": perekhod_klassa(Klass4, 3, KlassM); assert "bm2022-perekhod-Klass4-4": perekhod_klassa(Klass4, 4, KlassM);
+    assert "bm2022-perekhod-Klass5-0": perekhod_klassa(Klass5, 0, Klass6); assert "bm2022-perekhod-Klass5-1": perekhod_klassa(Klass5, 1, Klass3); assert "bm2022-perekhod-Klass5-2": perekhod_klassa(Klass5, 2, Klass1); assert "bm2022-perekhod-Klass5-3": perekhod_klassa(Klass5, 3, KlassM); assert "bm2022-perekhod-Klass5-4": perekhod_klassa(Klass5, 4, KlassM);
+    assert "bm2022-perekhod-Klass6-0": perekhod_klassa(Klass6, 0, Klass7); assert "bm2022-perekhod-Klass6-1": perekhod_klassa(Klass6, 1, Klass4); assert "bm2022-perekhod-Klass6-2": perekhod_klassa(Klass6, 2, Klass2); assert "bm2022-perekhod-Klass6-3": perekhod_klassa(Klass6, 3, KlassM); assert "bm2022-perekhod-Klass6-4": perekhod_klassa(Klass6, 4, KlassM);
+    assert "bm2022-perekhod-Klass7-0": perekhod_klassa(Klass7, 0, Klass8); assert "bm2022-perekhod-Klass7-1": perekhod_klassa(Klass7, 1, Klass4); assert "bm2022-perekhod-Klass7-2": perekhod_klassa(Klass7, 2, Klass2); assert "bm2022-perekhod-Klass7-3": perekhod_klassa(Klass7, 3, KlassM); assert "bm2022-perekhod-Klass7-4": perekhod_klassa(Klass7, 4, KlassM);
+    assert "bm2022-perekhod-Klass8-0": perekhod_klassa(Klass8, 0, Klass9); assert "bm2022-perekhod-Klass8-1": perekhod_klassa(Klass8, 1, Klass5); assert "bm2022-perekhod-Klass8-2": perekhod_klassa(Klass8, 2, Klass2); assert "bm2022-perekhod-Klass8-3": perekhod_klassa(Klass8, 3, KlassM); assert "bm2022-perekhod-Klass8-4": perekhod_klassa(Klass8, 4, KlassM);
+    assert "bm2022-perekhod-Klass9-0": perekhod_klassa(Klass9, 0, Klass10); assert "bm2022-perekhod-Klass9-1": perekhod_klassa(Klass9, 1, Klass5); assert "bm2022-perekhod-Klass9-2": perekhod_klassa(Klass9, 2, Klass2); assert "bm2022-perekhod-Klass9-3": perekhod_klassa(Klass9, 3, Klass1); assert "bm2022-perekhod-Klass9-4": perekhod_klassa(Klass9, 4, KlassM);
+    assert "bm2022-perekhod-Klass10-0": perekhod_klassa(Klass10, 0, Klass11); assert "bm2022-perekhod-Klass10-1": perekhod_klassa(Klass10, 1, Klass6); assert "bm2022-perekhod-Klass10-2": perekhod_klassa(Klass10, 2, Klass3); assert "bm2022-perekhod-Klass10-3": perekhod_klassa(Klass10, 3, Klass1); assert "bm2022-perekhod-Klass10-4": perekhod_klassa(Klass10, 4, KlassM);
+    assert "bm2022-perekhod-Klass11-0": perekhod_klassa(Klass11, 0, Klass12); assert "bm2022-perekhod-Klass11-1": perekhod_klassa(Klass11, 1, Klass6); assert "bm2022-perekhod-Klass11-2": perekhod_klassa(Klass11, 2, Klass3); assert "bm2022-perekhod-Klass11-3": perekhod_klassa(Klass11, 3, Klass1); assert "bm2022-perekhod-Klass11-4": perekhod_klassa(Klass11, 4, KlassM);
+    assert "bm2022-perekhod-Klass12-0": perekhod_klassa(Klass12, 0, Klass13); assert "bm2022-perekhod-Klass12-1": perekhod_klassa(Klass12, 1, Klass6); assert "bm2022-perekhod-Klass12-2": perekhod_klassa(Klass12, 2, Klass3); assert "bm2022-perekhod-Klass12-3": perekhod_klassa(Klass12, 3, Klass1); assert "bm2022-perekhod-Klass12-4": perekhod_klassa(Klass12, 4, KlassM);
+    assert "bm2022-perekhod-Klass13-0": perekhod_klassa(Klass13, 0, Klass13); assert "bm2022-perekhod-Klass13-1": perekhod_klassa(Klass13, 1, Klass7); assert "bm2022-perekhod-Klass13-2": perekhod_klassa(Klass13, 2, Klass3); assert "bm2022-perekhod-Klass13-3": perekhod_klassa(Klass13, 3, Klass1); assert "bm2022-perekhod-Klass13-4": perekhod_klassa(Klass13, 4, KlassM);
+
+}

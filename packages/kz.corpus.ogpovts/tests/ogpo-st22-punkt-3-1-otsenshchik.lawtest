@@ -1,0 +1,106 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 22 п. 3-1: последствия того, что страховщик не определил размер вреда в
+// пятидневный срок части пятой пункта 3.
+//
+// ТРИ СЦЕНАРИЯ, И РАЗНЫЕ ОНИ ПО ВХОДУ, А НЕ ПО ОЖИДАНИЮ:
+//   -a  местный продюсер, порог срока СНИЗУ: акт осмотра 8 сентября, предел
+//       15 сентября, день проверки 15 сентября — срок ещё не пропущен;
+//   -b  местный продюсер, порог СВЕРХУ: тот же вход, день проверки
+//       16 сентября — срок пропущен, право и обязанность возникли;
+//   -c  МОСТ к нормативному правовому акту уполномоченного органа: тот же
+//       вывод приходит из `kz.corpus.vred_ts` предикатом
+//       `pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona`, и результат
+//       оценщика (итоговая величина отчёта о размере вреда) принимается
+//       страховщиком для выплаты. Вывод соседа подан УТВЕРЖДЕНИЕМ ДЕЛА, а не
+//       выведен из его входов: три входа этого вывода
+//       (`osmotr_osushchestvlen_strakhovshchikom`,
+//       `otchet_predostavlen_poterpevshemu`, `den_rassmotreniya_dela`) у
+//       соседа не объявлены `pub`, и через границу пакета не видны —
+//       LDC-E1105 §24. Долг записан в отчёте наряда разделом «Мосты».
+//
+// Даты — по снимку официального календаря 2026 года: в сентябре 2026
+// праздников и перенесённых дней отдыха нет, выходные — суббота и воскресенье.
+// Предел от 8 сентября (вторник): ср 9 (1), чт 10 (2), пт 11 (3), пн 14 (4),
+// вт 15 (5) → 15 сентября. Предел от 1 сентября: 2 (1), 3 (2), 4 (3), 7 (4),
+// 8 (5) → 8 сентября.
+
+context profile KZ_OGPO_SLUCHAY_DEADLINES_31 {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-st22-3-1-srok-ne-propushchen" {
+    given {
+        context extends KZ_OGPO_SLUCHAY_DEADLINES_31 {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st22-31a-a0": inspection_act_drawn_up_on(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-08) { origin case_input; }
+        assert "st22-31a-a1": not property_harm_determined(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st22-31a-a2": harm_determination_review_day(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-15) { origin case_input; }
+    }
+
+    evaluate truth(property_harm_not_determined_in_term(entity_ref("urn:kz:ogpo:accident:a1")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-st22-3-1-srok-propushchen" {
+    given {
+        context extends KZ_OGPO_SLUCHAY_DEADLINES_31 {
+            decision_time @2026-09-16T12:00:00+05:00;
+            knowledge_time @2026-09-16T12:00:00+05:00;
+            legal_time @2026-09-16;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st22-31b-a0": inspection_act_drawn_up_on(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-08) { origin case_input; }
+        assert "st22-31b-a1": not property_harm_determined(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st22-31b-a2": harm_determination_review_day(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-16) { origin case_input; }
+        assert "st22-31b-a3": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st22-31b-a4": harm_assessment_applicant(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+        assert "st22-31b-a5": assessor_services_cost(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), 45000 KZT) { origin case_input; }
+    }
+
+    evaluate truth(property_harm_not_determined_in_term(entity_ref("urn:kz:ogpo:accident:a1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    // Затраты на оценщика возмещаются ВНЕ ЗАВИСИМОСТИ ОТ СТРАХОВОЙ ВЫПЛАТЫ:
+    // дело не называет ни страхового случая, ни выплаты, и обязанность всё
+    // равно действует.
+    evaluate positions();
+    expect position(VozmestitZatratyNaUslugiOtsenshchika, ACTIVE);
+    expect not position(VozmestitZatratyNaUslugiOtsenshchika, SATISFIED);
+    expect position(VospolzovatsyaUslugamiOtsenshchika, ACTIVE);
+}
+
+test "urn:query:ogpo-st22-3-1-most-k-pravilam" {
+    given {
+        context {
+            decision_time @2026-09-09T12:00:00+05:00;
+            knowledge_time @2026-09-09T12:00:00+05:00;
+            legal_time @2026-09-09;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st22-31c-a0": kz.corpus.vred_ts::poterpevshiy_po_raschetu(entity_ref("urn:case:vred:raschet-1"), entity_ref("urn:case:vred:poterpevshiy-1")) { origin case_input; }
+        assert "st22-31c-a1": kz.corpus.vred_ts::pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona(entity_ref("urn:case:vred:poterpevshiy-1"), entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "st22-31c-a2": damage_assessment_for_victim(entity_ref("urn:case:vred:raschet-1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "st22-31c-a3": kz.corpus.vred_ts::otchet_po_raschetu(entity_ref("urn:case:vred:otchet-1"), entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "st22-31c-a4": kz.corpus.vred_ts::itogovaya_stoimost_v_tenge(entity_ref("urn:case:vred:otchet-1"), 350000 KZT) { origin case_input; }
+    }
+
+    evaluate truth(property_harm_not_determined_in_term(entity_ref("urn:kz:ogpo:accident:a1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(assessor_result_accepted_for_payment(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 350000 KZT));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

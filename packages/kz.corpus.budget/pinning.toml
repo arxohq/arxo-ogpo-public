@@ -1,0 +1,20 @@
+# Экземпляр шаблона `pinning` — ДАННЫЕ, не код.
+# Контракт: corpus/templates/pinning/TEMPLATE.ru.md
+# Фрагменты §194 порождаются из закреплённых байтов публикации.
+
+source    = "sources/budget/ru.txt"
+target    = "budget-2026.law"
+edition   = "BUDGET_EDITION"
+prefix    = "BUDGET_ART"
+profile   = "kz-adilet-article"
+kind      = "article"
+
+# Маркеры блока разошлись в семействе на 23 значения без нужды;
+# здесь они явные, чтобы миграция была байтово нейтральной.
+begin     = "// BEGIN GENERATED BUDGET FRAGMENTS"
+end       = "// END GENERATED BUDGET FRAGMENTS"
+
+[[cut]]
+article = "35"
+before  = "Президент\nРеспублики Казахстан"
+reason  = "подпись и приложения не входят во фрагмент: наивная граница утянула бы в статью весь хвост закона"

@@ -1,0 +1,118 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 16 п. 2 пп. 3: уведомить страховщика о транспортном происшествии не
+// позднее ПЯТИ РАБОЧИХ ДНЕЙ со дня, когда о нём стало известно.
+//
+// Расчёт срока вручную: происшествие стало известно 1 сентября 2026 года
+// (вторник). Политика §86 — общий порядок ГК РК (ст. 173, 176): счёт со
+// следующего дня, последний день включается, перенос на ближайший рабочий.
+// Пять рабочих дней: 2 (ср), 3 (чт), 4 (пт), 7 (пн), 8 (вт) сентября.
+// Последний день срока — 8 сентября 2026 года.
+//
+// Календарь §85 — закреплённый снимок официального календаря 2026 года.
+
+context profile KZ_OGPO_DEADLINES {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+// Внутри срока и без уведомления: обязанность ДЕЙСТВУЕТ, но не нарушена.
+test "urn:query:ogpo-p16-3-active" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-04T12:00:00+05:00;
+            knowledge_time @2026-09-04T12:00:00+05:00;
+            legal_time @2026-09-04;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "p16-3a-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p16-3a-a1": accident_under_contract(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "p16-3a-a2": accident_became_known_on(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(UvedomitStrakhovshchikaOProisshestvii, ACTIVE);
+    expect not position(UvedomitStrakhovshchikaOProisshestvii, VIOLATED);
+    expect not position(UvedomitStrakhovshchikaOProisshestvii, SATISFIED);
+}
+
+// Уведомление направлено в срок — обязанность исполнена.
+test "urn:query:ogpo-p16-3-satisfied" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "p16-3b-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p16-3b-a1": accident_under_contract(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "p16-3b-a2": accident_became_known_on(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-01) { origin case_input; }
+        assert "p16-3b-a3": insurer_notified_of_accident(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(UvedomitStrakhovshchikaOProisshestvii, SATISFIED);
+    expect not position(UvedomitStrakhovshchikaOProisshestvii, VIOLATED);
+}
+
+// Срок истёк 8 сентября, неисполнение УСТАНОВЛЕНО отрицательным фактом —
+// обязанность нарушена. Без отрицательного факта был бы UNDETERMINED (§136).
+test "urn:query:ogpo-p16-3-violated" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "p16-3c-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p16-3c-a1": accident_under_contract(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "p16-3c-a2": accident_became_known_on(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-01) { origin case_input; }
+        assert "p16-3c-a3": not insurer_notified_of_accident(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(UvedomitStrakhovshchikaOProisshestvii, VIOLATED);
+    expect not position(UvedomitStrakhovshchikaOProisshestvii, SATISFIED);
+}
+
+// Последний день срока: 8 сентября 2026 года.
+test "urn:query:ogpo-p16-3-due-day" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-04T12:00:00+05:00;
+            knowledge_time @2026-09-04T12:00:00+05:00;
+            legal_time @2026-09-04;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "p16-3d-a0": accident_became_known_on(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-01) { origin case_input; }
+    }
+    evaluate truth(accident_notice_due_day(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-08));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Страхователь и застрахованный — не одно лицо: носителем обязанности
+// становится ЗАСТРАХОВАННЫЙ (ч. 2 пп. 3).
+test "urn:query:ogpo-p16-3-bearer-insured" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-04T12:00:00+05:00;
+            knowledge_time @2026-09-04T12:00:00+05:00;
+            legal_time @2026-09-04;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "p16-3e-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p16-3e-a1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o2")) { origin case_input; }
+        assert "p16-3e-a2": insured_person_distinct_from_policyholder(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate truth(accident_notification_bearer(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

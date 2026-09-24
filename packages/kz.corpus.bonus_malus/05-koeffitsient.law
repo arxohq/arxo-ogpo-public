@@ -1,0 +1,264 @@
+// ПРИСВОЕННЫЙ КЛАСС И КОЭФФИЦИЕНТ — ПУНКТЫ 7, 14, 16 И ПРИЛОЖЕНИЕ.
+//
+// ПОРЯДОК СПЕЦИАЛЬНОСТИ, ПРИНЯТЫЙ 12.09.2026 И ЗАКРЕПЛЁННЫЙ СЦЕНАРИЯМИ.
+// Правила задают перечни исключений у каждого пункта, но не выстраивают их в
+// один ряд; прочитанный ряд таков:
+//
+//   1. пункт 14 (опьянение) — самый минимальный класс М2. Своих исключений
+//      пункт не называет ВОВСЕ, и он же назван исключением в пунктах 10 и 11;
+//   2. пункт 7 (гибель) — М2, кроме случаев пунктов 6, 8 и 9 (перечень
+//      записан в самом пункте 7);
+//   3. пункты 6, 8, 9 — класс по признаку страхователя; пункт 7 их прямо
+//      исключает, значит они сильнее его;
+//   4. пункты 4 и 5 — класс при первом заключении; исключением в пункте 7 они
+//      НЕ названы, поэтому гибель их вытесняет;
+//   5. приложение с модификаторами пунктов 10—13 — обычный ход.
+//
+// Развилка вынесена владельцу в README; каждая ступень стережётся сценарием.
+
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+pub relation prisvoennyy_klass(dogovor: Dogovor, klass: Klass) kind institutional {
+    key(dogovor);
+    label ru-KZ official "класс, присвоенный страхователю (застрахованному) при заключении договора обязательного страхования";
+}
+
+// --- Ступень 1: пункт 14 ----------------------------------------------------
+
+@source(BM_POINT_14)
+rule KlassM2PoPunktu14(dogovor: Dogovor, sluchaev: Integer) strict {
+    label ru-KZ official "Пункт 14. При наступлении страхового (страховых) случая (случаев), произошедшего по вине страхователя (застрахованного), и одновременном наличии нарушения одного из правил дорожного движения перечня пункта 14 страхователю присваивается самый минимальный класс – М2";
+    when narushenie_perechnya_punkta_14(dogovor);
+    when dostup_k_svedeniyam_punkta_3(dogovor);
+    when sluchaev_po_vine(dogovor, sluchaev);
+    when sluchaev >= 1;
+    then prisvoennyy_klass(dogovor, KlassM2);
+}
+
+// --- Ступень 2: пункт 7 -----------------------------------------------------
+
+@source(BM_POINT_7)
+rule KlassM2PoPunktu7(dogovor: Dogovor) strict {
+    label ru-KZ official "Пункт 7. Наступление страхового случая, произошедшего по вине страхователя (застрахованного) и повлекшего гибель и по которому осуществлена страховая выплата, влечёт снижение класса страхователя на самый минимальный класс – М2, за исключением случаев, предусмотренных пунктами 6, 8 и 9 Правил";
+    when gibel_po_vine_s_vyplatoy(dogovor);
+    when dostup_k_svedeniyam_punkta_3(dogovor);
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    when not_known(strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor));
+    when not_known(narushenie_perechnya_punkta_14(dogovor));
+    then prisvoennyy_klass(dogovor, KlassM2);
+}
+
+// --- Ступень 3: пункты 6, 8 и 9 ---------------------------------------------
+//
+// Два правила вместо одного с дизъюнкцией: признак «временный въезд» и
+// признак «юридическое лицо» суть разные основания, и каждому нужен свой
+// якорь. Общая голова с одинаковым значением конфликта ключа не даёт.
+
+@source(BM_POINT_6)
+rule PrisvoenieVremennogoVezda(dogovor: Dogovor, klass: Klass) strict {
+    label ru-KZ official "Класс по пункту 6 присваивается и при гибели: пункт 7 называет пункт 6 своим исключением";
+    when vremennyy_vezd_na_territoriyu_rk(dogovor);
+    when klass_po_priznaku_strakhovatelya(dogovor, klass);
+    when not_known(narushenie_perechnya_punkta_14(dogovor));
+    then prisvoennyy_klass(dogovor, klass);
+}
+
+@source(BM_POINT_8)
+@source(BM_POINT_9)
+rule PrisvoenieYurlitsa(dogovor: Dogovor, klass: Klass) strict {
+    label ru-KZ official "Класс по пунктам 8 и 9 присваивается и при гибели: пункт 7 называет пункты 8 и 9 своими исключениями";
+    when strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor);
+    when dostup_k_svedeniyam_punkta_3(dogovor);
+    when klass_po_priznaku_strakhovatelya(dogovor, klass);
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    when not_known(narushenie_perechnya_punkta_14(dogovor));
+    then prisvoennyy_klass(dogovor, klass);
+}
+
+// --- Ступень 4: пункты 4 и 5 ------------------------------------------------
+
+@source(BM_POINT_4)
+@source(BM_POINT_5)
+rule PrisvoeniePriPervomZaklyuchenii(dogovor: Dogovor, klass: Klass) strict {
+    label ru-KZ official "Класс при первом заключении договора (пункты 4 и 5) присваивается, если не применены пункты 7 и 14";
+    when dogovor_zaklyuchaetsya_vpervye(dogovor);
+    when klass_po_priznaku_strakhovatelya(dogovor, klass);
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    when not_known(strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor));
+    when not_known(gibel_po_vine_s_vyplatoy(dogovor));
+    when not_known(narushenie_perechnya_punkta_14(dogovor));
+    then prisvoennyy_klass(dogovor, klass);
+}
+
+// --- Ступень 5: приложение с модификаторами ---------------------------------
+//
+// Сдвиг считается по МЕСТУ в порядке классов: между классом 0 и классом М
+// номера нет, и «на 1 класс меньше» имеет смысл только в порядке приложения.
+
+pub relation mesto_prisvoeniya(dogovor: Dogovor, mesto: Integer) kind institutional {
+    key(dogovor);
+    label ru-KZ official "место присвоенного класса в порядке классов приложения до применения пределов: место класса по таблице плюс суммарный сдвиг пунктов 10—13";
+}
+
+@source(BM_POINT_15)
+rule MestoPrisvoeniya(dogovor: Dogovor, klass: Klass, mesto: Integer,
+                      sdvig: Integer) strict {
+    label ru-KZ official "Место присвоенного класса есть место класса по приложению, сдвинутое на суммарную величину пунктов 10—13";
+    when klass_po_tablitse(dogovor, klass);
+    when poryadok_klassa(klass, mesto);
+    when summa_sdvigov(dogovor, sdvig);
+    then mesto_prisvoeniya(dogovor, mesto + sdvig);
+}
+
+// Общая посылка пятой ступени, вынесенная отдельным отношением: пять `not_known`
+// повторяются в трёх правилах предела, и повторение расходилось бы молча.
+pub relation khod_po_prilozheniyu(dogovor: Dogovor) kind institutional {
+    label ru-KZ official "класс присваивается обычным ходом — по приложению к Правилам с модификаторами пунктов 10—13, а не по пунктам 4, 5, 6, 7, 8, 9 и 14";
+}
+
+@source(BM_POINT_3)
+rule KhodPoPrilozheniyu(dogovor: Dogovor, deystvuyushchiy: Klass) strict {
+    label ru-KZ official "Обычный ход приложения применяется, когда не заявлены ни первое заключение договора, ни временный въезд, ни юридическое лицо, ни гибель, ни нарушение перечня пункта 14";
+    when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+    when not_known(nepreryvnogo_strakhovaniya_270_dney_v_baze_net(dogovor));
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    when not_known(strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor));
+    when not_known(gibel_po_vine_s_vyplatoy(dogovor));
+    when not_known(narushenie_perechnya_punkta_14(dogovor));
+    then khod_po_prilozheniyu(dogovor);
+}
+
+@source(BM_POINT_3) {
+    rule PrisvoenieVPredelakh(dogovor: Dogovor, mesto: Integer, klass: Klass) strict {
+        label ru-KZ official "Присвоенный класс есть класс сдвинутого места порядка приложения";
+        when khod_po_prilozheniyu(dogovor);
+        when mesto_prisvoeniya(dogovor, mesto);
+        when mesto >= 1;
+        when mesto <= 17;
+        when klass_na_meste(mesto, klass);
+        then prisvoennyy_klass(dogovor, klass);
+    }
+
+    rule PrisvoenieNizhePredela(dogovor: Dogovor, mesto: Integer) strict {
+        label ru-KZ official "Пункт 3. При этом самым минимальным классом является класс M2 — сдвиг ниже первого места порядка приложения его не создаёт";
+        when khod_po_prilozheniyu(dogovor);
+        when mesto_prisvoeniya(dogovor, mesto);
+        when mesto < 1;
+        then prisvoennyy_klass(dogovor, KlassM2);
+    }
+
+    rule PrisvoenieVyshePredela(dogovor: Dogovor, mesto: Integer) strict {
+        label ru-KZ official "Приложение не знает класса выше тринадцатого — сдвиг выше последнего места порядка его не создаёт";
+        when khod_po_prilozheniyu(dogovor);
+        when mesto_prisvoeniya(dogovor, mesto);
+        when mesto > 17;
+        then prisvoennyy_klass(dogovor, Klass13);
+    }
+}
+
+// --- Коэффициент ------------------------------------------------------------
+
+pub relation koeffitsient_bonus_malus(dogovor: Dogovor, koeffitsient: Decimal)
+    kind institutional {
+    key(dogovor);
+    label ru-KZ official "коэффициент по системе «бонус-малус», применяемый к базовой страховой премии (пункт 10 статьи 19 Закона)";
+}
+
+// --- Пункт 16: собственная оценка рисков страховщика ------------------------
+
+pub relation fizlitso_v_klasse_13_bolee_pyati_let(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "страхователь (застрахованный) — физическое лицо, находящееся в 13-классе непрерывно более 5 лет (пункт 16)";
+}
+
+pub relation koeffitsient_sobstvennoy_otsenki(dogovor: Dogovor, koeffitsient: Decimal)
+    kind empirical {
+    key(dogovor);
+    label ru-KZ official "коэффициент, определённый страховщиком на основе собственной оценки рисков и (или) данных базы данных, утверждённой советом директоров страховщика (пункт 16)";
+}
+
+pub relation sobstvennaya_otsenka_zayavlena(dogovor: Dogovor) kind institutional {
+    label ru-KZ official "по договору заявлен коэффициент собственной оценки рисков страховщика (пункт 16)";
+}
+
+@source(BM_POINT_16) {
+    rule SobstvennayaOtsenkaZayavlena(dogovor: Dogovor, koeffitsient: Decimal) strict {
+        label ru-KZ official "По договору заявлен коэффициент собственной оценки рисков страховщика";
+        when koeffitsient_sobstvennoy_otsenki(dogovor, koeffitsient);
+        then sobstvennaya_otsenka_zayavlena(dogovor);
+    }
+
+    rule KoeffitsientPoSobstvennoyOtsenke(dogovor: Dogovor, koeffitsient: Decimal,
+                                          predel: Decimal) strict {
+        label ru-KZ official "Пункт 16. Для страхователей (застрахованных) физических лиц, находящихся в 13-классе непрерывно более 5 лет, страховщик применяет коэффициент, который определяется на основе собственной оценки рисков и (или) данных, содержащихся в базе данных; применяемый коэффициент не может превышать значения, установленного приложением к Правилам для 13-класса, и не может быть равен нулю";
+        when prisvoennyy_klass(dogovor, Klass13);
+        when fizlitso_v_klasse_13_bolee_pyati_let(dogovor);
+        when koeffitsient_sobstvennoy_otsenki(dogovor, koeffitsient);
+        when koeffitsient_klassa(Klass13, predel);
+        when koeffitsient <= predel;
+        when koeffitsient > 0.0;
+        then koeffitsient_bonus_malus(dogovor, koeffitsient);
+    }
+
+    // §93.3. Констрейнт, а не молчание правила: коэффициент собственной оценки
+    // выше предела либо равный нулю есть НАРУШЕНИЕ пункта 16, и ответ об этом
+    // обязан отличаться от ответа «коэффициент не выведен».
+    // Предел записан здесь числом, а не чтением `koeffitsient_klassa(Klass13,
+    // predel)`: связывание §190 в констрейнте берёт переменные из ОДНОГО
+    // конъюнкта, и второй `when` оставил бы `koeffitsient` несвязанным
+    // (LDC-E4101). Само число 0,50 не набрано глазами — оно же стоит фактом
+    // приложения, и `tools/annex_table.py --check` сверяет его с
+    // закреплёнными байтами; расхождение уронит проверку пакета.
+    constraint SobstvennayaOtsenkaVPredelakhPunkta16(
+        dogovor: Dogovor, koeffitsient: Decimal
+    ) {
+        when koeffitsient_sobstvennoy_otsenki(dogovor, koeffitsient);
+        require koeffitsient <= 0.50;
+        severity error;
+        message "пункт 16: применяемый коэффициент не может превышать значения, установленного приложением к Правилам для 13-класса (0,50)";
+    }
+
+    constraint SobstvennayaOtsenkaNeNol(dogovor: Dogovor, koeffitsient: Decimal) {
+        when koeffitsient_sobstvennoy_otsenki(dogovor, koeffitsient);
+        require koeffitsient > 0.0;
+        severity error;
+        message "пункт 16: применяемый коэффициент не может быть равен нулю";
+    }
+}
+
+// --- Коэффициент приложения и повышающие множители пунктов 4 и 9 -------------
+
+pub relation povyshayushchiy_mnozhitel_zayavlen(dogovor: Dogovor) kind institutional {
+    label ru-KZ official "к размеру коэффициента класса применяется повышающий коэффициент пункта 4 либо пункта 9";
+}
+
+@source(BM_POINT_4)
+@source(BM_POINT_9)
+rule PovyshayushchiyMnozhitelZayavlen(dogovor: Dogovor, mnozhitel: Decimal) strict {
+    label ru-KZ official "К размеру коэффициента класса применяется повышающий коэффициент";
+    when povyshayushchiy_mnozhitel(dogovor, mnozhitel);
+    then povyshayushchiy_mnozhitel_zayavlen(dogovor);
+}
+
+@source(BM_ANNEX_TABLE) {
+    rule KoeffitsientSPovysheniem(dogovor: Dogovor, klass: Klass, bazovyy: Decimal,
+                                  mnozhitel: Decimal) strict {
+        label ru-KZ official "Коэффициент есть размер коэффициента присвоенного класса с повышающим коэффициентом пункта 4 либо пункта 9";
+        when prisvoennyy_klass(dogovor, klass);
+        when koeffitsient_klassa(klass, bazovyy);
+        when povyshayushchiy_mnozhitel(dogovor, mnozhitel);
+        when not_known(sobstvennaya_otsenka_zayavlena(dogovor));
+        then koeffitsient_bonus_malus(dogovor, bazovyy * mnozhitel);
+    }
+
+    rule KoeffitsientBezPovysheniya(dogovor: Dogovor, klass: Klass,
+                                    bazovyy: Decimal) strict {
+        label ru-KZ official "Коэффициент есть размер коэффициента присвоенного класса, установленный приложением к Правилам";
+        when prisvoennyy_klass(dogovor, klass);
+        when koeffitsient_klassa(klass, bazovyy);
+        when not_known(povyshayushchiy_mnozhitel_zayavlen(dogovor));
+        when not_known(sobstvennaya_otsenka_zayavlena(dogovor));
+        then koeffitsient_bonus_malus(dogovor, bazovyy);
+    }
+}

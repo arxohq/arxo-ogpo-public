@@ -1,0 +1,242 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны corpus/tools/questions_catalog/build_catalog.py по CLIR пакета;
+// правка руками — только вместе с каталогом.
+
+// Статья 17 пункт 1 подпункт 2). Страховщик вправе запрашивать у соответствующих государственных органов и организаций, исходя из их компетенции, докуме
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-ZAPRASHIVATDOKUMENTYUGOSORGANOV" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position(ZaprashivatDokumentyUGosorganov, ACTIVE);
+}
+
+// Статья 17 пункт 1 подпункт 3). Страховщик вправе устанавливать причины и иные обстоятельства транспортного происшествия
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-USTANAVLIVATPRICHINYPROISSHESTVIYA" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position(UstanavlivatPrichinyProisshestviya, ACTIVE);
+}
+
+// Статья 17 пункт 2 подпункт 6-1). Страховщик обязан при недостаточности документов, подтверждающих факт наступления страхового случая и размер подлежащ
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-INSURERMUSTNOTIFYMISSINGDOCUMENTS/DUTY/NORM" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("InsurerMustNotifyMissingDocuments/duty/norm", ACTIVE);
+}
+
+// Статья 17 пункт 2 подпункт 7-2). Страховщик обязан при получении от страхователя (потерпевшего, выгодоприобретателя) заявления на рассмотрение спора, 
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-INSURERMUSTANSWERDISPUTEAPPLICATION/DUTY/NORM" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("InsurerMustAnswerDisputeApplication/duty/norm", ACTIVE);
+}
+
+// Статья 17 пункт 2 подпункт 7-3). Страховщик обязан при получении от страхователя (потерпевшего, выгодоприобретателя) заявления, направляемого страхово
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-INSURERMUSTFORWARDAPPLICATIONTOOMBUDSMAN/DUTY/NORM" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("InsurerMustForwardApplicationToOmbudsman/duty/norm", ACTIVE);
+}
+
+// Статья 22 пункт 3. Осмотр поврежденного имущества должен быть произведён в течение пяти рабочих дней со дня подачи заявления об определении размера пр
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-INSURERMUSTCONDUCTINSPECTIONWITHINTERM/DUTY/NORM" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("InsurerMustConductInspectionWithinTerm/duty/norm", ACTIVE);
+}
+
+// Статья 22 пункт 3. Страхователь (застрахованный, выгодоприобретатель) согласовывает дату, время и место проведения осмотра поврежденного имущества в т
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-APPLICANTMUSTAGREEINSPECTIONAPPOINTMENT/DUTY/NORM" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("ApplicantMustAgreeInspectionAppointment/duty/norm", ACTIVE);
+}
+
+// Статья 22 пункт 3. Страховщик обязан определить размер вреда, причинённого имуществу, не позднее пяти рабочих дней со дня осмотра и составления акта о
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-INSURERMUSTDETERMINEPROPERTYHARMWITHINTERM/DUTY/NORM" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("InsurerMustDeterminePropertyHarmWithinTerm/duty/norm", ACTIVE);
+}
+
+// Статья 22 пункт 3. Страховщик согласовывает дату, время и место проведения осмотра поврежденного имущества в течение трёх рабочих дней со дня подачи з
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-INSURERMUSTAGREEINSPECTIONAPPOINTMENT/DUTY/NORM" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("InsurerMustAgreeInspectionAppointment/duty/norm", ACTIVE);
+}
+
+// Статья 24 пункт 4. Расходы, понесённые страхователем (застрахованным) в целях предотвращения или уменьшения убытков, подлежат возмещению страховщиком 
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-VOZMESTITRASKHODYPOUMENSHENIYUUBYTKOV" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position(VozmestitRaskhodyPoUmensheniyuUbytkov, ACTIVE);
+}
+
+// Статья 26 пункт 1. Страховщик обязан произвести страховую выплату в срок, исчисляемый со дня получения им документов, предусмотренных статьёй 25 насто
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-INSURERMUSTPAYWITHINTERM/DUTY/NORM" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("InsurerMustPayWithinTerm/duty/norm", ACTIVE);
+}
+
+// Статья 26 пункт 3. Если у потерпевшего наступит ухудшение здоровья либо смерть, страховщик на основании поступившего заявления и соответствующих докум
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-PROIZVESTIPERERASCHETSUMMYVYPLATY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position(ProizvestiPereraschetSummyVyplaty, ACTIVE);
+}
+
+// Статья 26 пункт 4. При несвоевременном осуществлении страховой выплаты страховщик обязан уплатить выгодоприобретателю неустойку в порядке и размере, у
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-UPLATITNEUSTOYKUZAPROSROCHKUVYPLATY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position(UplatitNeustoykuZaProsrochkuVyplaty, ACTIVE);
+}
+
+// Статья 26-1 пункт 3. Страховая компания лица, по вине которого произошёл страховой случай, возмещает фактически выплаченную сумму страховщику, урегули
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-VOZMESTITVYPLATUUREGULIROVAVSHEMUSTRAKHOVSHCHIKU" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position(VozmestitVyplatuUregulirovavshemuStrakhovshchiku, ACTIVE);
+}
+
+// Статья 27. При причинении лицу вреда несколькими транспортными средствами, владельцы которых имеют договоры обязательного страхования ответственности 
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-POLUCHITVYPLATUOTDELNOPOKAZHDOMUDOGOVORU" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position(PoluchitVyplatuOtdelnoPoKazhdomuDogovoru, ACTIVE);
+}
+
+// Статья 29 пункт 3. При наличии оснований для отказа в осуществлении страховой выплаты страховщик обязан в течение семи рабочих дней со дня получения з
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-INSURERMUSTDISPATCHREFUSALDECISION/DUTY/NORM" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("InsurerMustDispatchRefusalDecision/duty/norm", ACTIVE);
+}
+
+// Статья 29 пункты 1 и 2. Страховщик вправе полностью или частично отказать в страховой выплате при наличии предусмотренного настоящей статьёй основания
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-OTKAZATVSTRAKHOVOYVYPLATE" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position(OtkazatVStrakhovoyVyplate, ACTIVE);
+}
+
+// Статья 5 пункт 2. Гражданско-правовая ответственность владельца транспортного средства подлежит страхованию по каждой единице эксплуатируемого им тран
+// Посылки правила этой нормы порождающий проход не строит: мир без
+// фактов фиксирует, что позиция НЕ возникает. Положительное
+// свидетельство — долг (граница пакета).
+test "CATALOG-NOPOS-ZAKLYUCHITDOGOVOROBYAZATELNOGOSTRAKHOVANIYA" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position(ZaklyuchitDogovorObyazatelnogoStrakhovaniya, ACTIVE);
+}

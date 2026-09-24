@@ -1,0 +1,126 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// ЦЕЛИ АКТА (DECISION-0089) поверх статьи 2 («Основная цель и задачи
+// бюджетного законодательства Республики Казахстан») и статьи 4 («Основные
+// принципы бюджетной системы Республики Казахстан») — фрагменты BC_ART2 и
+// BC_ART4. Принцип не даёт условия и следствия: он ОЦЕНИВАЕТ прочие нормы, и
+// цель есть ровно та форма, в которой эта оценка становится проверяемой —
+// утверждение об ИСХОДАХ, которое право обязано давать на всяком деле своего
+// домена.
+//
+// Срез v1: один связыватель, домен — УНАРНЫЙ предикат. Нормы кодекса чаще
+// двуместны (расход и бюджет, документ и участник), поэтому домены стоят на
+// проекциях, объявленных в 08-perehodnye-polozheniya.law отдельными
+// правилами: забывание второго аргумента есть утверждение о ПРЕДМЕТЕ, и оно
+// видно в разборе строкой, а не спрятано в цель.
+//
+// Чего здесь НЕТ и почему. Цель «всякий бюджетный кредит имеет срок и
+// ставку» (принципы платности и срочности, ст. 154 п. 4) НЕ ставится в этой
+// форме: она ложна не по праву, а по ДЕЛУ — кредит, выданный без ставки,
+// есть нарушение кодекса, а не контрпример к нему, и сценарий KZ-BC-62
+// такое дело содержит. Проверяемая форма того же принципа — цель
+// GoalCreditFollowsNamedProcedure ниже: право обязано провести всякое
+// решение о кредите через названную процедуру, и вот это утверждение об
+// исходе на всяком деле домена держится.
+//
+// Замер 02.09.2026 на 72 мирах регрессии семейства budget_code
+// (`python3 -m lawref goals … --cases <миры>`): цели HELD, ноль FAILED;
+// канарейка описана в verification.ru.md и падает контрпримером.
+
+// Мир файла: дело нужно свойствам как мир (`lawc test` берёт его из теста
+// того же файла, а без контекста §82 отказывает CONTEXT_FIELD_MISSING).
+// Полный домен целей — миры регрессии семейства, поданные `lawref goals
+// --cases`; здесь один представительный случай статьи 19.
+test "резерв на инициативы Президента в объявленных границах соблюдает Кодекс" {
+    given {
+        context {
+            legal_time @2026-06-01;
+            decision_time @2026-06-01T12:00:00+05:00;
+            knowledge_time @2026-06-01T12:00:00+05:00;
+            timezone "Asia/Almaty";
+        }
+        assert "g0": budget_level(entity_ref("urn:kz:bc:budget-republican"), Republican) { origin case_input; }
+        assert "g1": reserve_of(entity_ref("urn:kz:bc:reserve-1"), entity_ref("urn:kz:bc:budget-republican")) { origin case_input; }
+        assert "g2": reserve_kind(entity_ref("urn:kz:bc:reserve-1"), PresidentInitiatives) { origin case_input; }
+        assert "g3": reserve_amount(entity_ref("urn:kz:bc:reserve-1"), 20000000.00 KZT) { origin case_input; }
+        assert "g4": planned_revenue_without_transfers(entity_ref("urn:kz:bc:budget-republican"), 1000000000.00 KZT) { origin case_input; }
+    }
+    evaluate truth(reserve_size_conforms(entity_ref("urn:kz:bc:reserve-1")));
+    expect truth_status == TRUE_ONLY;
+}
+
+// «Принцип обоснованности» и «принцип последовательности» (ст. 4 подпункты
+// 4 и 5): бюджетное правило не молчит ни на одном резерве, объём которого
+// известен. Тотальность оценки — это утверждение о том, что «право
+// промолчало» невозможно там, где данные есть.
+property GoalReserveAlwaysAssessed {
+    label ru-KZ unofficial "резерв с известным объёмом всегда получает вердикт по границам Кодекса";
+    basis BC_ART4;
+    over GoalReserveConformanceOnlyWhenMeasured;
+    forall r in collect v: Reserve where reserve_measured(v);
+    expect reserve_size_assessed(r);
+}
+
+// «Принцип самостоятельности бюджета» (ст. 4 подпункт 8) и прямая норма
+// ст. 29 п. 3: расход, профинансированный чужим уровнем, не остаётся без
+// правового последствия — запрет активен на самом расходе.
+property GoalCrossLevelFundingIsProhibited {
+    label ru-KZ unofficial "расход, профинансированный бюджетом чужого уровня, покрыт действующим запретом";
+    basis BC_ART4;
+    forall p in collect v: BudgetProgramme where cross_level_funded(v);
+    expect position(FundExpenditureFromAnotherLevel, ACTIVE, p);
+}
+
+// «Принцип транспарентности» (ст. 4 подпункт 10) с его собственным изъятием:
+// документ, публикация которого отнесена к участнику и не снята тайной,
+// покрыт действующей обязанностью публикации.
+property GoalTransparencyDutyIsActive {
+    label ru-KZ unofficial "документ бюджетного процесса, подлежащий публикации, покрыт действующей обязанностью";
+    basis BC_ART4;
+    forall d in collect v: ProcessDocument where publication_owed(v);
+    expect position(PublishProcessDocument, ACTIVE, d);
+}
+
+// «Основная цель» ст. 2 п. 1 — гармонизация задач государства с ОБЪЁМАМИ
+// бюджетных средств: всякое решение о бюджетном кредите проходит названную
+// статьёй 155 процедуру либо названное ею же изъятие. Сторожевая цель ниже
+// ограничивает средство: процедура не считается пройденной ничем иным.
+property GoalCreditFollowsNamedProcedure {
+    label ru-KZ unofficial "решение о бюджетном кредите, которое может быть продолжено, прошло названную процедуру";
+    basis BC_ART2;
+    over GoalCreditProcedureOnlyByNamedRoutes;
+    forall c in collect v: BudgetCredit where credit_decision_may_proceed(v);
+    expect credit_procedure_followed(c);
+}
+
+// Сторож: процедура пройдена ТОЛЬКО определением целесообразности либо
+// изъятием для кредита на покрытие дефицита наличности. Правка, раздавшая
+// бы «процедуру пройденной» по иному основанию, роняет эту цель.
+property GoalCreditProcedureOnlyByNamedRoutes {
+    label ru-KZ unofficial "процедура кредита пройдена только определением целесообразности либо изъятием статьи 155";
+    basis BC_ART2;
+    forall c in collect v: BudgetCredit where credit_procedure_followed(v);
+    expect credit_decision_may_proceed(c);
+}
+
+// Сторож объёмных границ: резерв признаётся соблюдающим границы ТОЛЬКО
+// тогда, когда объём резерва и объём доходов бюджета по делу известны.
+// Правка, раздавшая бы «соблюдение» без замера, роняет эту цель — и роняет
+// её раньше, чем кто-нибудь заметит зелёный вердикт на пустом деле.
+property GoalReserveConformanceOnlyWhenMeasured {
+    label ru-KZ unofficial "резерв признан соблюдающим границы только при известных объёмах";
+    basis BC_ART4;
+    forall r in collect v: Reserve where reserve_size_conforms(v);
+    expect reserve_measured(r);
+}
+
+// «Принцип обоснованности» (ст. 4 подпункт 4): расход, секвестру не
+// подлежащий, не теряет защиты — секвестр над ним объявлен противоправным.
+property GoalProtectedExpenditureKeepsProtection {
+    label ru-KZ unofficial "секвестр расхода, секвестру не подлежащего, признан противоречащим Кодексу";
+    basis BC_ART4;
+    forall p in collect v: BudgetProgramme where sequester_unlawful(v);
+    expect not_subject_to_sequester(p);
+}

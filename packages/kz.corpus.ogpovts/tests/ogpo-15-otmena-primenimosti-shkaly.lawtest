@@ -1,0 +1,99 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// DECISION-0344 в статье 15 пунктах 3 и 4. Заключение нового договора с этим
+// же страховщиком отводит ПРИМЕНИМОСТЬ удержания по шкале пункта 4
+// (`scale_retention_applies(contract)`), а не величину, которую шкала
+// насчитала. Цель отмены беззначна, и потому под неё не подпадает ни одна
+// сумма — ни чужая, ни тождественная.
+//
+// Величины здесь поданы делом прямо, а не выведены шкалой и формулой: сцены
+// проверяют РАЗВЯЗКУ порядков, а сама шкала и сама формула проверены
+// двадцатью четырьмя сценами `ogpo-shkala-uderzhaniya.lawtest` и сценами
+// `ogpo-dosrochnoe-prekrashchenie.lawtest`, которые остаются зелёными
+// дословно.
+//
+// ЧЕСТНАЯ ГРАНИЦА СЦЕНЫ 3. На ПРЕЖНЕЙ идиоме (`defeat premium_retained(
+// contract, <величина шкалы>)`) она тоже зелена: величину пункта 3 выводит
+// СТРОГОЕ `PremiumRetainedIsProRataAmount`, а «defeasible candidate никогда
+// не побеждает strict support» (§107). Сцена закрепляет СВОЙСТВО и красна для
+// формы, где цель отмены снова понесёт величину, и для правки, делающей опору
+// пункта 3 поражаемой.
+
+// 1. Новый договор с этим же страховщиком отводит ПРИМЕНИМОСТЬ шкалы.
+test "urn:query:ogpo-15-primenimost-shkaly-otvedena" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-15p-a0": premium_retained_by_scale(entity_ref("urn:kz:ogpo:contract:r1"), 20000 KZT) {
+            origin case_input;
+        }
+        assert "ogpo-15p-a1": new_contract_with_same_insurer(entity_ref("urn:kz:ogpo:contract:r1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(scale_retention_applies(entity_ref("urn:kz:ogpo:contract:r1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2. Без нового договора шкала применяется: умолчание выведено на том же
+//    входе, что и прежнее общее правило пункта 4.
+test "urn:query:ogpo-15-primenimost-shkaly-stoit" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-15p-b0": premium_retained_by_scale(entity_ref("urn:kz:ogpo:contract:r2"), 20000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:r2"), 20000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// 3. САМОЕ ОПАСНОЕ ДЕЛО: величина пункта 3 РАВНА величине шкалы пункта 4.
+//    Вывод специальной нормы не гаснет.
+test "urn:query:ogpo-15-sovpadenie-velichin-ne-snimaet-punkt-3" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-15p-c0": premium_retained_by_scale(entity_ref("urn:kz:ogpo:contract:r3"), 20000 KZT) {
+            origin case_input;
+        }
+        assert "ogpo-15p-c1": premium_retained_pro_rata(entity_ref("urn:kz:ogpo:contract:r3"), 20000 KZT) {
+            origin case_input;
+        }
+        assert "ogpo-15p-c2": new_contract_with_same_insurer(entity_ref("urn:kz:ogpo:contract:r3")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:r3"), 20000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

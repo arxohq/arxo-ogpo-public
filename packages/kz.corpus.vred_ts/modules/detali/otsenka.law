@@ -1,0 +1,141 @@
+// Evaluation of a replaceable part: clause 10 and the footnote to annex 3.
+//
+// PURPOSE. When a part is evaluated at the market value of a NEW part without
+// accounting for wear, which value is accepted into the calculation and to whom is
+// the replaceable part transferred.
+//
+// SOURCE PROVISIONS: clause 10 (subclauses 1 and 2, second part); annex 3,
+// clause 1 subclause 3 with the footnote.
+//
+// MODEL BOUNDARY. The Rules do NOT CONTAIN the formula "cost of the new part minus
+// wear", so the part's cost WITH wear accounted for enters as a RESULT —
+// a case fact whose label names the owner of the calculation (the SPO of clause 2 and
+// the website of clause 11). The only arithmetic about a part's price that
+// the Rules do contain is the cases of clause 10, and it is computed. The full
+// boundary discussion is in the `package.law` header and `modules/iznos/dostupnost-rascheta.law`.
+
+//
+// TWO CASES — TWO RULES (§206), and the conditions within each are satisfied
+// SIMULTANEOUSLY, i.e. by conjunction: for a natural person — the technical inspection
+// not being mandatory, an average annual mileage not exceeding fifteen thousand
+// kilometers, and the part itself being undamaged; for a legal person — warranty
+// service, twenty thousand kilometers and the same undamaged condition of the part.
+//
+// MILEAGE IS A QUANTITY WITH A UNIT, NOT A NUMBER. It is supplied as `Quantity` with the tag
+// `km` and compared with the literal `15000 km` / `20000 km`: the unit lives in
+// the type, and a value under a foreign tag fails loudly rather than being computed silently
+// (E-0068). Recording mileage as `Integer` would amount to hiding the unit in the
+// predicate name.
+//
+// THE WINDOW FOR THE DUTY TO TRANSFER THE PART IS OPEN: clause 10 ties the transfer to
+// the insurer's demand and does not name a performance deadline. The duty therefore
+// can be performed, but is never breached by deadline; the lint
+// `achievement-open-window` sees it and must see it.
+//
+// "DOES NOT EXCEED" GIVES `<=`: a mileage of exactly fifteen (twenty) thousand
+// kilometers SATISFIES the condition. Both boundaries are pinned by pairs of scenarios.
+
+pub relation vladelets_fizicheskoe_litso(v: TransportnoeSredstvo) kind empirical { label ru official "Владельцем транспортного средства является физическое лицо"; }
+pub relation vladelets_yuridicheskoe_litso(v: TransportnoeSredstvo) kind empirical { label ru official "Владельцем транспортного средства является юридическое лицо"; }
+pub relation ne_podlezhit_obyazatelnomu_tekhosmotru(v: TransportnoeSredstvo) kind empirical { label ru official "Транспортное средство не подлежит обязательному техническому осмотру"; }
+pub relation nakhoditsya_na_garantiynom_obsluzhivanii(v: TransportnoeSredstvo) kind empirical { label ru official "Транспортное средство находится на гарантийном обслуживании"; }
+pub relation srednegodovoy_probeg(v: TransportnoeSredstvo, distance: Quantity) kind empirical { label ru official "Среднегодовой пробег транспортного средства"; }
+pub relation detal_podlezhit_zamene(d: Detal) kind empirical { label ru official "Деталь транспортного средства подлежит замене"; }
+// "Was not previously damaged AND was not repaired" is two case facts,
+// and their conjunction is derived: an intact but repaired part cannot be
+// distinguished from an intact and unrepaired one by a single fact.
+pub relation detal_ranee_ne_povrezhdalas(d: Detal) kind empirical { label ru official "Заменяемая деталь ранее не была повреждена"; }
+pub relation detal_ne_podvergalas_remontu(d: Detal) kind empirical { label ru official "Заменяемая деталь не подвергалась ремонту"; }
+pub relation detal_ne_povrezhdalas_i_ne_remontirovalas(d: Detal) kind institutional { label ru official "Заменяемая деталь ранее не была повреждена и не подвергалась ремонту"; }
+pub relation detal_otsenivaetsya_bez_iznosa(d: Detal) kind institutional { label ru official "Заменяемая деталь оценивается по рыночной стоимости новой детали без учёта износа"; }
+pub relation trebovanie_o_peredache_detali(r: RaschetVreda, d: Detal, day: Date) kind empirical { label ru official "Страховщик предъявил требование о передаче заменяемой детали в этот день"; }
+pub relation detal_peredana_strakhovshchiku(d: Detal) kind empirical { label ru official "Заменяемая деталь передана в собственность страховщика"; }
+
+@source(VRED_TS_PT_10) {
+    rule DetalNePovrezhdalasINeRemontirovalas(d: Detal) strict {
+        label ru official "Пункт 10. Условие о детали соблюдено, если она ранее не была повреждена и не подвергалась ремонту";
+        when detal_ranee_ne_povrezhdalas(d);
+        when detal_ne_podvergalas_remontu(d);
+        then detal_ne_povrezhdalas_i_ne_remontirovalas(d);
+    }
+
+    rule NovayaDetalUFizicheskogoLitsa(
+        v: TransportnoeSredstvo,
+        d: Detal,
+        distance: Quantity,
+    ) strict {
+        label ru official "Пункт 10 подпункт 1. Для транспортного средства физического лица деталь оценивается без износа при одновременном соблюдении трёх условий: техосмотр не обязателен, среднегодовой пробег не превышает пятнадцати тысяч километров, деталь ранее не повреждалась и не ремонтировалась";
+        when detal_ts(d: d, v: v);
+        when detal_podlezhit_zamene(d);
+        when vladelets_fizicheskoe_litso(v);
+        when ne_podlezhit_obyazatelnomu_tekhosmotru(v);
+        when srednegodovoy_probeg(v: v, distance: distance);
+        when distance <= 15000 km;
+        when detal_ne_povrezhdalas_i_ne_remontirovalas(d);
+        then detal_otsenivaetsya_bez_iznosa(d);
+    }
+
+    rule NovayaDetalUYuridicheskogoLitsa(
+        v: TransportnoeSredstvo,
+        d: Detal,
+        distance: Quantity,
+    ) strict {
+        label ru official "Пункт 10 подпункт 2. Для транспортного средства юридического лица деталь оценивается без износа при одновременном соблюдении трёх условий: гарантийное обслуживание, среднегодовой пробег не превышает двадцати тысяч километров, деталь ранее не повреждалась и не ремонтировалась";
+        when detal_ts(d: d, v: v);
+        when detal_podlezhit_zamene(d);
+        when vladelets_yuridicheskoe_litso(v);
+        when nakhoditsya_na_garantiynom_obsluzhivanii(v);
+        when srednegodovoy_probeg(v: v, distance: distance);
+        when distance <= 20000 km;
+        when detal_ne_povrezhdalas_i_ne_remontirovalas(d);
+        then detal_otsenivaetsya_bez_iznosa(d);
+    }
+
+    // Second part of clause 10: the duty to transfer arises NOT FROM THE MERE CASE
+    // of evaluation without wear, but from the insurer's demand ("transfers … at the demand
+    // of the insurer"), so the day of the demand is the start of the window.
+    rule ObyazannostPeredatZamenyaemuyuDetal(
+        r: RaschetVreda,
+        d: Detal,
+        s: Strakhovshchik,
+        p: Poterpevshiy,
+        day: Date,
+    ) strict {
+        label ru official "Пункт 10. Выгодоприобретатель передаёт заменяемую деталь в собственность страховщика по его требованию";
+        when strakhovshchik_po_raschetu(r: r, s: s);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        when detal_otsenivaetsya_bez_iznosa(d);
+        when trebovanie_o_peredache_detali(r: r, d: d, day: day);
+        then duty PeredatZamenyaemuyuDetal {
+            bearer p;
+            beneficiary s;
+            achieve detal_peredana_strakhovshchiku(d) during [day, infinity);
+        };
+    }
+}
+
+// --- Clause 10 with the footnote to annex 3. Cost of the replaceable part ----------
+pub relation rynochnaya_stoimost_novoy_detali(d: Detal, amount: Money) kind empirical { label ru official "Рыночная стоимость новой детали, подлежащей замене"; }
+pub relation stoimost_detali_s_uchetom_iznosa(d: Detal, amount: Money) kind empirical { label ru official "Стоимость заменяемой детали с учётом амортизационного износа — внешний результат: её даёт лицензионное специализированное программное обеспечение пункта 2 и интернет-ресурс пункта 11, а формулы износа Правила не содержат"; }
+pub relation stoimost_zamenyaemoy_detali(d: Detal, amount: Money) kind institutional { label ru official "Стоимость заменяемой детали, принимаемая в калькуляцию размера вреда"; }
+
+@source(VRED_TS_PT_10, quote = "Страховщик при составлении калькуляции размера вреда, причиненного транспортному средству в случае необходимости замены детали, применяет рыночную стоимость новой детали без учета износа в следующих случаях:")
+@source(VRED_TS_PRIL_3, quote = "*- износ не применяется в случаях, указанных в пункте 10 Правил.")
+rule StoimostDetaliBezIznosa(d: Detal, amount: Money) strict {
+    label ru official "Пункт 10 и сноска приложения 3. В названных пунктом 10 случаях в калькуляцию принимается рыночная стоимость новой детали";
+    when detal_otsenivaetsya_bez_iznosa(d);
+    when rynochnaya_stoimost_novoy_detali(d: d, amount: amount);
+    then stoimost_zamenyaemoy_detali(d: d, amount: amount);
+}
+
+@source(VRED_TS_PRIL_3, quote = "указание стоимости заменяемых деталей с учетом износа*")
+rule StoimostDetaliSUchetomIznosa(d: Detal, amount: Money) defeasible {
+    label ru official "Приложение 3 пункт 1 подпункт 3. Вне случаев пункта 10 в калькуляцию принимается стоимость заменяемой детали с учётом износа";
+    when stoimost_detali_s_uchetom_iznosa(d: d, amount: amount);
+    // The clause rebinds `amount`: the body of the generated defeater is it alone,
+    // while its head carries both variables. Without the rebinding, `amount` in the
+    // defeater's head is unbound, and the oracle fails at substitution.
+    unless DetalBezIznosa when detal_otsenivaetsya_bez_iznosa(d)
+        and stoimost_detali_s_uchetom_iznosa(d: d, amount: amount);
+    then stoimost_zamenyaemoy_detali(d: d, amount: amount);
+}

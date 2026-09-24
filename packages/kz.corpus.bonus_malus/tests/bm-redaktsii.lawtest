@@ -1,0 +1,153 @@
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// РЕДАКЦИИ ПРАВИЛ ВО ВРЕМЕНИ (DECISION-0333): один и тот же договор на разные
+// даты права отвечает по разным редакциям приложения.
+//
+// Ожидаемые классы редакции 2022 года прочитаны из строк «Класс 3» и «Класс 4»
+// приложения из пятнадцати строк (`tools/annex_table.py --state 2022`): у
+// класса 3 один случай — 1 (1,55), два, три и более — М (2,45); у класса 4 два
+// случая — 1 (1,55). В действующей редакции те же клетки дают М (2,45), М1
+// (3,00), М2 (3,50) и 0 (2,30).
+
+// Класс 3, один случай, 2024 год: класс 1 — как и в действующей редакции.
+test "urn:query:bm-red-2024-klass3-odin" {
+    given {
+        context { decision_time @2024-06-01T12:00:00+05:00; knowledge_time @2024-06-01T12:00:00+05:00; legal_time @2024-06-01; timezone "Asia/Almaty"; }
+        assert "a0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:r:1"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "a1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:r:1"), 1) { origin case_input; }
+        assert "a2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:r:1"), Klass3) { origin case_input; }
+        assert "a3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:r:1"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:r:1"), 1.55));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Класс 3, три случая, 2024 год: класс М (2,45), а не М1 (3,00) — клетка,
+// изменённая редакцией № 87.
+test "urn:query:bm-red-2024-klass3-tri" {
+    given {
+        context { decision_time @2024-06-01T12:00:00+05:00; knowledge_time @2024-06-01T12:00:00+05:00; legal_time @2024-06-01; timezone "Asia/Almaty"; }
+        assert "b0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:r:2"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "b1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:r:2"), 3) { origin case_input; }
+        assert "b2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:r:2"), Klass3) { origin case_input; }
+        assert "b3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:r:2"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:r:2"), 2.45));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:bm-red-2024-klass3-tri-ne-m1" {
+    given {
+        context { decision_time @2024-06-01T12:00:00+05:00; knowledge_time @2024-06-01T12:00:00+05:00; legal_time @2024-06-01; timezone "Asia/Almaty"; }
+        assert "c0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:r:3"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "c1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:r:3"), 3) { origin case_input; }
+        assert "c2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:r:3"), Klass3) { origin case_input; }
+        assert "c3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:r:3"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:r:3"), 3.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Те же факты на 2026 год: класс М1 (3,00) — пара к предыдущей сцене.
+test "urn:query:bm-red-2026-klass3-tri" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "d0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:r:4"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "d1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:r:4"), 3) { origin case_input; }
+        assert "d2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:r:4"), Klass3) { origin case_input; }
+        assert "d3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:r:4"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:r:4"), 3.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Класс 4, два случая, 2024 год: класс 1 (1,55); действующая редакция даёт
+// класс 0 (2,30).
+test "urn:query:bm-red-2024-klass4-dva" {
+    given {
+        context { decision_time @2024-06-01T12:00:00+05:00; knowledge_time @2024-06-01T12:00:00+05:00; legal_time @2024-06-01; timezone "Asia/Almaty"; }
+        assert "e0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:r:5"), InformatsiyaOSluchayakh) { origin case_input; }
+        assert "e1": sluchaev_v_baze_dannykh(entity_ref("urn:kz:bm:r:5"), 2) { origin case_input; }
+        assert "e2": deystvuyushchiy_klass(entity_ref("urn:kz:bm:r:5"), Klass4) { origin case_input; }
+        assert "e3": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:r:5"), 365) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:r:5"), 1.55));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Первое заключение договора, 2024 год: класс 3 без повышающего
+// коэффициента — 1,00 (пункт 2, часть вторая редакции 2022 года).
+test "urn:query:bm-red-2024-vpervye" {
+    given {
+        context { decision_time @2024-06-01T12:00:00+05:00; knowledge_time @2024-06-01T12:00:00+05:00; legal_time @2024-06-01; timezone "Asia/Almaty"; }
+        assert "f0": pervoe_zaklyuchenie_dogovora(entity_ref("urn:kz:bm:r:6")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:r:6"), 1.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Юридическое лицо, 2024 год: редакция 2022 года класса ему не присваивает
+// (пункт 2, часть первая) — коэффициент не выводится.
+test "urn:query:bm-red-2024-yurlitso" {
+    given {
+        context { decision_time @2024-06-01T12:00:00+05:00; knowledge_time @2024-06-01T12:00:00+05:00; legal_time @2024-06-01; timezone "Asia/Almaty"; }
+        assert "g0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:r:7"), OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "g1": deystvuyushchiy_klass(entity_ref("urn:kz:bm:r:7"), Klass3) { origin case_input; }
+        assert "g2": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:r:7"), 365) { origin case_input; }
+        assert "g3": strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(entity_ref("urn:kz:bm:r:7")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:r:7"), 0.95));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Класс М1 в 2024 году: такого класса редакция 2022 года не знает — ни
+// коэффициента, ни перехода.
+test "urn:query:bm-red-2024-m1-net" {
+    given {
+        context { decision_time @2024-06-01T12:00:00+05:00; knowledge_time @2024-06-01T12:00:00+05:00; legal_time @2024-06-01; timezone "Asia/Almaty"; }
+    }
+    evaluate truth(koeffitsient_klassa(KlassM1, 3.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Редакция № 87 (2025 год): таблица из семнадцати строк уже действует, класс
+// М2 стоит 3,50; нормы пунктов той редакции — объявленная граница пакета.
+test "urn:query:bm-red-2025-m2" {
+    given {
+        context { decision_time @2025-06-01T12:00:00+05:00; knowledge_time @2025-06-01T12:00:00+05:00; legal_time @2025-06-01; timezone "Asia/Almaty"; }
+    }
+    evaluate truth(koeffitsient_klassa(KlassM2, 3.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Разрыв между принятием № 82 и днём, с которого действующая редакция
+// заведомо действует: ни одна редакция не применима, пакет молчит.
+test "urn:query:bm-red-razryv-2026-03" {
+    given {
+        context { decision_time @2026-03-01T12:00:00+05:00; knowledge_time @2026-03-01T12:00:00+05:00; legal_time @2026-03-01; timezone "Asia/Almaty"; }
+    }
+    evaluate truth(koeffitsient_klassa(Klass3, 1.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

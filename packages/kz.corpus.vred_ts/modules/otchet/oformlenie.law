@@ -1,0 +1,215 @@
+// Formatting of the damage-amount report: annex 3 and the fifth part of clause 3.
+//
+// PURPOSE. The model of the report itself — the composition of its data, the final
+// amount, the marks, the approval and the mode of provision — and the final
+// check that the report is drawn up in accordance with the Rules.
+//
+// SOURCE PROVISIONS: annex 3 (clauses 1—5); clause 3, fifth part.
+//
+// MODEL BOUNDARY. ROUNDING TO THE TENGE IS A POLICY BOUNDARY, NOT A GAP.
+// Clause 2 of annex 3 requires "a figure rounded to the tenge" but DOES NOT NAME
+// the rounding mode, and §50 forbids assuming one silently:
+// round-half-up and round-half-to-even give different sums on the same case.
+// Therefore the final amount enters the package already rounded, and the module
+// CHECKS that it is rounded — a property that does not depend on the mode.
+//
+// The type `Otchet` and the link between the report and the calculation live here: they have
+// no other readers. The deadlines around the report are in `modules/otchet/sroki-i-vozrazheniya.law`; they
+// work with the calculation, not with the document itself.
+//
+// DATA AS VALUES (10.09.2026, E-0165, as with the inspection act). An element of
+// the report is an empirical predicate with an argument and a parameter label
+// (`otchet_nomer(o, nomer: Text)`; the sums of the calculation entries are `Money`, dates are
+// `Date`); the title-page, calculation-entry and annex rules read the
+// existence of a value via the underscore of §98 (`when otchet_nomer(o: o, nomer:
+// _);`). There are no presence predicates or bridges — E-0165 removed them. Left without a value
+// are the seal-absence clause, the clause-3 marks (the form
+// PROVIDES FOR a mark, an empty mark has no value), the mode of provision,
+// and the clause-5 format property.
+
+pub entity Otchet { label ru official "Отчёт о размере вреда, причинённого транспортному средству"; }
+
+pub relation otchet_po_raschetu(o: Otchet, r: RaschetVreda) kind empirical { label ru official "Отчёт о размере вреда составлен по этому расчёту"; }
+
+// --- Annex 3. Formatting of the damage-amount report ------------------------
+// Subclauses 1), 3) and 4) of clause 1 of annex 3 are EXPANDED down to elements: each
+// form element has its own case fact, the group is derived by conjunction.
+// "Certified by seal (if present)" is a form proviso: certification is satisfied
+// by a seal with a signature or, absent a seal, by a signature alone (§206).
+pub relation pechat_otsutstvuet(o: Otchet) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. У страховщика нет печати (оговорка «при наличии»)"; }
+pub relation otchet_zaveren(o: Otchet) kind institutional { label ru official "Отчёт заверен по подпункту 1 пункта 1 приложения 3: печатью при её наличии и подписью утверждающего лица"; }
+pub relation otchet_soderzhit_titulnyy_list(o: Otchet) kind institutional { label ru official "Отчёт содержит титульный лист со всеми элементами подпункта 1 пункта 1 приложения 3"; }
+pub relation otchet_soderzhit_stoimosti_i_obemy(o: Otchet) kind institutional { label ru official "Отчёт содержит стоимость заменяемых деталей, объёмы и стоимость восстановительных работ, стоимость материалов и итоговую стоимость восстановительного ремонта"; }
+pub relation otchet_soderzhit_prilozheniya(o: Otchet) kind institutional { label ru official "Отчёт содержит приложения: калькуляцию из программного обеспечения, фотографии объекта и исходные данные"; }
+pub relation otchet_soderzhit_svedeniya_punkta_1(o: Otchet) kind institutional { label ru official "Отчёт содержит все сведения, предусмотренные пунктом 1 приложения 3"; }
+pub relation itogovaya_stoimost_v_tenge(o: Otchet, amount: Money) kind empirical { label ru official "Итоговая величина стоимости в тенге, выраженная цифрой в отчёте; округление до тенге выполняет составитель (режима округления Правила не называют, §50), а пакет проверяет отсутствие дробной части"; }
+pub relation otchet_soderzhit_itogovuyu_velichinu(o: Otchet) kind institutional { label ru official "Итоговая величина стоимости выражена в отчёте по требованиям пункта 2 приложения 3"; }
+pub relation otchet_predusmatrivaet_otmetku_o_soglasii(o: Otchet) kind empirical { label ru official "Отчёт предусматривает отметку о согласии либо несогласии с результатами расчёта"; }
+pub relation otchet_predusmatrivaet_otmetku_ob_otsutstvii_zhalob(o: Otchet) kind empirical { label ru official "Отчёт предусматривает отметку об отсутствии жалоб и претензий при исполнении страховщиком требований законодательных актов"; }
+pub relation otchet_soderzhit_otmetki(o: Otchet) kind institutional { label ru official "Отчёт содержит обе отметки, предусмотренные пунктом 3 приложения 3"; }
+pub relation otchet_utverzhden(o: Otchet) kind institutional { label ru official "Отчёт о размере вреда утверждён по требованиям пункта 4 приложения 3"; }
+pub relation otchet_predostavlen_v_bumazhnom_vide(o: Otchet) kind empirical { label ru official "Отчёт предоставлен выгодоприобретателю в бумажном виде"; }
+pub relation otchet_predostavlen_v_elektronnom_vide(o: Otchet) kind empirical { label ru official "Отчёт предоставлен выгодоприобретателю в электронном виде"; }
+pub relation format_ne_pozvolyaet_vnosit_izmeneniya(o: Otchet) kind empirical { label ru official "Формат отчёта не позволяет вносить какие-либо изменения"; }
+pub relation otchet_predostavlen_v_dopustimom_vide(o: Otchet) kind institutional { label ru official "Отчёт предоставлен в виде и формате, требуемых пунктом 5 приложения 3"; }
+pub relation otchet_vklyuchaet_kalkulyatsiyu_iz_spo(o: Otchet) kind empirical { label ru official "Отчёт включает калькуляцию определения размера вреда, сформированную в лицензионном специализированном программном обеспечении"; }
+pub relation otchet_oformlen_po_prilozheniyu_3(o: Otchet) kind institutional { label ru official "Отчёт о размере вреда оформлен согласно приложению 3 к Правилам"; }
+pub relation otchet_sostavlen_po_pravilam(o: Otchet) kind institutional { label ru official "Отчёт о размере вреда составлен страховщиком в порядке, установленном Правилами"; }
+
+// --- Annex 3. Report field values (10.09.2026) ------------------------
+pub relation otchet_nomer(o: Otchet, nomer: Text { label ru official "Номер отчёта"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Номер отчёта на титульном листе"; }
+pub relation otchet_data_sostavleniya(o: Otchet, day: Date { label ru official "Дата составления"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Дата составления отчёта"; }
+pub relation otchet_marka(o: Otchet, marka: Text { label ru official "Марка"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Марка транспортного средства на титульном листе"; }
+pub relation otchet_model(o: Otchet, model: Text { label ru official "Модель"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Модель транспортного средства на титульном листе"; }
+pub relation otchet_gos_nomer(o: Otchet, nomer: Text { label ru official "Государственный регистрационный номер"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Государственный регистрационный номер на титульном листе"; }
+pub relation otchet_data_osmotra(o: Otchet, day: Date { label ru official "Дата проведения осмотра объекта"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Дата проведения осмотра объекта на титульном листе"; }
+pub relation otchet_zayavitel(o: Otchet, naimenovanie: Text { label ru official "Полное наименование или ФИО заявителя (выгодоприобретателя)"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Заявитель (выгодоприобретатель) на титульном листе"; }
+pub relation otchet_strakhovshchik_naimenovanie(o: Otchet, naimenovanie: Text { label ru official "Полное наименование страховщика"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Полное наименование страховщика, определяющего размер вреда"; }
+pub relation otchet_strakhovshchik_bin(o: Otchet, bin: Text { label ru official "БИН"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. БИН страховщика"; }
+pub relation otchet_strakhovshchik_rekvizity(o: Otchet, rekvizity: Text { label ru official "Банковские реквизиты"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Банковские реквизиты страховщика"; }
+pub relation otchet_strakhovshchik_adres(o: Otchet, adres: Text { label ru official "Юридический адрес"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Юридический адрес страховщика"; }
+pub relation otchet_pechat(o: Otchet, fio: Text { label ru official "ФИО на печати"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Печать с указанием ФИО утверждающего лица"; }
+pub relation otchet_podpis_utverzhdayushchego(o: Otchet, fio: Text { label ru official "ФИО лица, утверждающего отчёт"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Подпись лица, утверждающего отчёт, с указанием его ФИО"; }
+pub relation otchet_opisanie_obekta(o: Otchet, opisanie: Text { label ru official "Общая информация и описание объекта"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 1. Общая информация и описание объекта на титульном листе"; }
+pub relation otchet_raschet_iznosa(o: Otchet, soderzhanie: Text { label ru official "Расчёт амортизационного износа (содержание раздела)"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 2. Расчётная часть: расчёт амортизационного износа — внешний результат, входит содержанием раздела"; }
+pub relation otchet_stoimost_detaley(o: Otchet, amount: Money { label ru official "Стоимость заменяемых деталей"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 3. Стоимость заменяемых деталей (с учётом износа вне случаев пункта 10)"; }
+pub relation otchet_obemy_rabot(o: Otchet, opisanie: Text { label ru official "Объёмы восстановительных работ"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 3. Объёмы восстановительных работ"; }
+pub relation otchet_stoimost_rabot(o: Otchet, amount: Money { label ru official "Стоимость восстановительных работ"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 3. Стоимость восстановительных работ"; }
+pub relation otchet_stoimost_materialov(o: Otchet, amount: Money { label ru official "Стоимость материалов"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 3. Стоимость материалов"; }
+pub relation otchet_stoimost_remonta(o: Otchet, amount: Money { label ru official "Итоговая стоимость восстановительного ремонта"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 3. Итоговая стоимость восстановительного ремонта"; }
+pub relation otchet_kalkulyatsiya_spo(o: Otchet, fayl: Text { label ru official "Калькуляция из СПО (имя файла или ссылка)"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 4. Калькуляция, составленная в СПО, приложенная к отчёту"; }
+pub relation otchet_fotografii_obekta(o: Otchet, fayly: Text { label ru official "Фотографии объекта (имена файлов или ссылки)"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 4. Фотографии объекта, приложенные к отчёту"; }
+pub relation otchet_iskhodnye_dannye(o: Otchet, perechen: Text { label ru official "Исходные данные: заявление, акт осмотра, иные документы"; }) kind empirical { label ru official "Приложение 3 пункт 1 подпункт 4. Исходные данные для составления калькуляции, приложенные к отчёту"; }
+pub relation otchet_summa_propisyu(o: Otchet, propis: Text { label ru official "Сумма прописью"; }) kind empirical { label ru official "Приложение 3 пункт 2. Письменная расшифровка итоговой суммы в скобках"; }
+pub relation otchet_utverdil_rukovoditel(o: Otchet, fio: Text { label ru official "ФИО руководителя страховой организации"; }) kind empirical { label ru official "Приложение 3 пункт 4. Руководитель страховой организации, утвердивший отчёт"; }
+pub relation otchet_utverdilo_upolnomochennoe_litso(o: Otchet, fio: Text { label ru official "ФИО уполномоченного лица"; }) kind empirical { label ru official "Приложение 3 пункт 4. Уполномоченное руководителем лицо, утвердившее отчёт"; }
+
+@source(VRED_TS_PRIL_3) {
+    rule OtchetZaverenPechatyuIPodpisyu(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 1 подпункт 1. Отчёт заверен, если на нём печать и подпись утверждающего лица";
+        when otchet_pechat(o: o, fio: _);
+        when otchet_podpis_utverzhdayushchego(o: o, fio: _);
+        then otchet_zaveren(o);
+    }
+
+    rule OtchetZaverenPodpisyuBezPechati(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 1 подпункт 1. Отчёт заверен, если печати нет («при наличии») и есть подпись утверждающего лица";
+        when pechat_otsutstvuet(o);
+        when otchet_podpis_utverzhdayushchego(o: o, fio: _);
+        then otchet_zaveren(o);
+    }
+
+    rule OtchetSoderzhitTitulnyyList(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 1 подпункт 1. Титульный лист полон при наличии номера отчёта, даты составления, марки, модели и госномера, даты осмотра, заявителя, сведений о страховщике, заверения и описания объекта";
+        when otchet_nomer(o: o, nomer: _);
+        when otchet_data_sostavleniya(o: o, day: _);
+        when otchet_marka(o: o, marka: _);
+        when otchet_model(o: o, model: _);
+        when otchet_gos_nomer(o: o, nomer: _);
+        when otchet_data_osmotra(o: o, day: _);
+        when otchet_zayavitel(o: o, naimenovanie: _);
+        when otchet_strakhovshchik_naimenovanie(o: o, naimenovanie: _);
+        when otchet_strakhovshchik_bin(o: o, bin: _);
+        when otchet_strakhovshchik_rekvizity(o: o, rekvizity: _);
+        when otchet_strakhovshchik_adres(o: o, adres: _);
+        when otchet_zaveren(o);
+        when otchet_opisanie_obekta(o: o, opisanie: _);
+        then otchet_soderzhit_titulnyy_list(o);
+    }
+
+    rule OtchetSoderzhitStoimostiIObemy(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 1 подпункт 3. Расчётные указания полны при наличии стоимости заменяемых деталей, объёмов и стоимости работ, стоимости материалов и итоговой стоимости ремонта";
+        when otchet_stoimost_detaley(o: o, amount: _);
+        when otchet_obemy_rabot(o: o, opisanie: _);
+        when otchet_stoimost_rabot(o: o, amount: _);
+        when otchet_stoimost_materialov(o: o, amount: _);
+        when otchet_stoimost_remonta(o: o, amount: _);
+        then otchet_soderzhit_stoimosti_i_obemy(o);
+    }
+
+    rule OtchetSoderzhitPrilozheniya(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 1 подпункт 4. Приложения полны при наличии калькуляции из СПО, фотографий объекта и исходных данных";
+        when otchet_kalkulyatsiya_spo(o: o, fayl: _);
+        when otchet_fotografii_obekta(o: o, fayly: _);
+        when otchet_iskhodnye_dannye(o: o, perechen: _);
+        then otchet_soderzhit_prilozheniya(o);
+    }
+
+    rule OtchetSoderzhitSvedeniyaPunkta1(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 1. Отчёт содержит требуемые сведения, если в нём есть титульный лист, расчётная часть, стоимости с объёмами и приложения";
+        when otchet_soderzhit_titulnyy_list(o);
+        when otchet_raschet_iznosa(o: o, soderzhanie: _);
+        when otchet_soderzhit_stoimosti_i_obemy(o);
+        when otchet_soderzhit_prilozheniya(o);
+        then otchet_soderzhit_svedeniya_punkta_1(o);
+    }
+
+    // "Rounded to the tenge" IS CHECKED, even though the rounding mode is not named:
+    // the amount is rounded to the tenge if and only if it has no
+    // fractional part, and this property does not depend on the mode — `round` under any
+    // mode returns an integer value unchanged. The mode itself is still
+    // not chosen (§50): the package does not round, it checks that the amount is rounded.
+    rule OtchetSoderzhitItogovuyuVelichinu(o: Otchet, amount: Money) strict {
+        label ru official "Приложение 3 пункт 2. Итоговая величина выражена надлежаще, если она дана в тенге цифрой без дробной части (округлённой до тенге) и расшифрована прописью в скобках";
+        when itogovaya_stoimost_v_tenge(o: o, amount: amount);
+        when round(amount, 0, "HALF_UP") == amount;
+        when otchet_summa_propisyu(o: o, propis: _);
+        then otchet_soderzhit_itogovuyu_velichinu(o);
+    }
+
+    rule OtchetSoderzhitOtmetki(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 3. Отчёт содержит отметки, если в нём предусмотрены и отметка о согласии либо несогласии, и отметка об отсутствии жалоб и претензий";
+        when otchet_predusmatrivaet_otmetku_o_soglasii(o);
+        when otchet_predusmatrivaet_otmetku_ob_otsutstvii_zhalob(o);
+        then otchet_soderzhit_otmetki(o);
+    }
+
+    // "By the head of the organization OR a person authorized by them" — two grounds, two rules.
+    rule OtchetUtverzhdenRukovoditelem(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 4. Отчёт утверждён, если его утвердил руководитель страховой организации";
+        when otchet_utverdil_rukovoditel(o: o, fio: _);
+        then otchet_utverzhden(o);
+    }
+
+    rule OtchetUtverzhdenUpolnomochennymLitsom(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 4. Отчёт утверждён, если его утвердило уполномоченное руководителем лицо";
+        when otchet_utverdilo_upolnomochennoe_litso(o: o, fio: _);
+        then otchet_utverzhden(o);
+    }
+
+    // "In paper OR electronic form" — two grounds; the format requirement is
+    // common to both and therefore appears in each rule, not alongside them.
+    rule OtchetVBumazhnomVide(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 5. Отчёт предоставлен надлежаще, если он дан в бумажном виде в формате, не позволяющем вносить изменения";
+        when otchet_predostavlen_v_bumazhnom_vide(o);
+        when format_ne_pozvolyaet_vnosit_izmeneniya(o);
+        then otchet_predostavlen_v_dopustimom_vide(o);
+    }
+
+    rule OtchetVElektronnomVide(o: Otchet) strict {
+        label ru official "Приложение 3 пункт 5. Отчёт предоставлен надлежаще, если он дан в электронном виде в формате, не позволяющем вносить изменения";
+        when otchet_predostavlen_v_elektronnom_vide(o);
+        when format_ne_pozvolyaet_vnosit_izmeneniya(o);
+        then otchet_predostavlen_v_dopustimom_vide(o);
+    }
+
+    rule OtchetOformlenPoPrilozheniyu3(o: Otchet) strict {
+        label ru official "Приложение 3. Отчёт оформлен по приложению 3, если он содержит требуемые сведения и итоговую величину, предусматривает обе отметки, утверждён и предоставлен в допустимом виде";
+        when otchet_soderzhit_svedeniya_punkta_1(o);
+        when otchet_soderzhit_itogovuyu_velichinu(o);
+        when otchet_soderzhit_otmetki(o);
+        when otchet_utverzhden(o);
+        when otchet_predostavlen_v_dopustimom_vide(o);
+        then otchet_oformlen_po_prilozheniyu_3(o);
+    }
+}
+
+@source(VRED_TS_PT_3, quote = "Отчет о размере вреда составляется страховщиком и включает калькуляцию определения размера вреда, причиненного транспортному средству, которая формируется в СПО. Оформление отчета о размере вреда осуществляется согласно приложению 3 к Правилам.")
+rule OtchetSostavlenPoPravilam(o: Otchet, r: RaschetVreda, s: Strakhovshchik) strict {
+    label ru official "Пункт 3. Отчёт составлен по Правилам, если он составлен страховщиком, включает калькуляцию из программного обеспечения и оформлен согласно приложению 3";
+    when otchet_po_raschetu(o: o, r: r);
+    when strakhovshchik_po_raschetu(r: r, s: s);
+    when otchet_vklyuchaet_kalkulyatsiyu_iz_spo(o);
+    when otchet_oformlen_po_prilozheniyu_3(o);
+    then otchet_sostavlen_po_pravilam(o);
+}

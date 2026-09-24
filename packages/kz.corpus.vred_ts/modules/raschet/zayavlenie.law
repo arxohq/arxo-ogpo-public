@@ -1,0 +1,27 @@
+// Application for determining the amount of damage: annex 1.
+//
+// PURPOSE. The document itself that grounds the calculation, and the composition of its data.
+//
+// SOURCE PROVISIONS: annex 1 (application data); clause 2 in the part where
+// the application is named as the basis for the calculation.
+//
+// MODEL BOUNDARY. The type `Zayavlenie` is declared here, and three other modules read it:
+// the basis of the calculation (`modules/raschet/organizatsiya.law`), the appraiser branch
+// (`modules/raschet/otsenshchiki.law`) and the additional inspection
+// (`modules/osmotr/provedenie.law`), which has ITS OWN application.
+
+entity Zayavlenie { label ru official "Заявление об определении размера вреда, причинённого имуществу"; }
+
+// --- Annex 1. Application data ---------------------------------------
+relation zayavlenie_po_raschetu(z: Zayavlenie, r: RaschetVreda) kind empirical { label ru official "Заявление подано по этому расчёту размера вреда"; }
+relation zayavlenie_soderzhit_datu_i_vremya_postupleniya(z: Zayavlenie) kind empirical { label ru official "Заявление содержит сведения о дате и времени своего поступления"; }
+relation zayavlenie_soderzhit_svedeniya_ob_imushchestve(z: Zayavlenie) kind empirical { label ru official "Заявление содержит сведения об имуществе или транспортном средстве и его регистрационном номере"; }
+relation zayavlenie_soderzhit_svedeniya_prilozheniya_1(z: Zayavlenie) kind institutional { label ru official "Заявление содержит все сведения, предусмотренные приложением 1 к Правилам"; }
+
+@source(VRED_TS_PRIL_1, quote = "Заявление об определении размера вреда, причиненного транспортному средству, содержит следующие сведения:")
+rule ZayavlenieSoderzhitTrebuemyeSvedeniya(z: Zayavlenie) strict {
+    label ru official "Приложение 1. Заявление содержит требуемые сведения, если в нём есть и дата с временем поступления, и сведения об имуществе с регистрационным номером";
+    when zayavlenie_soderzhit_datu_i_vremya_postupleniya(z);
+    when zayavlenie_soderzhit_svedeniya_ob_imushchestve(z);
+    then zayavlenie_soderzhit_svedeniya_prilozheniya_1(z);
+}

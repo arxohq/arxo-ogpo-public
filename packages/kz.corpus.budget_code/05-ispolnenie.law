@@ -1,0 +1,675 @@
+// РАЗДЕЛ 5. ИСПОЛНЕНИЕ БЮДЖЕТА (главы 21–25, статьи 101–128).
+//
+// Выражено правилами: запрет перевода остатков на внебюджетные счета и
+// запрет использования средств будущих лет планового периода (ст. 101);
+// запрет платежей без зарегистрированной сделки (ст. 110 п. 4); запрет
+// инкассовых распоряжений на единый казначейский счёт (ст. 112 п. 2);
+// трёхмесячный срок возврата нецелевых трансфертов и кредитов (ст. 115
+// п. 1) — срок в КАЛЕНДАРНЫХ МЕСЯЦАХ, шаг §86; запрет изъятия остатков
+// местных бюджетов и норматив досрочного погашения долга не менее половины
+// сверхплановых остатков (ст. 116 пп. 3–4); обязанность руководствоваться
+// нормативными актами при составлении бюджетной отчётности (ст. 118 п. 5).
+//
+// ГРАНИЦЫ РАЗДЕЛА:
+//   - ст. 102–108, 111, 113, 114 (казначейское исполнение, счета, план
+//     финансирования, управление ликвидностью, казначейский мониторинг) —
+//     процедуры, порядок которых определяется центральным уполномоченным
+//     органом по исполнению бюджета; кодекс называет участников и предмет,
+//     а условие и следствие оставляет подзаконному акту;
+//   - ст. 109 п. 8 (регистрация сделок после 20 декабря) — КАЛЕНДАРНАЯ ДАТА
+//     без года; из года дела не выводится (конструктора даты в §258 нет);
+//   - ст. 117, 119, 120 (бюджетный учёт, мониторинг, представление отчёта) —
+//     формы и периодичность определяются актами уполномоченного органа;
+//   - ст. 121–128 (годовой отчёт об исполнении бюджета) — регламент
+//     представления, обсуждения и утверждения с КАЛЕНДАРНЫМИ ДАТАМИ
+//     («не позднее 1 апреля», «не позднее 20 апреля», «не позднее 15 мая»);
+//     та же граница языка.
+
+
+// --- Ст. 101: два запрета исполнения ---------------------------------------
+
+relation transfer_of_balances_to_offbudget_account(p: BudgetProgramme, b: Body) kind empirical {
+    label ru-KZ official "участник переводит остатки бюджетных средств по бюджетной программе на аккредитивные и иные внебюджетные счета";
+}
+
+relation uses_future_year_appropriation(p: BudgetProgramme, b: Body) kind empirical {
+    label ru-KZ official "участник использует в текущем финансовом году бюджетные средства, предусмотренные во втором либо третьем годах планового периода";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation transfer_balances(p: BudgetProgramme) kind empirical {
+    label ru-KZ unofficial "действие нормы: transfer balances";
+}
+
+@source(BC_ART101) {
+    rule NoBalanceTransferToOffBudgetAccounts(p: BudgetProgramme, b: Body) strict {
+        when transfer_of_balances_to_offbudget_account(p, b);
+        then prohibition TransferBalancesOffBudget {
+            bearer b;
+            action transfer_balances(p);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 101 пункт 7. Не допускается перевод остатков бюджетных средств по бюджетным программам, образовавшихся на 31 декабря текущего финансового года, на аккредитивные и иные внебюджетные счета";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation use_appropriation(p: BudgetProgramme) kind empirical {
+        label ru-KZ unofficial "действие нормы: use appropriation";
+    }
+
+    rule NoUseOfFutureYearAppropriations(p: BudgetProgramme, b: Body) strict {
+        when uses_future_year_appropriation(p, b);
+        then prohibition UseFutureYearAppropriation {
+            bearer b;
+            action use_appropriation(p);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 101 пункт 8. При исполнении бюджета использование в текущем финансовом году бюджетных средств, предусмотренных во втором и (или) третьем финансовых годах планового периода, не допускается";
+    }
+}
+
+// --- Ст. 110 п. 4: платёж без зарегистрированной сделки ---------------------
+
+entity Payment {
+    label ru-KZ official "платёж либо перевод денег государственного учреждения";
+}
+
+relation payment_by(pay: Payment, b: Body) kind empirical {
+    label ru-KZ official "платёж проводится названным государственным учреждением";
+}
+
+relation registration_required_specific(pay: Payment) kind empirical {
+    label ru-KZ official "платёж относится к спецификам экономической классификации расходов, по которым регистрация гражданско-правовой сделки обязательна";
+}
+
+relation civil_transaction_registered(pay: Payment) kind empirical {
+    label ru-KZ official "гражданско-правовая сделка по платежу зарегистрирована";
+}
+
+relation payment_in_question(pay: Payment) kind empirical {
+    label ru-KZ official "платёж поставлен вопросом по настоящему делу";
+}
+
+closure RegisteredTransactionsClosure {
+    label ru-KZ official "перечень платежей с зарегистрированной гражданско-правовой сделкой по делу закрыт";
+    predicate civil_transaction_registered;
+    domain payment_in_question;
+    snapshot "urn:kz:corpus:clir:budget-code:snapshot:registered-transactions";
+    complete_as_of @2025-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation make_payment(pay: Payment) kind empirical {
+    label ru-KZ unofficial "действие нормы: make payment";
+}
+
+@source(BC_ART110)
+rule NoPaymentWithoutRegisteredTransaction(pay: Payment, b: Body) strict {
+    when payment_by(pay, b);
+    when payment_in_question(pay);
+    when registration_required_specific(pay);
+    when not civil_transaction_registered(pay);
+    then prohibition MakeUnregisteredPayment {
+        bearer b;
+        action make_payment(pay);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 110 пункт 4. Не допускается проведение платежей и переводов денег государственных учреждений без зарегистрированной гражданско-правовой сделки по спецификам, для которых регистрация обязательна";
+}
+
+// --- Ст. 112 п. 2: инкассовое распоряжение на единый казначейский счёт ------
+
+entity CollectionOrder {
+    label ru-KZ official "инкассовое распоряжение";
+}
+
+relation order_targets_treasury_account(o: CollectionOrder) kind empirical {
+    label ru-KZ official "инкассовое распоряжение выставляется на единый казначейский счёт, счета в иностранной валюте центрального уполномоченного органа по исполнению бюджета, специальные счета внешних займов либо связанных грантов";
+}
+
+relation order_issued_by(o: CollectionOrder, b: Body) kind empirical {
+    label ru-KZ official "инкассовое распоряжение выставляется названным лицом";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation issue_collection_order(o: CollectionOrder) kind empirical {
+    label ru-KZ unofficial "действие нормы: issue collection order";
+}
+
+@source(BC_ART112)
+rule NoCollectionOrderOnTreasuryAccount(o: CollectionOrder, b: Body) strict {
+    when order_targets_treasury_account(o);
+    when order_issued_by(o, b);
+    then prohibition IssueCollectionOrderOnTreasuryAccount {
+        bearer b;
+        action issue_collection_order(o);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 112 пункт 2. Не допускается выставление инкассовых распоряжений на единый казначейский счёт и счета в иностранной валюте, открытые центральному уполномоченному органу по исполнению бюджета, специальные счета внешних займов и связанных грантов";
+}
+
+// --- Ст. 115 п. 1: возврат нецелевых трансфертов в три месяца ---------------
+// Единица срока — КАЛЕНДАРНЫЙ МЕСЯЦ: шаг §86 календарь не спрашивает и
+// истекает в соответствующее число, а не на девяностый считающийся день.
+
+relation misuse_established_by_audit(t: Transfer, d: Date) kind empirical {
+    key(t);
+    label ru-KZ official "нецелевое использование установлено аудиторским заключением, принятым названной датой";
+}
+
+relation return_deadline(t: Transfer, d: Date) kind institutional {
+    label ru-KZ official "средства подлежат обязательному возврату не позднее названной даты";
+}
+
+relation returned_on(t: Transfer, d: Date) kind empirical {
+    key(t);
+    label ru-KZ official "средства возвращены названной датой";
+}
+
+relation return_timely(t: Transfer) kind institutional {
+    label ru-KZ official "возврат средств произведён в срок";
+}
+
+relation return_late(t: Transfer) kind institutional {
+    label ru-KZ official "возврат средств произведён с нарушением срока";
+}
+
+@source(BC_ART115) {
+    rule MisusedFundsReturnDeadline(t: Transfer, audit_date: Date) strict {
+        when misuse_established_by_audit(t, audit_date);
+        then return_deadline(t, add_calendar_period(audit_date, 3 calendar_month));
+        label ru-KZ official "Статья 115 пункт 1. Использованные не по целевому назначению целевые трансферты и бюджетные кредиты подлежат обязательному возврату не позднее трёх месяцев после принятия аудиторского заключения";
+    }
+
+    rule MisusedFundsReturnTimely(t: Transfer, returned: Date, deadline: Date) strict {
+        when returned_on(t, returned);
+        when return_deadline(t, deadline);
+        when returned <= deadline;
+        then return_timely(t);
+        label ru-KZ official "Статья 115 пункт 1. Возврат, произведённый не позднее последнего дня трёхмесячного срока, произведён в срок";
+    }
+
+    rule MisusedFundsReturnLate(t: Transfer, returned: Date, deadline: Date) strict {
+        when returned_on(t, returned);
+        when return_deadline(t, deadline);
+        when returned > deadline;
+        then return_late(t);
+        label ru-KZ official "Статья 115 пункт 1. Возврат, произведённый после последнего дня трёхмесячного срока, произведён с нарушением срока";
+    }
+}
+
+// --- Ст. 116: остатки бюджетных средств -------------------------------------
+
+entity Balance {
+    label ru-KZ official "остаток бюджетных средств на контрольном счёте наличности";
+}
+
+relation balance_of_local_budget(bal: Balance, b: Budget) kind empirical {
+    label ru-KZ official "остаток образовался на контрольном счёте наличности названного местного бюджета";
+}
+
+relation withdrawal_to_upper_budget(bal: Balance, b: Body) kind empirical {
+    label ru-KZ official "участник изымает (перечисляет) остаток в вышестоящий бюджет";
+}
+
+relation cash_deficit_case_of_article_113(bal: Balance) kind empirical {
+    label ru-KZ official "имеет место случай абзаца четвёртого пункта 6 статьи 113 настоящего Кодекса";
+}
+
+relation balance_not_withdrawable(bal: Balance) kind institutional {
+    label ru-KZ official "остаток бюджетных средств изъятию (перечислению) в вышестоящий бюджет не подлежит";
+}
+
+@source(BC_ART116) {
+    rule LocalBalanceNotWithdrawable(bal: Balance, b: Budget) defeasible {
+        when balance_of_local_budget(bal, b);
+        then balance_not_withdrawable(bal);
+        label ru-KZ official "Статья 116 пункт 3 абзац первый. Остатки бюджетных средств на конец периода на контрольных счетах наличности местных бюджетов изъятию (перечислению) в вышестоящий бюджет не подлежат";
+    }
+
+    rule Article113CaseAllowsWithdrawal(bal: Balance) defeater {
+        when cash_deficit_case_of_article_113(bal);
+        defeat balance_not_withdrawable(bal);
+        label ru-KZ official "Статья 116 пункт 3 абзац первый. Изъятие допускается в случае, предусмотренном абзацем четвёртым пункта 6 статьи 113 настоящего Кодекса";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation withdraw_balance(bal: Balance) kind empirical {
+        label ru-KZ unofficial "действие нормы: withdraw balance";
+    }
+
+    rule NoWithdrawalOfProtectedBalance(bal: Balance, b: Body) strict {
+        when balance_not_withdrawable(bal);
+        when withdrawal_to_upper_budget(bal, b);
+        then prohibition WithdrawLocalBalance {
+            bearer b;
+            action withdraw_balance(bal);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 116 пункт 3. Изъятие остатка, изъятию не подлежащего, настоящим Кодексом не допускается";
+    }
+}
+
+// Сверхплановый остаток: не менее половины идёт на досрочное погашение долга
+// местного исполнительного органа. Доля выражена масштабированием обеих
+// сторон — деление денег на деньги дало бы неточное частное.
+
+relation surplus_balance_amount(bal: Balance, amount: Money) kind empirical {
+    key(bal);
+    label ru-KZ official "остаток, образовавшийся вследствие превышения поступлений над плановыми значениями, составляет названную сумму";
+}
+
+relation directed_to_early_debt_repayment(bal: Balance, amount: Money) kind empirical {
+    key(bal);
+    label ru-KZ official "на досрочное погашение долга местного исполнительного органа направлена названная сумма";
+}
+
+relation surplus_use_conforms(bal: Balance) kind institutional {
+    label ru-KZ official "использование сверхпланового остатка отвечает нормативу настоящего Кодекса";
+}
+
+relation surplus_use_breaches(bal: Balance) kind institutional {
+    label ru-KZ official "использование сверхпланового остатка нормативу настоящего Кодекса не отвечает";
+}
+
+@source(BC_ART116) {
+    rule SurplusBalanceHalfToDebt(bal: Balance, surplus: Money, repaid: Money) strict {
+        when surplus_balance_amount(bal, surplus);
+        when directed_to_early_debt_repayment(bal, repaid);
+        when repaid * 2 >= surplus;
+        then surplus_use_conforms(bal);
+        label ru-KZ official "Статья 116 пункт 3 подпункт 1). Сверхплановые остатки используются для досрочного погашения долга местного исполнительного органа в объёме не менее пятидесяти процентов данных остатков";
+    }
+
+    rule SurplusBalanceBelowHalf(bal: Balance, surplus: Money, repaid: Money) strict {
+        when surplus_balance_amount(bal, surplus);
+        when directed_to_early_debt_repayment(bal, repaid);
+        when repaid * 2 < surplus;
+        then surplus_use_breaches(bal);
+        label ru-KZ official "Статья 116 пункт 3 подпункт 1). Направление на досрочное погашение долга менее половины сверхпланового остатка нормативу настоящего Кодекса не отвечает";
+    }
+}
+
+// --- Ст. 118 п. 5: обязанность при составлении бюджетной отчётности ---------
+
+relation prepares_budget_report(b: Body, r: Report) kind empirical {
+    label ru-KZ official "участник составляет и представляет названную бюджетную отчётность";
+}
+
+relation report_follows_regulations(r: Report) kind empirical {
+    label ru-KZ official "бюджетная отчётность составлена по нормативным правовым актам о составлении и представлении бюджетной отчётности";
+}
+
+@source(BC_ART118)
+rule BudgetReportRegulationDuty(b: Body, r: Report) strict {
+    when prepares_budget_report(b, r);
+    then duty FollowReportingRegulations {
+        bearer b;
+        beneficiary b;
+        achieve report_follows_regulations(r) during [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 118 пункт 5. Участники бюджетного процесса обязаны руководствоваться нормативными правовыми актами по составлению и представлению бюджетной отчётности";
+}
+
+// === ВТОРОЙ ПРОХОД (02.09.2026): статьи 102, 105, 106, 109, 111, 113, 117 ===
+
+// --- Ст. 102: деньги от реализации государственными учреждениями -----------
+// Общее правило с ИЗЪЯТИЕМ по сферам деятельности: зачисление в бюджет —
+// поражаемый вывод, а перечень сфер снимает его дефитером. Гардом в теле
+// изъятие молчало бы в разборе.
+
+entity SalesProceeds {
+    label ru-KZ official "деньги от реализации государственным учреждением товаров (работ, услуг)";
+}
+
+relation income_generating_right(p: SalesProceeds) kind empirical {
+    label ru-KZ official "государственному учреждению законами Республики Казахстан предоставлено право осуществлять приносящую доходы деятельность";
+}
+
+relation exempt_sphere(p: SalesProceeds) kind empirical {
+    label ru-KZ official "товары (работы, услуги) произведены в названной пунктом сфере — науки, образования, физической культуры и спорта, ветеринарии, лесного хозяйства, особо охраняемых природных территорий, медицинской помощи, Вооружённых Сил, государственных библиотек, музеев и архивов";
+}
+
+relation credited_to_budget(p: SalesProceeds) kind institutional {
+    label ru-KZ official "деньги подлежат зачислению в соответствующий бюджет";
+}
+
+@source(BC_ART102) {
+    rule SalesProceedsToBudget(p: SalesProceeds) defeasible {
+        when income_generating_right(p);
+        then credited_to_budget(p);
+        label ru-KZ official "Статья 102 пункт 1. Деньги от реализации государственными учреждениями товаров (работ, услуг), которым законами предоставлено право осуществлять приносящую доходы деятельность, подлежат зачислению в соответствующий бюджет";
+    }
+
+    rule ExemptSphereNotCredited(p: SalesProceeds) defeater {
+        when exempt_sphere(p);
+        defeat credited_to_budget(p);
+        label ru-KZ official "Статья 102 пункт 1. Изъятие: деньги от реализации товаров (работ, услуг), производимых в названных сферах, зачислению в бюджет не подлежат";
+    }
+}
+
+// --- Ст. 105: сбалансированность сводного плана ----------------------------
+// «Должен быть сбалансирован, что означает недопущение превышения расходов
+// над поступлениями по месяцам с нарастающим итогом» — определение дано
+// САМОЙ статьёй, поэтому норма проверяема сравнением, а не оценкой.
+
+entity FinancingPlan {
+    label ru-KZ official "сводный план поступлений и финансирования по платежам";
+}
+
+relation plan_cumulative_receipts(p: FinancingPlan, amount: Money) kind empirical {
+    key(p);
+    label ru-KZ official "поступления по сводному плану нарастающим итогом с начала года составляют названную сумму";
+}
+
+relation plan_cumulative_expenditure(p: FinancingPlan, amount: Money) kind empirical {
+    key(p);
+    label ru-KZ official "расходы по сводному плану нарастающим итогом с начала года составляют названную сумму";
+}
+
+relation plan_balanced(p: FinancingPlan) kind institutional {
+    label ru-KZ official "сводный план поступлений и финансирования сбалансирован";
+}
+
+relation plan_unbalanced(p: FinancingPlan) kind institutional {
+    label ru-KZ official "сводный план поступлений и финансирования не сбалансирован";
+}
+
+@source(BC_ART105) {
+    rule PlanBalanced(p: FinancingPlan, receipts: Money, spending: Money) strict {
+        when plan_cumulative_receipts(p, receipts);
+        when plan_cumulative_expenditure(p, spending);
+        when spending <= receipts;
+        then plan_balanced(p);
+        label ru-KZ official "Статья 105 пункт 5. Сводный план поступлений и финансирования по платежам должен быть сбалансирован, что означает недопущение превышения расходов над поступлениями по месяцам с нарастающим итогом с начала года";
+    }
+
+    rule PlanUnbalanced(p: FinancingPlan, receipts: Money, spending: Money) strict {
+        when plan_cumulative_receipts(p, receipts);
+        when plan_cumulative_expenditure(p, spending);
+        when spending > receipts;
+        then plan_unbalanced(p);
+        label ru-KZ official "Статья 105 пункт 5. Превышение расходов над поступлениями нарастающим итогом означает, что сводный план не сбалансирован";
+    }
+}
+
+// --- Ст. 106: два запрета по счетам ----------------------------------------
+
+relation transfer_between_institution_codes(pay: Payment, b: Body) kind empirical {
+    label ru-KZ official "производится перечисление денег с кода одного государственного учреждения на код другого государственного учреждения";
+}
+
+relation account_opened_outside_list(b: Body) kind empirical {
+    label ru-KZ official "государственное учреждение открывает счёт в банке второго уровня, не предусмотренный частью первой пункта, в том числе на имя третьих лиц";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation transfer_between_codes(pay: Payment) kind empirical {
+    label ru-KZ unofficial "действие нормы: transfer between codes";
+}
+
+@source(BC_ART106) {
+    rule NoTransferBetweenInstitutionCodes(pay: Payment, b: Body) strict {
+        when transfer_between_institution_codes(pay, b);
+        then prohibition TransferBetweenCodes {
+            bearer b;
+            action transfer_between_codes(pay);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 106. Перечисление денег с кода одного государственного учреждения на код другого государственного учреждения не допускается";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation open_account(b: Body) kind empirical {
+        label ru-KZ unofficial "действие нормы: open account";
+    }
+
+    rule NoAccountOutsideList(b: Body) strict {
+        when account_opened_outside_list(b);
+        then prohibition OpenAccountOutsideList {
+            bearer b;
+            action open_account(b);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 106. Открытие государственными учреждениями счетов в банках второго уровня, не предусмотренных частью первой пункта, в том числе на имя третьих лиц, не допускается";
+    }
+}
+
+// --- Ст. 109: регистрация сделки в пределах плана ---------------------------
+
+entity CivilTransaction {
+    label ru-KZ official "гражданско-правовая сделка государственного учреждения";
+}
+
+relation transaction_amount(x: CivilTransaction, amount: Money) kind empirical {
+    key(x);
+    label ru-KZ official "сумма гражданско-правовой сделки составляет названную сумму";
+}
+
+relation individual_plan_limit(x: CivilTransaction, amount: Money) kind empirical {
+    key(x);
+    label ru-KZ official "сумма, утверждённая индивидуальным планом финансирования по обязательствам на соответствующий финансовый год, составляет названную сумму";
+}
+
+relation transaction_registrable(x: CivilTransaction) kind institutional {
+    label ru-KZ official "гражданско-правовая сделка подлежит регистрации";
+}
+
+relation transaction_over_plan(x: CivilTransaction) kind institutional {
+    label ru-KZ official "сумма гражданско-правовой сделки выходит за пределы индивидуального плана финансирования";
+}
+
+@source(BC_ART109) {
+    rule TransactionWithinPlanIsRegistrable(
+        x: CivilTransaction,
+        amount: Money,
+        limit: Money,
+    ) strict {
+        when transaction_amount(x, amount);
+        when individual_plan_limit(x, limit);
+        when amount <= limit;
+        then transaction_registrable(x);
+        label ru-KZ official "Статья 109 пункт 5. Гражданско-правовые сделки подлежат регистрации в пределах сумм, утверждённых индивидуальным планом финансирования по обязательствам на соответствующий финансовый год";
+    }
+
+    rule TransactionOverPlan(x: CivilTransaction, amount: Money, limit: Money) strict {
+        when transaction_amount(x, amount);
+        when individual_plan_limit(x, limit);
+        when amount > limit;
+        then transaction_over_plan(x);
+        label ru-KZ official "Статья 109 пункт 5. Сделка на сумму свыше утверждённой индивидуальным планом финансирования пределу настоящей статьи не отвечает";
+    }
+}
+
+// --- Ст. 111: одиннадцать оснований приостановления -------------------------
+// Одиннадцать подпунктов — одиннадцать правил §206 с одной головой: в одном
+// факте они неразличимы для разбора и для law_loophole, а снимаются
+// по-разному.
+
+entity Institution {
+    label ru-KZ official "государственное учреждение";
+}
+
+relation plan_amended(i: Institution) kind empirical {
+    label ru-KZ official "внесены изменения в индивидуальные планы финансирования по обязательствам и платежам";
+}
+
+relation collection_order_issued(i: Institution) kind empirical {
+    label ru-KZ official "выставлено инкассовое распоряжение вне случаев пункта 2 статьи 112 настоящего Кодекса";
+}
+
+relation reconversion_not_done(i: Institution) kind empirical {
+    label ru-KZ official "государственным учреждением не осуществлена процедура реконвертации остатка сконвертированной иностранной валюты";
+}
+
+relation credit_not_returned(i: Institution) kind empirical {
+    label ru-KZ official "местным исполнительным органом не возвращена сумма бюджетного кредита в вышестоящий бюджет в срок, предусмотренный кредитным договором";
+}
+
+relation sequester_declared(i: Institution) kind empirical {
+    label ru-KZ official "объявлен секвестр";
+}
+
+relation annual_statements_not_filed(i: Institution) kind empirical {
+    label ru-KZ official "администратором бюджетных программ не представлена годовая финансовая отчётность в установленные порядок и сроки";
+}
+
+relation arrest_or_court_act(i: Institution) kind empirical {
+    label ru-KZ official "наложен арест уполномоченных органов либо выставлен акт судебного органа вне случаев пункта 2 статьи 112";
+}
+
+relation tax_or_audit_order(i: Institution) kind empirical {
+    label ru-KZ official "выставлено распоряжение налогового органа либо органа внутреннего государственного аудита вне случаев пункта 2 статьи 112";
+}
+
+relation withdrawal_transfer_overdue(i: Institution) kind empirical {
+    label ru-KZ official "нарушены сроки перечисления сумм бюджетных изъятий";
+}
+
+relation targeted_transfer_overdue(i: Institution) kind empirical {
+    label ru-KZ official "нарушены сроки перечисления целевых трансфертов в республиканский бюджет";
+}
+
+relation cash_insufficient(i: Institution) kind empirical {
+    label ru-KZ official "на контрольном счёте наличности соответствующего бюджета денег нет либо недостаточно";
+}
+
+relation registration_suspended(i: Institution) kind institutional {
+    label ru-KZ official "приём документов для регистрации гражданско-правовых сделок и проведения платежей приостанавливается";
+}
+
+@source(BC_ART111) {
+    rule SuspendByPlanAmendment(i: Institution) strict {
+        when plan_amended(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 1). Приостановление в случае внесения изменений в индивидуальные планы финансирования";
+    }
+
+    rule SuspendByCollectionOrder(i: Institution) strict {
+        when collection_order_issued(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 2). Приостановление в случае выставления инкассовых распоряжений";
+    }
+
+    rule SuspendByReconversion(i: Institution) strict {
+        when reconversion_not_done(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 3). Приостановление, если не осуществлена процедура реконвертации остатка иностранной валюты";
+    }
+
+    rule SuspendByUnreturnedCredit(i: Institution) strict {
+        when credit_not_returned(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 4). Приостановление, если не возвращена сумма бюджетного кредита в вышестоящий бюджет в срок кредитного договора";
+    }
+
+    rule SuspendBySequester(i: Institution) strict {
+        when sequester_declared(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 5). Приостановление в случае секвестра";
+    }
+
+    rule SuspendByMissingStatements(i: Institution) strict {
+        when annual_statements_not_filed(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 6). Приостановление, если не представлена годовая финансовая отчётность";
+    }
+
+    rule SuspendByArrestOrCourtAct(i: Institution) strict {
+        when arrest_or_court_act(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 7). Приостановление в случае наложения ареста либо выставления акта судебного органа";
+    }
+
+    rule SuspendByTaxOrAuditOrder(i: Institution) strict {
+        when tax_or_audit_order(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 8). Приостановление в случае распоряжения налогового органа либо органа внутреннего государственного аудита";
+    }
+
+    rule SuspendByWithdrawalOverdue(i: Institution) strict {
+        when withdrawal_transfer_overdue(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 9). Приостановление при нарушении сроков перечисления сумм бюджетных изъятий";
+    }
+
+    rule SuspendByTargetedTransferOverdue(i: Institution) strict {
+        when targeted_transfer_overdue(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 10). Приостановление при нарушении сроков перечисления целевых трансфертов в республиканский бюджет";
+    }
+
+    rule SuspendByCashShortage(i: Institution) strict {
+        when cash_insufficient(i);
+        then registration_suspended(i);
+        label ru-KZ official "Статья 111 пункт 1 подпункт 11). Приостановление при отсутствии либо недостаточности денег на контрольном счёте наличности";
+    }
+}
+
+// --- Ст. 113: запрет размещения бюджетных денег на банковских счетах --------
+
+relation budget_money_placed_on_account(b: Body) kind empirical {
+    label ru-KZ official "участник размещает бюджетные деньги, в том числе полученные на возвратной основе, на банковских счетах";
+}
+
+relation placement_allowed_by_article(b: Body) kind empirical {
+    label ru-KZ official "имеет место случай размещения, прямо предусмотренный статьёй 113 настоящего Кодекса";
+}
+
+relation placement_forbidden(b: Body) kind institutional {
+    label ru-KZ official "размещение бюджетных денег на банковских счетах не допускается";
+}
+
+@source(BC_ART113) {
+    rule BudgetMoneyPlacementForbidden(b: Body) defeasible {
+        when budget_money_placed_on_account(b);
+        then placement_forbidden(b);
+        label ru-KZ official "Статья 113 пункт 9. Размещение бюджетных денег, в том числе полученных на возвратной основе, на банковских счетах не допускается, за исключением случаев, предусмотренных настоящей статьёй";
+    }
+
+    rule PlacementAllowedByArticle(b: Body) defeater {
+        when placement_allowed_by_article(b);
+        defeat placement_forbidden(b);
+        label ru-KZ official "Статья 113. Изъятие: случаи размещения, прямо предусмотренные настоящей статьёй, запретом не охватываются";
+    }
+}
+
+// --- Ст. 117 п. 5: качественные характеристики бюджетной отчётности --------
+
+relation report_understandable(r: Report) kind empirical {
+    label ru-KZ official "бюджетная отчётность понятна пользователю";
+}
+
+relation report_relevant(r: Report) kind empirical {
+    label ru-KZ official "бюджетная отчётность уместна для принятия решений";
+}
+
+relation report_reliable(r: Report) kind empirical {
+    label ru-KZ official "бюджетная отчётность достоверна";
+}
+
+relation report_comparable(r: Report) kind empirical {
+    label ru-KZ official "бюджетная отчётность сопоставима";
+}
+
+relation report_quality_met(r: Report) kind institutional {
+    label ru-KZ official "бюджетная отчётность отвечает качественным характеристикам статьи 117";
+}
+
+@source(BC_ART117)
+rule ReportQualityMet(r: Report) strict {
+    when report_understandable(r);
+    when report_relevant(r);
+    when report_reliable(r);
+    when report_comparable(r);
+    then report_quality_met(r);
+    label ru-KZ official "Статья 117 пункт 5. Бюджетная отчётность должна соответствовать качественным характеристикам понятности, уместности, достоверности и сопоставимости";
+}

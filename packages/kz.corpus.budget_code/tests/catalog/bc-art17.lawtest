@@ -1,0 +1,22 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 17 пункт 2. Пилотный проект в области бюджетных отношений должен соответствовать шести критериям: уникальность решения, конкретные цели и ожидаемые резул
+test "CATALOG-PILOTCRITERIAMET" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": pilot_complete(entity_ref("urn:kz:catalog:pilotcriteriamet:v0")) { origin case_input; }
+        assert "cat-1": pilot_has_effect(entity_ref("urn:kz:catalog:pilotcriteriamet:v0")) { origin case_input; }
+        assert "cat-2": pilot_has_goals(entity_ref("urn:kz:catalog:pilotcriteriamet:v0")) { origin case_input; }
+        assert "cat-3": pilot_time_limited(entity_ref("urn:kz:catalog:pilotcriteriamet:v0")) { origin case_input; }
+        assert "cat-4": pilot_solution_unique(entity_ref("urn:kz:catalog:pilotcriteriamet:v0")) { origin case_input; }
+        assert "cat-5": pilot_realistic(entity_ref("urn:kz:catalog:pilotcriteriamet:v0")) { origin case_input; }
+    }
+    evaluate truth(pilot_criteria_met(entity_ref("urn:kz:catalog:pilotcriteriamet:v0")));
+    expect truth_status == TRUE_ONLY;
+}

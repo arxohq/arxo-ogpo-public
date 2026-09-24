@@ -1,0 +1,75 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 10 п. 2 — ПАРА. Один и тот же вид требования проверяется с обеих
+// сторон черты, которую проводит пункт: вред имуществу договором
+// предусмотрен, утрата товарной стоимости — изъята. Пара нужна затем, что
+// изъятие есть половина нормы: правило, выводящее только покрытие, зелено и
+// на изъятом деле.
+
+test "urn:query:ogpo-cover-property-harm" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p2-a0": claimed_harm_kind(entity_ref("urn:kz:ogpo:claim:d1"), HarmToProperty) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(harm_covered_by_contract(entity_ref("urn:kz:ogpo:claim:d1"), HarmToProperty));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-exclude-marketable-value" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p2-b0": claimed_harm_kind(entity_ref("urn:kz:ogpo:claim:d2"), LossOfMarketableValue) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(harm_excluded_from_contract(entity_ref("urn:kz:ogpo:claim:d2"), LossOfMarketableValue));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Оборотная сторона той же пары: изъятое возмещение НЕ становится покрытым.
+// Без этого теста правило `ClaimedHarmIsCoveredByContract` могло бы читать
+// любой заявленный вид и оставаться зелёным.
+test "urn:query:ogpo-marketable-value-not-covered" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p2-c0": claimed_harm_kind(entity_ref("urn:kz:ogpo:claim:d3"), MoralHarm) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(harm_covered_by_contract(entity_ref("urn:kz:ogpo:claim:d3"), MoralHarm));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

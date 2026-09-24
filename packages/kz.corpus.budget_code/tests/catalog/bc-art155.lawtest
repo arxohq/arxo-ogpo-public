@@ -1,0 +1,28 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 155 подпункт 1). Для кредита на покрытие дефицита наличности процедура пройдена самим изъятием статьи
+test "CATALOG-CREDITPROCEDUREBYCASHDEFICITEXEMPTION" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": cash_deficit_credit(entity_ref("urn:kz:catalog:creditprocedurebycashdeficitexemption:v0")) { origin case_input; }
+    }
+    evaluate truth(credit_procedure_followed(entity_ref("urn:kz:catalog:creditprocedurebycashdeficitexemption:v0")));
+    expect truth_status == TRUE_ONLY;
+}
+
+// Статья 155 подпункт 1). Определение целесообразности не требуется для бюджетных кредитов, направляемых на покрытие дефицита наличности нижестоящих бюджетов
+test "CATALOG-CASHDEFICITCREDITNEEDSNOEXPEDIENCY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": cash_deficit_credit(entity_ref("urn:kz:catalog:cashdeficitcreditneedsnoexpediency:v0")) { origin case_input; }
+        assert "cat-1": credit_proposed(entity_ref("urn:kz:catalog:cashdeficitcreditneedsnoexpediency:v0")) { origin case_input; }
+    }
+    evaluate truth(credit_decision_may_proceed(entity_ref("urn:kz:catalog:cashdeficitcreditneedsnoexpediency:v0")));
+    expect truth_status == TRUE_ONLY;
+}

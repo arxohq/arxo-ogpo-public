@@ -1,0 +1,19 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 94 пункт 3. Уполномоченный орган по исполнению бюджета вправе приостановить операции по бюджетным программам, по которым принято решение о сокращении бюд
+test "CATALOG-SUSPENDOPERATIONSLIBERTY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": reduction_decided(entity_ref("urn:kz:catalog:suspendoperationsliberty:v0")) { origin case_input; }
+        assert "cat-1": budget_execution_body(entity_ref("urn:kz:catalog:suspendoperationsliberty:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(SuspendProgrammeOperations, ACTIVE);
+}

@@ -1,0 +1,19 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 170. В целях совершенствования бюджетного законодательства Правительство Республики Казахстан вправе осуществлять реализацию пилотного проекта, предусмат
+test "CATALOG-BLOCKBUDGETINGPILOTLIBERTY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": block_budgeting_pilot(entity_ref("urn:kz:catalog:blockbudgetingpilotliberty:v0")) { origin case_input; }
+        assert "cat-1": government_of_kazakhstan(entity_ref("urn:kz:catalog:blockbudgetingpilotliberty:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(RunBlockBudgetingPilot, ACTIVE);
+}

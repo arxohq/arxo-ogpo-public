@@ -1,0 +1,33 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 9 п. 3: когда участники происшествия не могут сообщить о нём сами,
+// компетентное подразделение уполномоченного органа обязано информировать
+// страховщика.
+
+test "urn:query:ogpo-art9-p3-inform-insurer-when-reporting-impossible" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "art9-p3-a0": reporting_by_parties_impossible(entity_ref("urn:kz:ogpo:accident:a1")) {
+            origin case_input;
+        }
+        assert "art9-p3-a1": traffic_control_body_for(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:body:b1")) {
+            origin case_input;
+        }
+        assert "art9-p3-a2": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect position(InformirovatStrakhovshchikaOProisshestvii, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

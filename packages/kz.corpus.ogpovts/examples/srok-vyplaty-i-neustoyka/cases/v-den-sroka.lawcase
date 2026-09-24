@@ -1,0 +1,32 @@
+language "law.core" version "0.2";
+package examples.ogpovts.srok_vyplaty_i_neustoyka version "0.1.0";
+namespace "urn:law:examples:ogpo-vts:srok-vyplaty-i-neustoyka";
+
+// Статья 26 пункт 1: выплата В ДЕНЬ истечения срока — своевременна.
+// Документы получены в среду 22 июля 2026; пятнадцать рабочих дней по
+// снимку официального календаря (выходные — суббота и воскресенье, праздников
+// в окне нет): 23, 24, 27, 28, 29, 30, 31 июля, 3, 4, 5, 6, 7, 10, 11,
+// 12 августа → срок истекает в среду 12 августа 2026. Выплата 12 августа:
+// просрочки нет, неустойка не выводится вовсе — ни нулём, ни суммой.
+case VDenSroka {
+    context {
+        legal_time @2026-09-15;
+        knowledge_time @2026-09-15T12:00:00+05:00;
+        decision_time @2026-09-15T12:00:00+05:00;
+        timezone "Asia/Almaty";
+        deadline_policy OGPO_RABOCHIE_DNI;
+        calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+    }
+
+    const trebovanie: kz.corpus.ogpovts::PaymentClaim = entity_ref("urn:example:ogpo:trebovanie");
+    const proisshestvie: kz.corpus.ogpovts::TrafficAccident = entity_ref("urn:example:ogpo:proisshestvie");
+
+    assert "trebovanie": kz.corpus.ogpovts::payment_claim_of(trebovanie, proisshestvie, entity_ref("urn:example:ogpo:vygodopriobretatel"), entity_ref("urn:example:ogpo:strakhovshchik")) { origin case_input; }
+    assert "vygodopriobretatel": kz.corpus.ogpovts::beneficiary_of_victim(proisshestvie, entity_ref("urn:example:ogpo:poterpevshiy"), entity_ref("urn:example:ogpo:vygodopriobretatel")) { origin case_input; }
+    assert "razmer-vyplaty": kz.corpus.ogpovts::insurance_payment_amount(proisshestvie, entity_ref("urn:example:ogpo:poterpevshiy"), 730000 KZT) { origin case_input; }
+    assert "dokumenty-polucheny": kz.corpus.ogpovts::documents_received_on(trebovanie, @2026-07-22) { origin case_input; }
+    assert "vyplata": kz.corpus.ogpovts::strakhovaya_vyplata_osushchestvlena(trebovanie, @2026-08-12) { origin case_input; }
+    assert "nachislenie": kz.corpus.strakhovaya_neustoyka::nachislenie_po_trebovaniyu(trebovanie, entity_ref("urn:example:ogpo:nachislenie")) { origin case_input; }
+    assert "den-ispolneniya": kz.corpus.strakhovaya_neustoyka::den_ispolneniya_denezhnogo_obyazatelstva(trebovanie, @2026-08-12) { origin case_input; }
+    assert "delitel-goda": kz.corpus.strakhovaya_neustoyka::prinyatyy_delitel_goda(trebovanie, 365.0) { origin case_input; }
+}

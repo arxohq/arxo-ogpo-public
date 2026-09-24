@@ -1,0 +1,59 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 2 пункт 3 абзац второй. Получателям бюджетных средств запрещается вносить предложения об увеличении расходов бюджета вне процесса планирования бюджета
+test "CATALOG-NOEXPENDITUREINCREASEOUTSIDEPLANNING" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": budget_funds_recipient(entity_ref("urn:kz:catalog:noexpenditureincreaseoutsideplanning:v1")) { origin case_input; }
+        assert "cat-1": proposal_increases_expenditure(entity_ref("urn:kz:catalog:noexpenditureincreaseoutsideplanning:v0")) { origin case_input; }
+        assert "cat-2": proposal_outside_planning_process(entity_ref("urn:kz:catalog:noexpenditureincreaseoutsideplanning:v0")) { origin case_input; }
+        assert "cat-3": proposal_by(entity_ref("urn:kz:catalog:noexpenditureincreaseoutsideplanning:v0"), entity_ref("urn:kz:catalog:noexpenditureincreaseoutsideplanning:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(ProposeExpenditureIncreaseOutsidePlanning, ACTIVE);
+}
+
+// Статья 2 пункт 3 абзац третий. Получателям бюджетных средств запрещается вносить предложения об изменении механизмов выполнения задач бюджетного законодательств
+test "CATALOG-PART-NOTASKMECHANISMCHANGEWITHOUTAGREEMENT" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": budget_funds_recipient(entity_ref("urn:kz:catalog:notaskmechanismchangewithoutagreement:v1")) { origin case_input; }
+        assert "cat-1": proposal_changes_task_mechanism(entity_ref("urn:kz:catalog:notaskmechanismchangewithoutagreement:v0")) { origin case_input; }
+        assert "cat-2": proposal_in_question(entity_ref("urn:kz:catalog:notaskmechanismchangewithoutagreement:v0")) { origin case_input; }
+        assert "cat-3": proposal_by(entity_ref("urn:kz:catalog:notaskmechanismchangewithoutagreement:v0"), entity_ref("urn:kz:catalog:notaskmechanismchangewithoutagreement:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(ProposeTaskMechanismChange, ACTIVE);
+}
+
+// Статья 2 пункт 3 абзац четвёртый. Местным уполномоченным отраслевым органам запрещается согласовывать предложения центральных отраслевых органов об изменении ра
+test "CATALOG-PART-NOLOCALAPPROVALWITHOUTPLANNINGBODY" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": approval_of_central_sectoral_proposal(entity_ref("urn:kz:catalog:nolocalapprovalwithoutplanningbody:v0"), entity_ref("urn:kz:catalog:nolocalapprovalwithoutplanningbody:v1")) { origin case_input; }
+        assert "cat-1": proposal_in_question(entity_ref("urn:kz:catalog:nolocalapprovalwithoutplanningbody:v0")) { origin case_input; }
+        assert "cat-2": local_sectoral_body(entity_ref("urn:kz:catalog:nolocalapprovalwithoutplanningbody:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(ApproveCentralSectoralProposal, ACTIVE);
+}
+
+// Статья 2 пункт 4. Разногласия между администраторами бюджетных программ и центральным уполномоченным органом по бюджетному планированию рассматриваются соответс
+test "CATALOG-DISAGREEMENTSETTLEDBYCOMMISSION" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": budget_commission_resolved(entity_ref("urn:kz:catalog:disagreementsettledbycommission:v0")) { origin case_input; }
+        assert "cat-1": disagreement_between_administrator_and_planning_body(entity_ref("urn:kz:catalog:disagreementsettledbycommission:v0")) { origin case_input; }
+    }
+    evaluate truth(disagreement_settled(entity_ref("urn:kz:catalog:disagreementsettledbycommission:v0")));
+    expect truth_status == TRUE_ONLY;
+}

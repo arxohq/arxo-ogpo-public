@@ -1,0 +1,1088 @@
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Scenarios ported from the former Python runner of the `vred_ts` family.
+// Titles are the former scenario IDs (scenario-manifest); expectations are
+// derived from the FORMER checks, not from the engine's answers.
+
+test "KZ-VRED-01-POROG-80-RAVNO" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:kz:vred:ts-1"), amount: 1000000 KZT) {
+            origin case_input;
+        }
+
+        assert "assert-f1": ozhidaemye_raskhody_na_vosstanovlenie(v: entity_ref("urn:kz:vred:ts-1"), amount: 800000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(vosstanovlenie_ekonomicheski_netselesoobrazno(entity_ref("urn:kz:vred:ts-1")));
+    expect truth_status == NEITHER;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-02-POROG-80-PREVYSHEN" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:kz:vred:ts-1"), amount: 1000000 KZT) {
+            origin case_input;
+        }
+
+        assert "assert-f1": ozhidaemye_raskhody_na_vosstanovlenie(v: entity_ref("urn:kz:vred:ts-1"), amount: 800001 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(vosstanovlenie_ekonomicheski_netselesoobrazno(entity_ref("urn:kz:vred:ts-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(EkonomicheskayaNetselesoobraznost);
+}
+
+test "KZ-VRED-03-UNICHTOZHENO-TEKHNICHESKI" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": vosstanovlenie_tekhnicheski_nevozmozhno(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(ts_schitaetsya_unichtozhennym(entity_ref("urn:kz:vred:ts-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(UnichtozhenoPoTekhnicheskoyNevozmozhnosti);
+}
+
+test "KZ-VRED-04-VYPLATA-S-PEREDACHEY-OSTATKOV" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:kz:vred:ts-1"), amount: 1000000 KZT) {
+            origin case_input;
+        }
+
+        assert "assert-f4": vosstanovlenie_tekhnicheski_nevozmozhno(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": stoimost_godnykh_k_realizatsii_ostatkov(v: entity_ref("urn:kz:vred:ts-1"), amount: 150000 KZT) {
+            origin case_input;
+        }
+
+        assert "assert-f6": ostatki_peredany_v_sobstvennost_strakhovshchika(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(strakhovaya_vyplata_pri_gibeli(r: entity_ref("urn:kz:vred:raschet-1"), amount: 1000000 KZT));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(VyplataPriPeredacheOstatkov);
+}
+
+test "KZ-VRED-05-VYPLATA-ZA-MINUSOM-OSTATKOV" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": rynochnaya_stoimost_na_datu_otcheta(v: entity_ref("urn:kz:vred:ts-1"), amount: 1000000 KZT) {
+            origin case_input;
+        }
+
+        assert "assert-f4": vosstanovlenie_tekhnicheski_nevozmozhno(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": stoimost_godnykh_k_realizatsii_ostatkov(v: entity_ref("urn:kz:vred:ts-1"), amount: 150000 KZT) {
+            origin case_input;
+        }
+
+        assert "assert-f6": not ostatki_peredany_v_sobstvennost_strakhovshchika(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(strakhovaya_vyplata_pri_gibeli(r: entity_ref("urn:kz:vred:raschet-1"), amount: 850000 KZT));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(VyplataZaMinusomGodnykhOstatkov);
+}
+
+test "KZ-VRED-06-PROBEG-FIZLITSO-15000" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": detal_ts(d: entity_ref("urn:kz:vred:detal-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": detal_podlezhit_zamene(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": srednegodovoy_probeg(v: entity_ref("urn:kz:vred:ts-1"), distance: 15000 km) {
+            origin case_input;
+        }
+
+        assert "assert-f4": vladelets_fizicheskoe_litso(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:kz:vred:detal-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-07-PROBEG-FIZLITSO-15001" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": detal_ts(d: entity_ref("urn:kz:vred:detal-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": detal_podlezhit_zamene(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": srednegodovoy_probeg(v: entity_ref("urn:kz:vred:ts-1"), distance: 15001 km) {
+            origin case_input;
+        }
+
+        assert "assert-f4": vladelets_fizicheskoe_litso(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:kz:vred:detal-1")));
+    expect truth_status == NEITHER;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-08-PROBEG-YURLITSO-20000" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": detal_ts(d: entity_ref("urn:kz:vred:detal-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": detal_podlezhit_zamene(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": srednegodovoy_probeg(v: entity_ref("urn:kz:vred:ts-1"), distance: 20000 km) {
+            origin case_input;
+        }
+
+        assert "assert-f4": vladelets_yuridicheskoe_litso(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": nakhoditsya_na_garantiynom_obsluzhivanii(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:kz:vred:detal-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-09-PROBEG-YURLITSO-20001" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": detal_ts(d: entity_ref("urn:kz:vred:detal-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": detal_podlezhit_zamene(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": srednegodovoy_probeg(v: entity_ref("urn:kz:vred:ts-1"), distance: 20001 km) {
+            origin case_input;
+        }
+
+        assert "assert-f4": vladelets_yuridicheskoe_litso(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": nakhoditsya_na_garantiynom_obsluzhivanii(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:kz:vred:detal-1")));
+    expect truth_status == NEITHER;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-10-PEREDACHA-DETALI-DUTY" {
+    given {
+        context {
+            decision_time @2026-10-01T12:00:00+05:00;
+            knowledge_time @2026-10-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": detal_ts(d: entity_ref("urn:kz:vred:detal-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": detal_podlezhit_zamene(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": srednegodovoy_probeg(v: entity_ref("urn:kz:vred:ts-1"), distance: 12000 km) {
+            origin case_input;
+        }
+
+        assert "assert-f7": vladelets_fizicheskoe_litso(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f8": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f9": trebovanie_o_peredache_detali(r: entity_ref("urn:kz:vred:raschet-1"), d: entity_ref("urn:kz:vred:detal-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+    expect issues_within(info);
+    expect position(PeredatZamenyaemuyuDetal, ACTIVE);
+    expect not position(PeredatZamenyaemuyuDetal, CREATED);
+    expect not position(PeredatZamenyaemuyuDetal, PENDING);
+    expect not position(PeredatZamenyaemuyuDetal, SATISFIED);
+    expect not position(PeredatZamenyaemuyuDetal, VIOLATED);
+    expect not position(PeredatZamenyaemuyuDetal, WAIVED);
+    expect not position(PeredatZamenyaemuyuDetal, SUSPENDED);
+    expect not position(PeredatZamenyaemuyuDetal, TERMINATED);
+    expect not position(PeredatZamenyaemuyuDetal, EXPIRED);
+    expect not position(PeredatZamenyaemuyuDetal, UNDETERMINED);
+    expect not position(PeredatZamenyaemuyuDetal, AVAILABLE);
+    expect not position(PeredatZamenyaemuyuDetal, EXERCISED);
+    expect not position(PeredatZamenyaemuyuDetal, VALIDLY_EXERCISED);
+    expect not position(PeredatZamenyaemuyuDetal, INVALIDLY_EXERCISED);
+    expect not position(PeredatZamenyaemuyuDetal, CONFLICTED);
+    expect not position(PeredatZamenyaemuyuDetal, DEFEATED);
+}
+
+test "KZ-VRED-10-PEREDACHA-DETALI-DUTY/2" {
+    given {
+        context {
+            decision_time @2026-10-01T12:00:00+05:00;
+            knowledge_time @2026-10-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": detal_ts(d: entity_ref("urn:kz:vred:detal-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": detal_podlezhit_zamene(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": srednegodovoy_probeg(v: entity_ref("urn:kz:vred:ts-1"), distance: 12000 km) {
+            origin case_input;
+        }
+
+        assert "assert-f7": vladelets_fizicheskoe_litso(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f8": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f9": trebovanie_o_peredache_detali(r: entity_ref("urn:kz:vred:raschet-1"), d: entity_ref("urn:kz:vred:detal-1"), day: @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "assert-f10": detal_peredana_strakhovshchiku(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+    expect issues_within(info);
+    expect position(PeredatZamenyaemuyuDetal, SATISFIED);
+    expect not position(PeredatZamenyaemuyuDetal, CREATED);
+    expect not position(PeredatZamenyaemuyuDetal, PENDING);
+    expect not position(PeredatZamenyaemuyuDetal, ACTIVE);
+    expect not position(PeredatZamenyaemuyuDetal, VIOLATED);
+    expect not position(PeredatZamenyaemuyuDetal, WAIVED);
+    expect not position(PeredatZamenyaemuyuDetal, SUSPENDED);
+    expect not position(PeredatZamenyaemuyuDetal, TERMINATED);
+    expect not position(PeredatZamenyaemuyuDetal, EXPIRED);
+    expect not position(PeredatZamenyaemuyuDetal, UNDETERMINED);
+    expect not position(PeredatZamenyaemuyuDetal, AVAILABLE);
+    expect not position(PeredatZamenyaemuyuDetal, EXERCISED);
+    expect not position(PeredatZamenyaemuyuDetal, VALIDLY_EXERCISED);
+    expect not position(PeredatZamenyaemuyuDetal, INVALIDLY_EXERCISED);
+    expect not position(PeredatZamenyaemuyuDetal, CONFLICTED);
+    expect not position(PeredatZamenyaemuyuDetal, DEFEATED);
+}
+
+test "KZ-VRED-11-DVA-OTSENSHCHIKA" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": predlozheno_otsenshchikov(r: entity_ref("urn:kz:vred:raschet-1"), n: 2) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(vybor_otsenshchikov_obespechen(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-12-ODIN-OTSENSHCHIK" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": predlozheno_otsenshchikov(r: entity_ref("urn:kz:vred:raschet-1"), n: 1) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(vybor_otsenshchikov_obespechen(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == FALSE_ONLY;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-21-RASCHET-STRAKHOVSHCHIKOM" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": zayavlenie_po_raschetu(z: entity_ref("urn:kz:vred:zayavlenie-1"), r: entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": zayavlenie_soderzhit_datu_i_vremya_postupleniya(entity_ref("urn:kz:vred:zayavlenie-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": zayavlenie_soderzhit_svedeniya_ob_imushchestve(entity_ref("urn:kz:vred:zayavlenie-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": spo_primeneno(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f7": raschet_osushchestvlyaet_strakhovshchik(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(raschet_vedetsya_po_pravilam(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(RaschetStrakhovshchikom);
+}
+
+test "KZ-VRED-22-RASCHET-OTSENSHCHIKOM" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": zayavlenie_po_raschetu(z: entity_ref("urn:kz:vred:zayavlenie-1"), r: entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": zayavlenie_soderzhit_datu_i_vremya_postupleniya(entity_ref("urn:kz:vred:zayavlenie-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": zayavlenie_soderzhit_svedeniya_ob_imushchestve(entity_ref("urn:kz:vred:zayavlenie-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": spo_primeneno(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f7": otsenshchik_privlechen_po_dogovoru(s: entity_ref("urn:kz:vred:strakhovshchik-1"), o: entity_ref("urn:kz:vred:otsenshchik-1"), r: entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(raschet_vedetsya_po_pravilam(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect applied(PrivlechennyyOtsenshchikVeretRaschet);
+    expect applied(RaschetOtsenshchikom);
+}
+
+test "KZ-VRED-23-OSMOTR-S-DOKUMENTAMI" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": dostup_k_ts_besprepyatstvennyy(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": identifikatsiya_ts_provodima(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": probeg_po_odometru_ustanovim(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": komplektnost_ustanovima(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": perechen_defektov_ustanovim(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": fotosemka_povrezhdeniy_provodima(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": priznaki_prezhnikh_remontov_ustanovimy(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f7": opredelyaetsya_stoimost_vosstanovitelnogo_remonta(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f8": dokumenty_o_povrezhdeniyakh_v_dtp_predstavleny(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(osmotr_dopustim(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(OsmotrVozmozhen);
+}
+
+test "KZ-VRED-24-OSMOTR-BEZ-DOKUMENTOV" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": dostup_k_ts_besprepyatstvennyy(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": identifikatsiya_ts_provodima(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": probeg_po_odometru_ustanovim(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": komplektnost_ustanovima(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": perechen_defektov_ustanovim(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": fotosemka_povrezhdeniy_provodima(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": priznaki_prezhnikh_remontov_ustanovimy(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f7": opredelyaetsya_stoimost_vosstanovitelnogo_remonta(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f8": not dokumenty_o_povrezhdeniyakh_v_dtp_predstavleny(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(osmotr_dopustim(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == FALSE_ONLY;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-25-ORGANIZATSIYA-RASCHETA" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": akt_osmotra_po_raschetu(a: entity_ref("urn:kz:vred:akt-osmotra-1"), r: entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1-0": akt_data_provedeniya_osmotra(entity_ref("urn:kz:vred:akt-osmotra-1"), @2026-08-30T10:00:00+05:00) {
+            origin case_input;
+        }
+        assert "assert-f1-1": akt_data_sostavleniya(entity_ref("urn:kz:vred:akt-osmotra-1"), @2026-08-30T11:30:00+05:00) {
+            origin case_input;
+        }
+
+        assert "assert-f2": akt_sobstvennik(entity_ref("urn:kz:vred:akt-osmotra-1"), "образец") {
+            origin case_input;
+        }
+
+        assert "assert-f3": akt_soderzhit_svedeniya_o_predstavivshem_lice(entity_ref("urn:kz:vred:akt-osmotra-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": akt_soderzhit_svedeniya_o_ts(entity_ref("urn:kz:vred:akt-osmotra-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": akt_soderzhit_svedeniya_o_povrezhdennykh_elementakh(entity_ref("urn:kz:vred:akt-osmotra-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": akt_fio_osmotrevshego(entity_ref("urn:kz:vred:akt-osmotra-1"), "образец") {
+            origin case_input;
+        }
+
+        assert "assert-f7": akt_vozmozhnye_defekty(entity_ref("urn:kz:vred:akt-osmotra-1"), "образец") {
+            origin case_input;
+        }
+
+        assert "assert-f8": mesto_i_vremya_osmotra_soglasovany(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f9": spo_primeneno(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(organizatsiya_rascheta_vypolnena(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-26-ORGANIZATSIYA-BEZ-SOGLASOVANIYA" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": akt_osmotra_po_raschetu(a: entity_ref("urn:kz:vred:akt-osmotra-1"), r: entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1-0": akt_data_provedeniya_osmotra(entity_ref("urn:kz:vred:akt-osmotra-1"), @2026-08-30T10:00:00+05:00) {
+            origin case_input;
+        }
+        assert "assert-f1-1": akt_data_sostavleniya(entity_ref("urn:kz:vred:akt-osmotra-1"), @2026-08-30T11:30:00+05:00) {
+            origin case_input;
+        }
+
+        assert "assert-f2": akt_sobstvennik(entity_ref("urn:kz:vred:akt-osmotra-1"), "образец") {
+            origin case_input;
+        }
+
+        assert "assert-f3": akt_soderzhit_svedeniya_o_predstavivshem_lice(entity_ref("urn:kz:vred:akt-osmotra-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": akt_soderzhit_svedeniya_o_ts(entity_ref("urn:kz:vred:akt-osmotra-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": akt_soderzhit_svedeniya_o_povrezhdennykh_elementakh(entity_ref("urn:kz:vred:akt-osmotra-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": akt_fio_osmotrevshego(entity_ref("urn:kz:vred:akt-osmotra-1"), "образец") {
+            origin case_input;
+        }
+
+        assert "assert-f7": akt_vozmozhnye_defekty(entity_ref("urn:kz:vred:akt-osmotra-1"), "образец") {
+            origin case_input;
+        }
+
+        assert "assert-f8": spo_primeneno(entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(organizatsiya_rascheta_vypolnena(entity_ref("urn:kz:vred:raschet-1")));
+    expect truth_status == NEITHER;
+    expect issues_within(info);
+}
+
+test "KZ-VRED-27-OTCHET-OFORMLEN" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": otchet_po_raschetu(o: entity_ref("urn:kz:vred:otchet-1"), r: entity_ref("urn:kz:vred:raschet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": otchet_soderzhit_titulnyy_list(entity_ref("urn:kz:vred:otchet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": otchet_raschet_iznosa(entity_ref("urn:kz:vred:otchet-1"), "образец") {
+            origin case_input;
+        }
+
+        assert "assert-f6": otchet_soderzhit_stoimosti_i_obemy(entity_ref("urn:kz:vred:otchet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f7": otchet_soderzhit_prilozheniya(entity_ref("urn:kz:vred:otchet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f8": itogovaya_stoimost_v_tenge(o: entity_ref("urn:kz:vred:otchet-1"), amount: 742318 KZT) {
+            origin case_input;
+        }
+
+        assert "assert-f9": otchet_summa_propisyu(entity_ref("urn:kz:vred:otchet-1"), "образец") {
+            origin case_input;
+        }
+
+        assert "assert-f10": otchet_predusmatrivaet_otmetku_o_soglasii(entity_ref("urn:kz:vred:otchet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f11": otchet_predusmatrivaet_otmetku_ob_otsutstvii_zhalob(entity_ref("urn:kz:vred:otchet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f12": otchet_utverdil_rukovoditel(entity_ref("urn:kz:vred:otchet-1"), "образец") {
+            origin case_input;
+        }
+
+        assert "assert-f13": otchet_predostavlen_v_bumazhnom_vide(entity_ref("urn:kz:vred:otchet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f14": format_ne_pozvolyaet_vnosit_izmeneniya(entity_ref("urn:kz:vred:otchet-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f15": otchet_vklyuchaet_kalkulyatsiyu_iz_spo(entity_ref("urn:kz:vred:otchet-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(otchet_sostavlen_po_pravilam(entity_ref("urn:kz:vred:otchet-1")));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(OtchetOformlenPoPrilozheniyu3);
+}
+
+test "KZ-VRED-28-STOIMOST-DETALI-BEZ-IZNOSA" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": detal_ts(d: entity_ref("urn:kz:vred:detal-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": detal_podlezhit_zamene(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": srednegodovoy_probeg(v: entity_ref("urn:kz:vred:ts-1"), distance: 12000 km) {
+            origin case_input;
+        }
+
+        assert "assert-f4": vladelets_fizicheskoe_litso(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f5": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f6": rynochnaya_stoimost_novoy_detali(d: entity_ref("urn:kz:vred:detal-1"), amount: 240000 KZT) {
+            origin case_input;
+        }
+
+        assert "assert-f7": stoimost_detali_s_uchetom_iznosa(d: entity_ref("urn:kz:vred:detal-1"), amount: 96000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(stoimost_zamenyaemoy_detali(d: entity_ref("urn:kz:vred:detal-1"), amount: 240000 KZT));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(StoimostDetaliBezIznosa);
+}
+
+test "KZ-VRED-29-STOIMOST-DETALI-S-IZNOSOM" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": detal_ts(d: entity_ref("urn:kz:vred:detal-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": detal_podlezhit_zamene(entity_ref("urn:kz:vred:detal-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": rynochnaya_stoimost_novoy_detali(d: entity_ref("urn:kz:vred:detal-1"), amount: 240000 KZT) {
+            origin case_input;
+        }
+
+        assert "assert-f3": stoimost_detali_s_uchetom_iznosa(d: entity_ref("urn:kz:vred:detal-1"), amount: 96000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(stoimost_zamenyaemoy_detali(d: entity_ref("urn:kz:vred:detal-1"), amount: 96000 KZT));
+    expect truth_status == TRUE_ONLY;
+    expect issues_within(info);
+    expect any_applied(StoimostDetaliSUchetomIznosa);
+}
+
+test "KZ-VRED-30-POZITSII-PUNKTOV-8-I-11" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": oplata_remonta_soglasovana(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": vozmozhnost_rascheta_iznosa_obespechena_strakhovshchikom(entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+    expect issues_within(info);
+    expect position(ObespechitRaschetIznosaStrakhovshchikom, SATISFIED);
+    expect position(OrganizovatOplatuRemonta, ACTIVE);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, CREATED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, PENDING);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, ACTIVE);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, VIOLATED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, WAIVED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, SUSPENDED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, TERMINATED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, EXPIRED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, UNDETERMINED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, AVAILABLE);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, EXERCISED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, VALIDLY_EXERCISED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, INVALIDLY_EXERCISED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, CONFLICTED);
+    expect not position(ObespechitRaschetIznosaStrakhovshchikom, DEFEATED);
+    expect not position(OrganizovatOplatuRemonta, CREATED);
+    expect not position(OrganizovatOplatuRemonta, PENDING);
+    expect not position(OrganizovatOplatuRemonta, SATISFIED);
+    expect not position(OrganizovatOplatuRemonta, VIOLATED);
+    expect not position(OrganizovatOplatuRemonta, WAIVED);
+    expect not position(OrganizovatOplatuRemonta, SUSPENDED);
+    expect not position(OrganizovatOplatuRemonta, TERMINATED);
+    expect not position(OrganizovatOplatuRemonta, EXPIRED);
+    expect not position(OrganizovatOplatuRemonta, UNDETERMINED);
+    expect not position(OrganizovatOplatuRemonta, AVAILABLE);
+    expect not position(OrganizovatOplatuRemonta, EXERCISED);
+    expect not position(OrganizovatOplatuRemonta, VALIDLY_EXERCISED);
+    expect not position(OrganizovatOplatuRemonta, INVALIDLY_EXERCISED);
+    expect not position(OrganizovatOplatuRemonta, CONFLICTED);
+    expect not position(OrganizovatOplatuRemonta, DEFEATED);
+}
+
+test "KZ-VRED-30-POZITSII-PUNKTOV-8-I-11/2" {
+    given {
+        context {
+            decision_time @2026-08-26T12:00:00+05:00;
+            knowledge_time @2026-08-26T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+
+        assert "assert-f0": raschet_po_ts(r: entity_ref("urn:kz:vred:raschet-1"), v: entity_ref("urn:kz:vred:ts-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f1": strakhovshchik_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), s: entity_ref("urn:kz:vred:strakhovshchik-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f2": poterpevshiy_po_raschetu(r: entity_ref("urn:kz:vred:raschet-1"), p: entity_ref("urn:kz:vred:poterpevshiy-1")) {
+            origin case_input;
+        }
+
+        assert "assert-f3": ombudsman_deystvuet(entity_ref("urn:kz:vred:ombudsman")) {
+            origin case_input;
+        }
+
+        assert "assert-f4": vozmozhnost_rascheta_iznosa_obespechena_ombudsmanom(entity_ref("urn:kz:vred:ombudsman")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+    expect issues_within(info);
+    expect position(ObespechitRaschetIznosaOmbudsmanom, SATISFIED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, CREATED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, PENDING);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, ACTIVE);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, VIOLATED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, WAIVED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, SUSPENDED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, TERMINATED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, EXPIRED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, UNDETERMINED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, AVAILABLE);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, EXERCISED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, VALIDLY_EXERCISED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, INVALIDLY_EXERCISED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, CONFLICTED);
+    expect not position(ObespechitRaschetIznosaOmbudsmanom, DEFEATED);
+}

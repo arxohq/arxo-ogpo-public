@@ -1,0 +1,344 @@
+// ПУНКТЫ 3, 7 И 10—15 — ПЕРЕХОД КЛАССА И ЕГО МОДИФИКАТОРЫ.
+//
+// Порядок счёта, который задают Правила:
+//
+//   1. столбец приложения — по числу страховых случаев (пункт 3, часть вторая;
+//      столбцы 0, 1, 2, 3 и «4 и более»);
+//   2. клетка приложения — переход от действующего класса по этому столбцу;
+//      повышение при этом ОБУСЛОВЛЕНО пунктом 3 (двести семьдесят дней
+//      страхования и отсутствие лишения права управления);
+//   3. модификаторы пунктов 10—13 — сдвиг на один класс вверх или вниз,
+//      применяемые ОДНОВРЕМЕННО (пункт 15);
+//   4. пункты 7 и 14 — присвоение самого минимального класса М2 помимо
+//      таблицы.
+//
+// СДВИГ СЧИТАЕТСЯ ПО МЕСТУ В ПОРЯДКЕ КЛАССОВ, а не по номеру класса: между
+// классом 0 и классом М номера нет вовсе, и «на 1 класс меньше» имеет смысл
+// только в порядке приложения. Порядок объявлен в `01-prilozhenie-klassy.law`.
+//
+// ПОЧЕМУ У КАЖДОГО МОДИФИКАТОРА ЕСТЬ ЯВНЫЙ НОЛЬ. Пункт 15 складывает
+// модификаторы, и слагаемое, которого нет, сделало бы сумму невыводимой.
+// Ноль выводится правилом `…NeDeystvuet`, читающим `not_known` СВОЕГО же
+// признака применимости, и это чтение самопроверяемо: окажись `not_known`
+// слеп к строгому продюсеру (случай, описанный в
+// `spec/decisions` и измеренный на закупках 02.09.2026), дело с применимым
+// модификатором получило бы и 1, и 0 сразу — то есть KEY_CONFLICT по
+// `key(dogovor)`, а не тихий неверный ответ. Сцены
+// `bm-p10-uproshchennyy-poryadok` и `bm-p15-odnovremenno` стерегут обе стороны.
+
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// --- Признаки дела для пунктов 7 и 10—14 ------------------------------------
+
+pub relation gibel_po_vine_s_vyplatoy(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "наступил страховой случай, произошедший по вине страхователя (застрахованного), повлекший гибель, и по нему осуществлена страховая выплата (пункт 7)";
+}
+
+pub relation uregulirovano_uproshchennym_poryadkom(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "страховой случай, произошедший по вине страхователя (застрахованного), урегулирован посредством упрощенного порядка урегулирования страхового случая в соответствии со статьёй 22-2 Закона об обязательном страховании ответственности владельцев транспортных средств (пункт 10)";
+}
+
+pub relation vyplata_po_imushchestvu(dogovor: Dogovor, summa: Money) kind empirical {
+    key(dogovor);
+    label ru-KZ official "сумма страховой выплаты, осуществлённой по имуществу потерпевшего (потерпевших) по страховому случаю, произошедшему по вине страхователя (застрахованного) (пункт 11)";
+}
+
+pub relation sluchay_vne_territorii_registratsii(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "страховой случай, произошедший по вине страхователя (застрахованного) и по которому осуществлена страховая выплата, наступил вне территории регистрации транспортного средства (пункт 12)";
+}
+
+// ЧУЖОЙ ПРОДЮСЕР, И ЭТО ЗАПИСАННОЕ РЕШЕНИЕ. Исключение пункта 12 сравнивает
+// коэффициент по территории регистрации «в значениях, предусмотренных пунктом
+// 3 статьи 19 Закона», с коэффициентом по территории наступления случая, оба
+// с поправочными коэффициентами пункта 3-1 той же статьи. Владелец этих
+// величин — `kz.corpus.ogpovts` (таблица двадцати территорий) и
+// `kz.corpus.popravochnye_koeffitsienty`. Ввести их сюда значило бы завести
+// вторую копию таблицы закона в подзаконном пакете, а импортировать
+// `kz.corpus.ogpovts` нельзя: он сам читает отсюда коэффициент премии, и
+// импорт замкнул бы кольцо.
+//
+// Поэтому отношение ОБЪЯВЛЕНО здесь (норма-то пункта 12 — здешняя), а
+// производит его правило в `kz.corpus.ogpovts`, которому обе величины
+// доступны. В мире без `ogpovts` признак не выводится, и исключение пункта 12
+// молчит — это правильный ответ: сравнить нечего.
+pub relation registratsiya_ne_deshevle_mesta_sluchaya(dogovor: Dogovor)
+    kind institutional {
+    label ru-KZ official "размер коэффициента по территории регистрации транспортного средства с учётом поправочного коэффициента не меньше размера коэффициента по территории наступления страхового случая с учётом соответствующего ему поправочного коэффициента (пункт 12, часть вторая)";
+}
+
+pub relation narusheniy_perechnya_punkta_13(dogovor: Dogovor, chislo: Integer)
+    kind empirical {
+    key(dogovor);
+    label ru-KZ official "число нарушений правил дорожного движения из перечня пункта 13, по которым постановления по делу об административном правонарушении и (или) предписания вступили в законную силу со дня предыдущего изменения класса (пункт 13)";
+}
+
+pub relation narushenie_perechnya_punkta_14(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "у страхователя (застрахованного) есть нарушение одного из правил дорожного движения перечня пункта 14 (опьянение), по которому вступили в законную силу постановление, предписание либо приговор суда (пункт 14)";
+}
+
+// --- Пункт 3, часть вторая: столбец приложения ------------------------------
+
+pub relation stolbets_perekhoda(dogovor: Dogovor, stolbets: Integer)
+    kind institutional {
+    key(dogovor);
+    label ru-KZ official "номер столбца приложения к Правилам по числу страховых случаев: 0, 1, 2, 3 либо 4 — «4 и более страховых случая»";
+}
+
+@source(BM_POINT_3) {
+    rule StolbetsPoChisluSluchaev(dogovor: Dogovor, chislo: Integer) strict {
+        label ru-KZ official "Приложение к Правилам: столбец выбирается по числу страховых случаев, произошедших по вине страхователя (застрахованного)";
+        when sluchaev_po_vine(dogovor, chislo);
+        when chislo < 4;
+        then stolbets_perekhoda(dogovor, chislo);
+    }
+
+    rule StolbetsChetyreIBolee(dogovor: Dogovor, chislo: Integer) strict {
+        label ru-KZ official "Приложение к Правилам: четыре и более страховых случая читаются последним столбцом";
+        when sluchaev_po_vine(dogovor, chislo);
+        when chislo >= 4;
+        then stolbets_perekhoda(dogovor, 4);
+    }
+}
+
+// --- Пункт 3: класс по таблице, с условием повышения -------------------------
+
+pub relation povyshenie_klassa_dopustimo(dogovor: Dogovor) kind institutional {
+    label ru-KZ official "изменение класса на более высокий класс допустимо: страховых случаев по вине нет и в базе данных есть информация о не менее двухстах семидесяти календарных днях страхования со дня последнего изменения класса, а права управления страхователь не лишён (пункт 3)";
+}
+
+@source(BM_POINT_3)
+rule PovyshenieDopustimo(dogovor: Dogovor, dney: Integer) strict {
+    label ru-KZ official "Пункт 3. Изменение класса на более высокий класс осуществляется при одновременном выполнении следующих условий: отсутствие информации о страховом случае (страховых случаях), произошедшем по вине страхователя (застрахованного), и наличие информации в базе данных о не менее двухстах семидесяти календарных днях со дня последнего изменения класса, в течение которых гражданско-правовая ответственность была застрахована";
+    when sluchaev_po_vine(dogovor, 0);
+    when dney_strakhovaniya_s_poslednego_izmeneniya(dogovor, dney);
+    when dney >= 270;
+    when not_known(lishen_prava_upravleniya(dogovor));
+    then povyshenie_klassa_dopustimo(dogovor);
+}
+
+pub relation klass_po_tablitse(dogovor: Dogovor, klass: Klass) kind institutional {
+    key(dogovor);
+    label ru-KZ official "класс, полученный по приложению к Правилам от действующего класса и числа страховых случаев, до модификаторов пунктов 10—13";
+}
+
+@source(BM_POINT_3) {
+    rule KlassPoTablitsePriPovyshenii(dogovor: Dogovor, deystvuyushchiy: Klass,
+                                      novyy: Klass) strict {
+        label ru-KZ official "Пункт 3 и приложение: при нуле страховых случаев и соблюдении условий повышения класс меняется на более высокий согласно приложению";
+        when povyshenie_klassa_dopustimo(dogovor);
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when perekhod_klassa(deystvuyushchiy, 0, novyy);
+        then klass_po_tablitse(dogovor, novyy);
+    }
+
+    rule KlassBezPovysheniya(dogovor: Dogovor, deystvuyushchiy: Klass,
+                             dney: Integer) strict {
+        label ru-KZ official "Пункт 3. При отсутствии страховых случаев, но без информации о двухстах семидесяти календарных днях страхования со дня последнего изменения класса, класс на более высокий не меняется";
+        when sluchaev_po_vine(dogovor, 0);
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when dney_strakhovaniya_s_poslednego_izmeneniya(dogovor, dney);
+        when dney < 270;
+        then klass_po_tablitse(dogovor, deystvuyushchiy);
+    }
+
+    rule KlassBezPovysheniyaPriLishenii(dogovor: Dogovor, deystvuyushchiy: Klass,
+                                        dney: Integer) strict {
+        label ru-KZ official "Пункт 3. Для лиц, лишенных права управления транспортными средствами, классы не повышаются в течение срока лишения этого права";
+        when sluchaev_po_vine(dogovor, 0);
+        when lishen_prava_upravleniya(dogovor);
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when dney_strakhovaniya_s_poslednego_izmeneniya(dogovor, dney);
+        when dney >= 270;
+        then klass_po_tablitse(dogovor, deystvuyushchiy);
+    }
+
+    rule KlassPoTablitsePriSnizhenii(dogovor: Dogovor, deystvuyushchiy: Klass,
+                                     stolbets: Integer, novyy: Klass) strict {
+        label ru-KZ official "Пункт 3 и приложение: наступление страхового случая (страховых случаев), произошедшего по вине страхователя (застрахованного) и по которому осуществлена страховая выплата, влечёт снижение класса согласно приложению к Правилам";
+        when stolbets_perekhoda(dogovor, stolbets);
+        when stolbets >= 1;
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when perekhod_klassa(deystvuyushchiy, stolbets, novyy);
+        then klass_po_tablitse(dogovor, novyy);
+    }
+}
+
+// --- Пункты 10—13: модификаторы, применяемые одновременно (пункт 15) ---------
+//
+// У каждого модификатора два правила: «применяется» даёт сдвиг, «не
+// применяется» даёт явный ноль. Ноль нужен пункту 15: сумма четырёх сдвигов
+// невыводима, если хотя бы одно слагаемое отсутствует.
+//
+// ДОСТУП К СВЕДЕНИЯМ (пункт 3, часть шестая) — посылка пунктов 12, 13 и 14 и
+// пункта 7. Без него модификатор молчит не потому, что события не было, а
+// потому что о нём нельзя узнать; ноль в этом случае выводится ветвью «не
+// применяется», и это верно: Правила велят считать без такой информации.
+
+pub relation punkt_10_primenyaetsya(dogovor: Dogovor) kind institutional {
+    label ru-KZ official "применяется положение части первой пункта 10: класс на 1 класс больше класса, предусмотренного приложением";
+}
+
+pub relation punkt_11_primenyaetsya(dogovor: Dogovor) kind institutional {
+    label ru-KZ official "применяется положение части первой пункта 11: класс на 1 класс больше класса, предусмотренного приложением";
+}
+
+pub relation punkt_12_primenyaetsya(dogovor: Dogovor) kind institutional {
+    label ru-KZ official "применяется положение части первой пункта 12: класс на 1 класс меньше класса, предусмотренного приложением";
+}
+
+pub relation punkt_13_primenyaetsya(dogovor: Dogovor) kind institutional {
+    label ru-KZ official "применяется положение пункта 13: класс на 1 класс меньше класса, предусмотренного приложением";
+}
+
+pub relation sdvig_punkta_10(dogovor: Dogovor, sdvig: Integer) kind institutional {
+    key(dogovor);
+    label ru-KZ official "сдвиг класса по пункту 10 в местах порядка классов";
+}
+
+pub relation sdvig_punkta_11(dogovor: Dogovor, sdvig: Integer) kind institutional {
+    key(dogovor);
+    label ru-KZ official "сдвиг класса по пункту 11 в местах порядка классов";
+}
+
+pub relation sdvig_punkta_12(dogovor: Dogovor, sdvig: Integer) kind institutional {
+    key(dogovor);
+    label ru-KZ official "сдвиг класса по пункту 12 в местах порядка классов";
+}
+
+pub relation sdvig_punkta_13(dogovor: Dogovor, sdvig: Integer) kind institutional {
+    key(dogovor);
+    label ru-KZ official "сдвиг класса по пункту 13 в местах порядка классов";
+}
+
+@source(BM_POINT_10) {
+    rule Punkt10Primenyaetsya(dogovor: Dogovor, sluchaev: Integer,
+                              deystvuyushchiy: Klass, mesto: Integer) strict {
+        label ru-KZ official "Пункт 10. При урегулировании страхового случая, произошедшего по вине страхователя (застрахованного), посредством упрощенного порядка урегулирования страхователю присваивается класс на 1 класс больше класса, предусмотренного приложением; положение не применяется при двух и более страховых случаях, при действующем классе М1 или М2 и при применении пункта 14";
+        when uregulirovano_uproshchennym_poryadkom(dogovor);
+        when sluchaev_po_vine(dogovor, sluchaev);
+        when sluchaev < 2;
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when poryadok_klassa(deystvuyushchiy, mesto);
+        when mesto >= 3;
+        when not_known(narushenie_perechnya_punkta_14(dogovor));
+        then punkt_10_primenyaetsya(dogovor);
+    }
+
+    rule SdvigPunkta10Est(dogovor: Dogovor) strict {
+        label ru-KZ official "Пункт 10 даёт сдвиг на один класс вверх";
+        when punkt_10_primenyaetsya(dogovor);
+        then sdvig_punkta_10(dogovor, 1);
+    }
+
+    rule SdvigPunkta10Net(dogovor: Dogovor, deystvuyushchiy: Klass) strict {
+        label ru-KZ official "Пункт 10 не применяется — сдвига нет";
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when not_known(punkt_10_primenyaetsya(dogovor));
+        then sdvig_punkta_10(dogovor, 0);
+    }
+}
+
+@source(BM_POINT_11) {
+    rule Punkt11Primenyaetsya(dogovor: Dogovor, summa: Money, mrp: Money,
+                              sluchaev: Integer, deystvuyushchiy: Klass,
+                              mesto: Integer) strict {
+        label ru-KZ official "Пункт 11. При наступлении страхового случая, по которому осуществлена страховая выплата по имуществу потерпевшего (потерпевших) на сумму, не превышающую двухсот месячных расчетных показателей, страхователю присваивается класс на 1 класс больше класса, предусмотренного приложением; положение не применяется при двух и более страховых случаях, при действующем классе М1 или М2, при гибели, при упрощённом порядке и при применении пункта 14";
+        when vyplata_po_imushchestvu(dogovor, summa);
+        when primenyaemyy_mrp(mrp);
+        when summa <= mrp * 200;
+        when sluchaev_po_vine(dogovor, sluchaev);
+        when sluchaev < 2;
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when poryadok_klassa(deystvuyushchiy, mesto);
+        when mesto >= 3;
+        when not_known(gibel_po_vine_s_vyplatoy(dogovor));
+        when not_known(uregulirovano_uproshchennym_poryadkom(dogovor));
+        when not_known(narushenie_perechnya_punkta_14(dogovor));
+        then punkt_11_primenyaetsya(dogovor);
+    }
+
+    rule SdvigPunkta11Est(dogovor: Dogovor) strict {
+        label ru-KZ official "Пункт 11 даёт сдвиг на один класс вверх";
+        when punkt_11_primenyaetsya(dogovor);
+        then sdvig_punkta_11(dogovor, 1);
+    }
+
+    rule SdvigPunkta11Net(dogovor: Dogovor, deystvuyushchiy: Klass) strict {
+        label ru-KZ official "Пункт 11 не применяется — сдвига нет";
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when not_known(punkt_11_primenyaetsya(dogovor));
+        then sdvig_punkta_11(dogovor, 0);
+    }
+}
+
+@source(BM_POINT_12) {
+    rule Punkt12Primenyaetsya(dogovor: Dogovor, sluchaev: Integer) strict {
+        label ru-KZ official "Пункт 12. При наступлении вне территории регистрации транспортного средства страхового случая, по которому осуществлена страховая выплата, страхователю присваивается класс на 1 класс меньше класса, предусмотренного приложением; положение не применяется, если коэффициент по территории регистрации с учётом поправочного не меньше коэффициента по территории наступления случая, и при двух и более страховых случаях";
+        when sluchay_vne_territorii_registratsii(dogovor);
+        when dostup_k_svedeniyam_punkta_3(dogovor);
+        when sluchaev_po_vine(dogovor, sluchaev);
+        when sluchaev < 2;
+        when not_known(registratsiya_ne_deshevle_mesta_sluchaya(dogovor));
+        then punkt_12_primenyaetsya(dogovor);
+    }
+
+    rule SdvigPunkta12Est(dogovor: Dogovor) strict {
+        label ru-KZ official "Пункт 12 даёт сдвиг на один класс вниз";
+        when punkt_12_primenyaetsya(dogovor);
+        then sdvig_punkta_12(dogovor, -1);
+    }
+
+    rule SdvigPunkta12Net(dogovor: Dogovor, deystvuyushchiy: Klass) strict {
+        label ru-KZ official "Пункт 12 не применяется — сдвига нет";
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when not_known(punkt_12_primenyaetsya(dogovor));
+        then sdvig_punkta_12(dogovor, 0);
+    }
+}
+
+@source(BM_POINT_13) {
+    rule Punkt13Primenyaetsya(dogovor: Dogovor, narusheniy: Integer,
+                              sluchaev: Integer) strict {
+        label ru-KZ official "Пункт 13. При наступлении страхового случая, произошедшего по вине страхователя (застрахованного) и по которому осуществлена страховая выплата, и одновременном наличии в совокупности трёх и более нарушений правил дорожного движения из перечня пункта 13 страхователю присваивается класс на 1 класс меньше класса, предусмотренного приложением; положение не применяется при двух и более страховых случаях";
+        when narusheniy_perechnya_punkta_13(dogovor, narusheniy);
+        when narusheniy >= 3;
+        when dostup_k_svedeniyam_punkta_3(dogovor);
+        when sluchaev_po_vine(dogovor, sluchaev);
+        when sluchaev >= 1;
+        when sluchaev < 2;
+        then punkt_13_primenyaetsya(dogovor);
+    }
+
+    rule SdvigPunkta13Est(dogovor: Dogovor) strict {
+        label ru-KZ official "Пункт 13 даёт сдвиг на один класс вниз";
+        when punkt_13_primenyaetsya(dogovor);
+        then sdvig_punkta_13(dogovor, -1);
+    }
+
+    rule SdvigPunkta13Net(dogovor: Dogovor, deystvuyushchiy: Klass) strict {
+        label ru-KZ official "Пункт 13 не применяется — сдвига нет";
+        when deystvuyushchiy_klass(dogovor, deystvuyushchiy);
+        when not_known(punkt_13_primenyaetsya(dogovor));
+        then sdvig_punkta_13(dogovor, 0);
+    }
+}
+
+// --- Пункт 15: модификаторы применяются одновременно ------------------------
+
+pub relation summa_sdvigov(dogovor: Dogovor, sdvig: Integer) kind institutional {
+    key(dogovor);
+    label ru-KZ official "суммарный сдвиг класса по пунктам 10, 11, 12 и 13, применяемым одновременно (пункт 15)";
+}
+
+@source(BM_POINT_15)
+rule SummaSdvigov(dogovor: Dogovor, s10: Integer, s11: Integer, s12: Integer,
+                  s13: Integer) strict {
+    label ru-KZ official "Пункт 15. При наступлении страхового случая, который соответствует нескольким условиям, определенным пунктами 10, 11, 12 и 13 Правил, положения данных пунктов применяются одновременно, с учётом исключений, предусмотренных пунктами 10, 11 и 12 Правил";
+    when sdvig_punkta_10(dogovor, s10);
+    when sdvig_punkta_11(dogovor, s11);
+    when sdvig_punkta_12(dogovor, s12);
+    when sdvig_punkta_13(dogovor, s13);
+    then summa_sdvigov(dogovor, s10 + s11 + s12 + s13);
+}

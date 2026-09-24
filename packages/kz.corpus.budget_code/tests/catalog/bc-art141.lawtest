@@ -1,0 +1,30 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 141 пункт 6. Исключительным правом предоставления государственных гарантий от имени Республики Казахстан по займам обладает Правительство Республики Каза
+test "CATALOG-EXCLUSIVEGUARANTEEPOWER" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": government_of_kazakhstan(entity_ref("urn:kz:catalog:exclusiveguaranteepower:v1")) { origin case_input; }
+        assert "cat-1": guarantee_requirements_met(entity_ref("urn:kz:catalog:exclusiveguaranteepower:v0")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(GrantStateGuarantee, ACTIVE);
+}
+
+// Статья 141 пункт 9. Запрещается использование средств гарантированного государством займа на цели, не предусмотренные условиями займа, а также на кредитование
+test "CATALOG-NOMISUSEOFGUARANTEEDLOAN" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": guaranteed_loan_funds_misused(entity_ref("urn:kz:catalog:nomisuseofguaranteedloan:v0"), entity_ref("urn:kz:catalog:nomisuseofguaranteedloan:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(MisuseGuaranteedLoan, ACTIVE);
+}

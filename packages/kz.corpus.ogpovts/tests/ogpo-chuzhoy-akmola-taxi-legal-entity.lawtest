@@ -1,0 +1,36 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// ПОРОЖДЁН tools/foreign_premium.py --emit из tools/foreign-premium-cases.json —
+// не править руками. Ожидание выведено НЕЗАВИСИМОЙ моделью инструмента по
+// закреплённым текстам (ст. 19 Закона № 446-II, Правила № 140, постановление
+// АРРФР № 72), а не снято с ответа движка; чужие ответы и их квалификация —
+// tests/foreign/REPORT.md.
+//
+// Дело akmola-taxi-legal-entity: Акмолинская область, легковой такси юридического лица (п. 8 ст. 19 — 1,2; п. 9 Правил № 140 — класс 3 с повышением на 80 %), выпуск 2021; calk.kz требует водителя — подан 30 / 5
+
+test "urn:query:ogpo-chuzhoy-akmola-taxi-legal-entity" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "f0": territory_basis(entity_ref("urn:kz:ogpo:contract:foreign-akmola-taxi-legal-entity"), CityOfOblastSignificance) { origin case_input; }
+        assert "f1": registration_territory(entity_ref("urn:kz:ogpo:contract:foreign-akmola-taxi-legal-entity"), AkmolaOblast) { origin case_input; }
+        assert "f2": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:foreign-akmola-taxi-legal-entity"), PassengerCar) { origin case_input; }
+        assert "f3": insured_kind_of(entity_ref("urn:kz:ogpo:contract:foreign-akmola-taxi-legal-entity"), LegalEntity) { origin case_input; }
+        assert "f4": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:foreign-akmola-taxi-legal-entity"), 5) { origin case_input; }
+        assert "f5": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(5) { origin case_input; }
+        assert "f6": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:foreign-akmola-taxi-legal-entity"), entity_ref("urn:kz:bm:ogpo:foreign-akmola-taxi-legal-entity")) { origin case_input; }
+        assert "f7": kz.corpus.bonus_malus::strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(entity_ref("urn:kz:bm:ogpo:foreign-akmola-taxi-legal-entity")) { origin case_input; }
+        assert "f8": kz.corpus.bonus_malus::oked_arendy_lizinga_avtobusov_ili_taksi(entity_ref("urn:kz:bm:ogpo:foreign-akmola-taxi-legal-entity")) { origin case_input; }
+        assert "f9": kz.corpus.bonus_malus::dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:ogpo:foreign-akmola-taxi-legal-entity")) { origin case_input; }
+    }
+    evaluate truth(annual_premium_calculated(entity_ref("urn:kz:ogpo:contract:foreign-akmola-taxi-legal-entity"), 52885.6000992 KZT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

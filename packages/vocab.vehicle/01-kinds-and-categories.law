@@ -1,0 +1,135 @@
+// ПОРОЖДЕНО tools/gen_vehicles.py из vehicles.json — руками не правится
+// (инвариант 2 CLAUDE.md). Названия видов и категорий подтверждены
+// закреплёнными байтами корпуса (ст. 19 п. 6 Закона РК об ОГПО ВТС,
+// ПДД РК); коды нормализованы к латинице. Не правовой факт: нормы о
+// массе, местах, возрасте и коэффициентах остаются у предметных актов.
+
+language "law.core" version "0.2";
+package vocab.vehicle version "0.1.0";
+namespace "urn:law:vocab:vehicle";
+
+// --- Категории транспортных средств -----------------------------------------
+
+pub const A: Category = entity_ref("urn:law:vocab:vehicle:category:a") {
+    label ru official "категория A (мототранспортные средства)";
+    label kk official "A санаты (мотокөлік құралдары)";
+    label en official "category A (motorcycle-class vehicles)";
+};
+
+pub const B: Category = entity_ref("urn:law:vocab:vehicle:category:b") {
+    label ru official "категория B (легковые автомобили)";
+    label kk official "B санаты (жеңіл автомобильдер)";
+    label en official "category B (passenger cars)";
+};
+
+pub const C: Category = entity_ref("urn:law:vocab:vehicle:category:c") {
+    label ru official "категория C (грузовые автомобили)";
+    label kk official "C санаты (жүк автомобильдері)";
+    label en official "category C (goods vehicles)";
+};
+
+pub const D: Category = entity_ref("urn:law:vocab:vehicle:category:d") {
+    label ru official "категория D (автобусы)";
+    label kk official "D санаты (автобустар)";
+    label en official "category D (buses)";
+};
+
+pub const E: Category = entity_ref("urn:law:vocab:vehicle:category:e") {
+    label ru official "категория E (составы транспортных средств с тягачом)";
+    label kk official "E санаты (тартқышы бар көлік құралдарының құрамдары)";
+    label en official "category E (vehicle combinations with a towing vehicle)";
+};
+
+pub const C1: Category = entity_ref("urn:law:vocab:vehicle:category:c1") {
+    label ru official "подкатегория C1";
+    label kk official "C1 қосалқы санаты";
+    label en official "subcategory C1";
+};
+
+pub const D1: Category = entity_ref("urn:law:vocab:vehicle:category:d1") {
+    label ru official "подкатегория D1 (автобусы малой вместимости)";
+    label kk official "D1 қосалқы санаты (аз сыйымдылықты автобустар)";
+    label en official "subcategory D1 (small-capacity buses)";
+};
+
+// --- Виды транспортных средств ----------------------------------------------
+
+pub const PASSENGER_CAR: Kind = entity_ref("urn:law:vocab:vehicle:kind:passenger-car") {
+    label ru official "легковой автомобиль";
+    label kk official "жеңіл автомобиль";
+    label en official "passenger car";
+};
+
+pub const BUS: Kind = entity_ref("urn:law:vocab:vehicle:kind:bus") {
+    label ru official "автобус";
+    label kk official "автобус";
+    label en official "bus";
+};
+
+pub const FREIGHT_VEHICLE: Kind = entity_ref("urn:law:vocab:vehicle:kind:freight-vehicle") {
+    label ru official "грузовой автомобиль";
+    label kk official "жүк автомобилі";
+    label en official "freight vehicle";
+};
+
+pub const TROLLEYBUS: Kind = entity_ref("urn:law:vocab:vehicle:kind:trolleybus") {
+    label ru official "троллейбус";
+    label kk official "троллейбус";
+    label en official "trolleybus";
+};
+
+pub const TRAM: Kind = entity_ref("urn:law:vocab:vehicle:kind:tram") {
+    label ru official "трамвай";
+    label kk official "трамвай";
+    label en official "tram";
+};
+
+pub const MOTOR_VEHICLE: Kind = entity_ref("urn:law:vocab:vehicle:kind:motor-vehicle") {
+    label ru official "мототранспортное средство";
+    label kk official "мотокөлік құралы";
+    label en official "motor vehicle (motorcycle class)";
+};
+
+pub const TRAILER: Kind = entity_ref("urn:law:vocab:vehicle:kind:trailer") {
+    label ru official "прицеп";
+    label kk official "тіркеме";
+    label en official "trailer";
+};
+
+pub const SEMI_TRAILER: Kind = entity_ref("urn:law:vocab:vehicle:kind:semi-trailer") {
+    label ru official "полуприцеп";
+    label kk official "жартылай тіркеме";
+    label en official "semi-trailer";
+};
+
+// --- Атрибуты категорий: код и родительская категория -------------------------
+
+assert category_code(A, "A");
+
+assert category_code(B, "B");
+
+assert category_code(C, "C");
+
+assert category_code(D, "D");
+
+assert category_code(E, "E");
+
+assert category_code(C1, "C1");
+assert category_parent(C1, C);
+
+assert category_code(D1, "D1");
+assert category_parent(D1, D);
+
+// --- Атрибуты видов: категория классификации (где источник её называет) -----
+
+assert kind_category(PASSENGER_CAR, B);
+
+assert kind_category(BUS, D);
+
+assert kind_category(FREIGHT_VEHICLE, C);
+
+assert kind_category(MOTOR_VEHICLE, A);
+
+assert kind_category(TRAILER, E);
+
+assert kind_category(SEMI_TRAILER, E);

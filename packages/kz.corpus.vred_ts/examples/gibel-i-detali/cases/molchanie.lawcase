@@ -1,0 +1,24 @@
+language "law.core" version "0.2";
+package examples.vred_ts.gibel_i_detali version "0.1.0";
+namespace "urn:law:examples:vred-ts:gibel-i-detali";
+
+// Пункт 9, вопрос Q2: восстановление технически невозможно, гибель установлена,
+// но дело МОЛЧИТ о передаче остатков — ни факта передачи, ни его отрицания.
+// Ни одна из двух альтернатив выплаты не применяется: молчание не есть
+// отрицание (§113), и размер выплаты остаётся не определённым.
+case Molchanie {
+    context {
+        legal_time @2026-09-01;
+        knowledge_time @2026-09-01T12:00:00+05:00;
+        decision_time @2026-09-01T12:00:00+05:00;
+        timezone "Asia/Almaty";
+    }
+
+    const ts: kz.corpus.vred_ts::TransportnoeSredstvo = entity_ref("urn:example:vred:ts");
+    const raschet: kz.corpus.vred_ts::RaschetVreda = entity_ref("urn:example:vred:raschet");
+
+    assert "raschet-po-ts": kz.corpus.vred_ts::raschet_po_ts(raschet, ts) { origin case_input; }
+    assert "tekhnicheski-nevozmozhno": kz.corpus.vred_ts::vosstanovlenie_tekhnicheski_nevozmozhno(ts) { origin case_input; }
+    assert "rynochnaya-stoimost": kz.corpus.vred_ts::rynochnaya_stoimost_na_datu_otcheta(ts, 1000000 KZT) { origin case_input; }
+    assert "godnye-ostatki": kz.corpus.vred_ts::stoimost_godnykh_k_realizatsii_ostatkov(ts, 150000 KZT) { origin case_input; }
+}

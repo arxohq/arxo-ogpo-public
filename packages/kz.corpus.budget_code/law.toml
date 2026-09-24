@@ -1,0 +1,95 @@
+# Манифест §10 — маркер корня пакета (DECISION-0033). Нормативны заголовки §22
+# в самих .law; манифест обязан с ними совпадать (LDC-E1109, lawc check).
+[package]
+name = "kz.corpus.budget_code"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:kz:corpus:clir:budget-code"
+
+# Каталожная метадата (DECISION-0051; docs/PACKAGE-METADATA.ru.md). НЕ семантика:
+# в CLIR не понижается, в semantic hash §209 не входит. Выводимые поля
+# (jurisdiction ← jurisdiction источника, instrument ← kind, sourceFidelity ←
+# materialization_status) сверяются с source-декларациями воротами
+# verify/ci/gates/coverage/check_package_metadata.py. Невыводимое (issuer,
+# legalStatus) — по «Информации» страницы K2500000171 ИПС «Әділет»: орган,
+# принявший акт, — Парламент Республики Казахстан; статус «Обновленный»,
+# то есть действующая консолидированная редакция.
+[metadata]
+act = "kz-budget-code"
+title = "Бюджетный кодекс Республики Казахстан (171-VIII)"
+primarySource = "BUDGET_CODE"
+jurisdiction = "KZ"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "Парламент Республики Казахстан"
+
+# Рукописные сценарии пакета: исполняются общим раннером,
+# в учёт покрытия регрессии не входят.
+[[tests]]
+family = "kz.corpus.budget_code#authored"
+regression = false
+suites = ["tests/goals.lawtest", "tests/reserve-limits.lawtest",
+          "tests/catalog/bc-art101.lawtest",
+          "tests/catalog/bc-art102.lawtest",
+          "tests/catalog/bc-art106.lawtest",
+          "tests/catalog/bc-art110.lawtest",
+          "tests/catalog/bc-art111.lawtest",
+          "tests/catalog/bc-art112.lawtest",
+          "tests/catalog/bc-art113.lawtest",
+          "tests/catalog/bc-art115.lawtest",
+          "tests/catalog/bc-art116.lawtest",
+          "tests/catalog/bc-art117.lawtest",
+          "tests/catalog/bc-art118.lawtest",
+          "tests/catalog/bc-art129.lawtest",
+          "tests/catalog/bc-art130.lawtest",
+          "tests/catalog/bc-art132.lawtest",
+          "tests/catalog/bc-art133.lawtest",
+          "tests/catalog/bc-art136.lawtest",
+          "tests/catalog/bc-art138.lawtest",
+          "tests/catalog/bc-art14.lawtest",
+          "tests/catalog/bc-art141.lawtest",
+          "tests/catalog/bc-art144.lawtest",
+          "tests/catalog/bc-art144-2.lawtest",
+          "tests/catalog/bc-art145.lawtest",
+          "tests/catalog/bc-art146.lawtest",
+          "tests/catalog/bc-art148.lawtest",
+          "tests/catalog/bc-art149.lawtest",
+          "tests/catalog/bc-art150.lawtest",
+          "tests/catalog/bc-art154.lawtest",
+          "tests/catalog/bc-art155.lawtest",
+          "tests/catalog/bc-art157.lawtest",
+          "tests/catalog/bc-art160.lawtest",
+          "tests/catalog/bc-art162.lawtest",
+          "tests/catalog/bc-art165.lawtest",
+          "tests/catalog/bc-art166.lawtest",
+          "tests/catalog/bc-art17.lawtest",
+          "tests/catalog/bc-art170.lawtest",
+          "tests/catalog/bc-art171.lawtest",
+          "tests/catalog/bc-art17-1.lawtest",
+          "tests/catalog/bc-art18.lawtest",
+          "tests/catalog/bc-art19.lawtest",
+          "tests/catalog/bc-art2.lawtest",
+          "tests/catalog/bc-art20.lawtest",
+          "tests/catalog/bc-art22.lawtest",
+          "tests/catalog/bc-art29.lawtest",
+          "tests/catalog/bc-art40.lawtest",
+          "tests/catalog/bc-art41.lawtest",
+          "tests/catalog/bc-art44.lawtest",
+          "tests/catalog/bc-art5.lawtest",
+          "tests/catalog/bc-art55.lawtest",
+          "tests/catalog/bc-art56.lawtest",
+          "tests/catalog/bc-art58.lawtest",
+          "tests/catalog/bc-art59.lawtest",
+          "tests/catalog/bc-art73.lawtest",
+          "tests/catalog/bc-art75.lawtest",
+          "tests/catalog/bc-art76.lawtest",
+          "tests/catalog/bc-art8.lawtest",
+          "tests/catalog/bc-art82.lawtest",
+          "tests/catalog/bc-art83.lawtest",
+          "tests/catalog/bc-art94.lawtest",
+          "tests/catalog/bc-art95.lawtest",
+          "tests/catalog/bc-art98.lawtest",
+          "tests/catalog/bc-art99.lawtest",
+          "tests/catalog/general.lawtest"]
+world = ["kz.corpus.budget_code"]

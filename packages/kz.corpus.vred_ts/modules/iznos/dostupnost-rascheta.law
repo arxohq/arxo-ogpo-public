@@ -1,0 +1,57 @@
+// Availability of the depreciation wear calculation: clause 11.
+//
+// PURPOSE. The duty of the insurance ombudsman and insurers to provide
+// the ability to calculate depreciation wear on their own website.
+//
+// SOURCE PROVISIONS: clause 11.
+//
+// MODEL BOUNDARY. Clause 11 obliges PROVIDING THE ABILITY to calculate, not
+// computing the wear itself: the Rules give neither a formula, nor a coefficient, nor a table.
+// The wear value itself enters the package as the result of an external tool —
+// discussed in the `package.law` header and in `modules/detali/otsenka.law`.
+// There are TWO duty-bearers in clause 11 — the insurance ombudsman and the insurers — and they
+// are of different types, hence two rules rather than one with a disjunction (§206). The window
+// for both duties is OPEN: the Rules do not name a deadline for provision, and
+// ascribing one would amount to inventing a norm. The consequence is honest and named:
+// such a duty can be performed, but is never breached by deadline.
+
+entity StrakhovoyOmbudsman { label ru official "Страховой омбудсман"; }
+
+// --- Clause 11. Ability to calculate wear on the website ---------------
+relation ombudsman_deystvuet(x: StrakhovoyOmbudsman) kind empirical { label ru official "Страховой омбудсман осуществляет свои полномочия"; }
+relation vozmozhnost_rascheta_iznosa_obespechena_ombudsmanom(x: StrakhovoyOmbudsman) kind empirical { label ru official "Страховой омбудсман обеспечил возможность расчёта амортизационного износа на своём интернет-ресурсе"; }
+relation vozmozhnost_rascheta_iznosa_obespechena_strakhovshchikom(s: Strakhovshchik) kind empirical { label ru official "Страховщик обеспечил возможность расчёта амортизационного износа на своём интернет-ресурсе"; }
+
+@source(VRED_TS_PT_11) {
+    rule ObyazannostOmbudsmanaObespechitRaschetIznosa(
+        x: StrakhovoyOmbudsman,
+        r: RaschetVreda,
+        p: Poterpevshiy,
+    ) strict {
+        label ru official "Пункт 11. Страховой омбудсман обеспечивает возможность расчёта амортизационного износа на своём интернет-ресурсе";
+        when ombudsman_deystvuet(x);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        then duty ObespechitRaschetIznosaOmbudsmanom {
+            bearer x;
+            beneficiary p;
+            achieve vozmozhnost_rascheta_iznosa_obespechena_ombudsmanom(x)
+                during [@2016-02-08, infinity);
+        };
+    }
+
+    rule ObyazannostStrakhovshchikaObespechitRaschetIznosa(
+        s: Strakhovshchik,
+        r: RaschetVreda,
+        p: Poterpevshiy,
+    ) strict {
+        label ru official "Пункт 11. Страховщик обеспечивает возможность расчёта амортизационного износа на своём интернет-ресурсе";
+        when strakhovshchik_po_raschetu(r: r, s: s);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        then duty ObespechitRaschetIznosaStrakhovshchikom {
+            bearer s;
+            beneficiary p;
+            achieve vozmozhnost_rascheta_iznosa_obespechena_strakhovshchikom(s)
+                during [@2016-02-08, infinity);
+        };
+    }
+}

@@ -1,0 +1,15 @@
+{
+  "queryId": "pochemu-ne-bez-iznosa",
+  "kind": "why_not",
+  "literal": {
+    "kind": "literal",
+    "polarity": "positive",
+    "predicate": "urn:kz:corpus:clir:vred-ts#detal_otsenivaetsya_bez_iznosa",
+    "args": [
+      {
+        "kind": "entity_ref",
+        "id": "urn:example:vred:detal"
+      }
+    ]
+  }
+}

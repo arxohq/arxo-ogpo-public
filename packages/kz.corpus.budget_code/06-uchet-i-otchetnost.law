@@ -1,0 +1,135 @@
+// РАЗДЕЛ 6. СИСТЕМА БУХГАЛТЕРСКОГО УЧЁТА И ФИНАНСОВОЙ ОТЧЁТНОСТИ
+// (главы 26–27, статьи 129–135).
+//
+// Выражено правилами: право уполномоченного органа определять сроки
+// промежуточной финансовой отчётности с НИЖНЕЙ границей периодичности
+// (ст. 132 п. 5 — «не реже одного раза в год»: право, ограниченное самим
+// кодексом, и потому сторожевая норма) и обязанность составлять годовую
+// консолидированную финансовую отчётность (ст. 133 п. 2).
+//
+// ГРАНИЦЫ РАЗДЕЛА:
+//   - ст. 129 (цель, принципы и качественные характеристики учёта) —
+//     принципы бухгалтерского учёта, оценивающие прочие нормы, а не
+//     задающие условие и следствие; основание целей акта;
+//   - ст. 130, 131 (система бухгалтерского учёта, состав финансовой
+//     отчётности) — состав и формы утверждаются центральным уполномоченным
+//     органом по исполнению бюджета;
+//   - ст. 134, 135 (годовая консолидированная отчётность об исполнении
+//     бюджетов, отчёт по статистике государственных финансов) — сроки
+//     КАЛЕНДАРНЫМИ ДАТАМИ и формы подзаконного акта; ст. 135 вводится в
+//     действие с 01.01.2026 (ст. 172 п. 1 подпункт 1)).
+
+
+relation interim_reporting_period_set(b: Body, months: Integer) kind empirical {
+    key(b);
+    label ru-KZ official "уполномоченный орган установил периодичность представления промежуточной финансовой отчётности числом месяцев";
+}
+
+relation interim_period_lawful(b: Body) kind institutional {
+    label ru-KZ official "установленная периодичность промежуточной финансовой отчётности отвечает нижней границе настоящего Кодекса";
+}
+
+relation interim_period_unlawful(b: Body) kind institutional {
+    label ru-KZ official "установленная периодичность промежуточной финансовой отчётности реже одного раза в год и настоящему Кодексу не отвечает";
+}
+
+@source(BC_ART132) {
+    rule InterimReportingPeriodLawful(b: Body, months: Integer) strict {
+        when interim_reporting_period_set(b, months);
+        when months <= 12;
+        then interim_period_lawful(b);
+        label ru-KZ official "Статья 132 пункт 5. Уполномоченный орган вправе определять сроки представления промежуточной финансовой отчётности и устанавливать иную периодичность, но не реже одного раза в год";
+    }
+
+    rule InterimReportingPeriodUnlawful(b: Body, months: Integer) strict {
+        when interim_reporting_period_set(b, months);
+        when months > 12;
+        then interim_period_unlawful(b);
+        label ru-KZ official "Статья 132 пункт 5. Периодичность промежуточной финансовой отчётности реже одного раза в год нижней границе настоящего Кодекса не отвечает";
+    }
+}
+
+relation consolidated_report_obliged(b: Body, r: Report) kind empirical {
+    label ru-KZ official "участник обязан составить годовую консолидированную финансовую отчётность по названному отчёту";
+}
+
+relation consolidated_report_prepared(r: Report) kind empirical {
+    label ru-KZ official "годовая консолидированная финансовая отчётность составлена";
+}
+
+@source(BC_ART133)
+rule ConsolidatedReportDuty(b: Body, r: Report) strict {
+    when consolidated_report_obliged(b, r);
+    then duty PrepareConsolidatedReport {
+        bearer b;
+        beneficiary b;
+        achieve consolidated_report_prepared(r) during [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 133 пункт 2. Государственные учреждения и уполномоченные органы обязаны составлять годовую консолидированную финансовую отчётность в порядке, установленном центральным уполномоченным органом по исполнению бюджета";
+}
+
+// --- Предметы публикации, названные статьями раздела 6 (второй проход) -----
+
+relation consolidated_financial_statements(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является годовой консолидированной финансовой отчётностью об исполнении республиканского и местного бюджетов";
+}
+
+@source(BC_ART134)
+rule ConsolidatedStatementsArePublicationSubject(d: ProcessDocument) strict {
+    when consolidated_financial_statements(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 134. Годовая консолидированная финансовая отчётность об исполнении республиканского и местного бюджетов подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation public_finance_statistics_report(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является отчётом по статистике государственных финансов Республики Казахстан";
+}
+
+@source(BC_ART135)
+rule StatisticsReportIsPublicationSubject(d: ProcessDocument) strict {
+    when public_finance_statistics_report(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 135. Отчёт по статистике государственных финансов составляется по итогам финансового года и подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+// --- Ст. 130 п. 6: обязательная сертификация (второй проход) ---------------
+
+relation accounting_officer(person: Body) kind empirical {
+    label ru-KZ official "должностное лицо уполномочено на ведение бухгалтерского учёта и составление финансовой отчётности";
+}
+
+relation certification_obtained(person: Body) kind empirical {
+    label ru-KZ official "должностное лицо прошло обязательную сертификацию";
+}
+
+@source(BC_ART130)
+rule MandatoryCertificationDuty(person: Body) strict {
+    when accounting_officer(person);
+    then duty ObtainAccountingCertification {
+        bearer person;
+        beneficiary person;
+        achieve certification_obtained(person) during [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 130 пункт 6. В целях достоверного ведения бухгалтерского учёта и составления финансовой отчётности обязательной сертификации подлежат должностные лица, уполномоченные на их ведение";
+}
+
+// --- Ст. 129: принцип непрерывности деятельности ---------------------------
+// Второй проход. Принцип назван принципом, а сформулирован УСЛОВИЕМ со
+// следствием: «Если такое намерение или необходимость существует, то
+// финансовая отчётность составляется по иным правилам». Форма решает — это
+// норма, а не программное начало.
+
+relation going_concern_absent(r: Report) kind empirical {
+    label ru-KZ official "у государственного учреждения есть намерение либо необходимость ликвидации или существенного сокращения масштабов деятельности";
+}
+
+relation statements_on_special_basis(r: Report) kind institutional {
+    label ru-KZ official "финансовая отчётность составляется по правилам, отличным от применяемых при непрерывности деятельности";
+}
+
+@source(BC_ART129)
+rule StatementsOnSpecialBasis(r: Report) strict {
+    when going_concern_absent(r);
+    then statements_on_special_basis(r);
+    label ru-KZ official "Статья 129. Принцип непрерывности деятельности: если намерение либо необходимость ликвидации или существенного сокращения масштабов деятельности существует, финансовая отчётность составляется по иным правилам";
+}

@@ -1,0 +1,652 @@
+// СТАТЬЯ 25. ОБЩИЕ УСЛОВИЯ ОСУЩЕСТВЛЕНИЯ СТРАХОВОЙ ВЫПЛАТЫ (ОСТАТОК).
+//
+// Первая очередь пакета взяла из статьи 25 ровно то, что определяет НАЧАЛО
+// срока статьи 26: перечень документов пункта 2 замыканием §70 и день их
+// получения (`26-poryadok-vyplaty.law`, там же записана граница). Всё
+// остальное содержание статьи — здесь: состав требования, обязанность
+// представить оригиналы, запрет истребования лишнего, справка о принятых
+// документах, кто такой выгодоприобретатель и кто потерпевший при вреде
+// имуществу, выплата непосредственно лечащему лицу, независимость выплаты за
+// вред жизни и здоровью от других договоров, запрет ограничивающих условий,
+// право страховщика на имущество и его остатки, выплата по протоколу.
+//
+// Закон РК от 23.07.2026 № 352-VIII опубликован 21.08.2026. Поправки к
+// пунктам 1 и 5 действуют с 21.10.2026. Здесь окна правил разделены по дате
+// вступления: старый текст из закреплённой редакции № 446-II и новый текст
+// статьи 1 пункта 12 Закона № 352-VIII.
+//
+// ТИПЫ. `Beneficiary` — выгодоприобретатель, `Victim` — потерпевший; пункт 4
+// сам объясняет, почему это разные роли и как одна становится другой, и
+// поэтому переход между ними выражен ФАКТАМИ ДЕЛА, а не тождеством сущностей:
+// правом такое тождество не выводится.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ С ПРИЧИНОЙ:
+//
+//   пункт 1 часть первая, хвост — «в том числе посредством интернет-ресурса
+//              страховщика в соответствии с нормативным правовым актом
+//              уполномоченного органа». Делегирование: порядок предъявления
+//              требования через интернет-ресурс Закон не содержит.
+//
+//   пункт 2 подпункты 1), 5) и 8) — исключены поправками 2015 и 2018 годов;
+//              в закреплённом тексте от них осталась одна строка об
+//              исключении. Перечисление `RequiredDocumentKind` их не знает —
+//              разбор в `package.law`.
+//
+//   пункт 2 подпункт 4-2) — «заявление об определении размера вреда в
+//              случае, предусмотренном пунктом 3 статьи 22 настоящего
+//              Закона». Взято ранее (`RequiredDocumentKind`,
+//              `HarmAssessmentApplication`); сам случай пункта 3 статьи 22
+//              выведен в `22-strakhovoy-sluchay.law`.
+
+entity RestorationServiceProvider {
+    label ru-KZ official "лицо, оказавшее (оказывающее) потерпевшему услуги по восстановлению здоровья и (или) имущества";
+}
+
+// ============================================================================
+// Пункт 1: состав требования и оригиналы документов
+// ============================================================================
+//
+// ЧЕТЫРЕ ТРЕБОВАНИЯ К СОДЕРЖАНИЮ — КОНЪЮНКТЫ ОДНОГО ПРАВИЛА: пункт 1 называет
+// их одним перечнем через запятую, а не как самостоятельные основания.
+// До 21.10.2026 реквизиты в конъюнкцию не входят: прежний текст ставит их
+// «при необходимости». С 21.10.2026 это условие исключено Законом № 352-VIII.
+//
+// ПОРЯДОК ПОЛУЧЕНИЯ ВЫПЛАТЫ — ДИЗЪЮНКЦИЯ («наличными деньгами либо путём
+// перечисления на банковский счёт»), и она расщеплена на два правила (§206) с
+// общей головой.
+
+relation claim_states_residence(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "в требовании о страховой выплате указано место жительства выгодоприобретателя";
+}
+relation claim_states_contact_phones(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "в требовании о страховой выплате указаны контактные телефоны выгодоприобретателя";
+}
+relation claim_states_bank_details(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "в требовании о страховой выплате указаны банковские реквизиты выгодоприобретателя";
+}
+relation claim_requests_cash_payment(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "в требовании указан порядок получения страховой выплаты наличными деньгами";
+}
+relation claim_requests_bank_transfer(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "в требовании указан порядок получения страховой выплаты путём перечисления на банковский счёт";
+}
+relation claim_documents_attached(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "к требованию приложены документы, необходимые для осуществления страховой выплаты";
+}
+
+relation claim_states_payment_method(demand: PaymentClaim) kind institutional {
+    label ru-KZ official "в требовании указан порядок получения страховой выплаты";
+}
+pub relation payment_claim_complete(demand: PaymentClaim) kind institutional {
+    label ru-KZ official "требование о страховой выплате предъявлено с содержанием, которого требует пункт 1 статьи 25";
+}
+
+@source(LAW_446_ART25) {
+    rule ClaimPaymentMethodIsCash(demand: PaymentClaim) strict {
+        label ru-KZ official "Статья 25 пункт 1. Порядок получения страховой выплаты указывается наличными деньгами";
+        effective [@2026-07-23, @2026-10-21);
+        when claim_requests_cash_payment(demand);
+        then claim_states_payment_method(demand);
+    }
+
+    rule ClaimPaymentMethodIsBankTransfer(demand: PaymentClaim) strict {
+        label ru-KZ official "Статья 25 пункт 1. Порядок получения страховой выплаты указывается путём перечисления на банковский счёт";
+        effective [@2026-07-23, @2026-10-21);
+        when claim_requests_bank_transfer(demand);
+        then claim_states_payment_method(demand);
+    }
+
+    rule PaymentClaimComplete(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 1. Требование о страховой выплате к страховщику предъявляется страхователем (застрахованным) или иным лицом, являющимся выгодоприобретателем, с указанием места жительства, контактных телефонов выгодоприобретателя, порядка получения страховой выплаты с приложением документов, необходимых для осуществления страховой выплаты";
+        effective [@2026-07-23, @2026-10-21);
+        when payment_claim_of(demand, accident, holder, insurer);
+        when claim_states_residence(demand);
+        when claim_states_contact_phones(demand);
+        when claim_states_payment_method(demand);
+        when claim_documents_attached(demand);
+        then payment_claim_complete(demand);
+    }
+}
+
+// Закон № 352-VIII исключил выбор наличных и сделал банковские реквизиты
+// обязательной частью требования. Старые правила остаются только для дел
+// до 21 октября 2026 года.
+@source(LAW_352) {
+    rule PaymentClaimCompleteWithBankDetails(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 1 в редакции Закона № 352-VIII. Требование содержит банковские реквизиты выгодоприобретателя";
+        effective [@2026-10-21, infinity);
+        when payment_claim_of(demand, accident, holder, insurer);
+        when claim_states_residence(demand);
+        when claim_states_contact_phones(demand);
+        when claim_states_bank_details(demand);
+        when claim_documents_attached(demand);
+        then payment_claim_complete(demand);
+    }
+}
+
+// --- Пункт 1 часть вторая: оригиналы по требованию страховщика --------------
+//
+// ИСКЛЮЧЕНИЕ ПОДАЁТСЯ ПОЛОЖИТЕЛЬНЫМ ФАКТОМ, А НЕ ОТРИЦАНИЕМ. Текст изымает из
+// обязанности «документы, имеющиеся в электронной форме в базах данных и (или)
+// информационных системах государственных органов, доступ к которым имеет
+// страховщик». Отсутствие факта не есть его отрицание (§113), и `not` без
+// отрицательного продюсера не сработал бы никогда, поэтому дело утверждает
+// ПОЛОЖИТЕЛЬНО, что документы в таких системах недоступны.
+
+relation originals_requested_by_insurer(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик потребовал представить оригиналы документов, необходимых для осуществления страховой выплаты";
+}
+relation documents_unavailable_in_state_systems(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "документы отсутствуют в электронной форме в базах данных и (или) информационных системах государственных органов, доступ к которым имеет страховщик";
+}
+relation originals_submitted(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "заявитель представил страховщику оригиналы документов, необходимых для осуществления страховой выплаты";
+}
+
+@source(LAW_446_ART25, quote = "По требованию страховщика заявитель обязан представить страховщику оригиналы документов, необходимых для осуществления страховой выплаты, за исключением документов, имеющихся в электронной форме в базах данных и (или) информационных системах государственных органов, доступ к которым имеет страховщик.")
+rule ApplicantMustSubmitOriginals(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 25 пункт 1. По требованию страховщика заявитель обязан представить страховщику оригиналы документов, необходимых для осуществления страховой выплаты, за исключением документов, имеющихся в электронной форме в базах данных и (или) информационных системах государственных органов, доступ к которым имеет страховщик";
+    when payment_claim_of(demand, accident, holder, insurer);
+    when originals_requested_by_insurer(demand);
+    when documents_unavailable_in_state_systems(demand);
+    then duty PredstavitOrigninalyDokumentov {
+        bearer holder;
+        beneficiary insurer;
+        achieve originals_submitted(demand) during [@2026-07-23, infinity);
+    };
+}
+
+// ============================================================================
+// Пункт 2 часть последняя: запрет истребовать лишнее
+// ============================================================================
+//
+// Перечень пункта 2 взят замыканием §70 в `26-poryadok-vyplaty.law`. Здесь —
+// ОБОРОТНАЯ СТОРОНА перечня: раз он закрыт, истребование сверх него не
+// допускается. Форма — `prohibition` §128: адресат запрета назван («страховщик
+// не вправе»), и он же решает, что требовать.
+
+relation additional_documents_demanded(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик истребовал у страхователя (застрахованного) либо потерпевшего дополнительные документы и (или) документы, доступные посредством информационных систем и сервисов";
+}
+
+@source(LAW_446_ART25, quote = "Истребование страховщиком от страхователя (застрахованного) либо потерпевшего дополнительных документов и (или) документов, доступных посредством информационных систем и сервисов, не допускается.")
+rule InsurerMayNotDemandAdditionalDocuments(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 25 пункт 2. Истребование страховщиком от страхователя (застрахованного) либо потерпевшего дополнительных документов и (или) документов, доступных посредством информационных систем и сервисов, не допускается";
+    when payment_claim_of(demand, accident, holder, insurer);
+    then prohibition IstrebovatDopolnitelnyeDokumenty {
+        bearer insurer;
+        beneficiary holder;
+        action additional_documents_demanded(demand);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// ============================================================================
+// Пункт 3: справка о принятых документах
+// ============================================================================
+//
+// ТРИ ЧАСТИ — ТРИ РАЗНЫЕ НОРМЫ, И ФОРМЫ У НИХ РАЗНЫЕ: часть первая обязывает
+// («обязан составить в двух экземплярах»), часть вторая разрешает («может
+// представить ... в электронной форме»), часть третья обязывает при ЛИЧНОМ
+// обращении выдать экземпляр. Слить их в одну обязанность значило бы обязать
+// страховщика к электронной форме и к выдаче экземпляра при любом обращении.
+//
+// ОКНА ОТКРЫТЫ: срока составления и выдачи справки пункт 3 не называет.
+
+relation documents_accepted_by_insurer(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик принял документы, приложенные к заявлению о страховой выплате";
+}
+relation claim_sent_electronically(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "заявление о страховой выплате отправлено страхователем (застрахованным, выгодоприобретателем) электронным способом";
+}
+relation applicant_applied_in_person(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "заявитель обратился к страховщику лично";
+}
+
+relation receipt_certificate_drawn_in_two_copies(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик составил в двух экземплярах справку с указанием полного перечня представленных заявителем документов и даты их принятия";
+}
+relation receipt_certificate_provided_electronically(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик представил заявителю справку о принятых документах в электронной форме";
+}
+relation receipt_certificate_copy_handed_over(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "один экземпляр справки выдан заявителю, второй экземпляр с отметкой заявителя в её получении остался у страховщика";
+}
+
+@source(LAW_446_ART25) {
+    rule InsurerMustDrawReceiptCertificate(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 3. Страховщик, принявший документы, обязан составить в двух экземплярах справку с указанием полного перечня представленных заявителем документов и даты их принятия";
+        when payment_claim_of(demand, accident, holder, insurer);
+        when documents_accepted_by_insurer(demand);
+        then duty SostavitSpravkuOPrinyatykhDokumentakh {
+            bearer insurer;
+            beneficiary holder;
+            achieve receipt_certificate_drawn_in_two_copies(demand)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerMayProvideCertificateElectronically(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 3. В случае отправки страхователем (застрахованным, выгодоприобретателем) заявления о страховой выплате электронным способом страховщик может представить ему данную справку в электронной форме";
+        when payment_claim_of(demand, accident, holder, insurer);
+        when documents_accepted_by_insurer(demand);
+        when claim_sent_electronically(demand);
+        then liberty PredstavitSpravkuVElektronnoyForme {
+            holder insurer;
+            action receipt_certificate_provided_electronically(demand);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerMustHandOverCertificateCopy(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 3. При личном обращении заявителя к страховщику один экземпляр справки выдаётся заявителю, второй экземпляр с отметкой заявителя в её получении остаётся у страховщика";
+        when payment_claim_of(demand, accident, holder, insurer);
+        when documents_accepted_by_insurer(demand);
+        when applicant_applied_in_person(demand);
+        then duty VydatEkzemplyarSpravkiZayavitelyu {
+            bearer insurer;
+            beneficiary holder;
+            achieve receipt_certificate_copy_handed_over(demand)
+                during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Пункт 4: кто выгодоприобретатель и кто потерпевший при вреде имуществу
+// ============================================================================
+//
+// ЧАСТЬ ПЕРВАЯ — ТРИ ОСНОВАНИЯ, И ОНИ РАСЩЕПЛЕНЫ (§206): потерпевший; лицо,
+// имеющее право на возмещение вреда в связи со смертью потерпевшего;
+// страхователь (застрахованный) или иное лицо, возместившее вред и получившее
+// право на страховую выплату. Перечисление тут не годится: основания
+// различаются не значением признака, а составом посылок.
+//
+// ТОЖДЕСТВО РОЛЕЙ — ФАКТ ДЕЛА. Потерпевший и выгодоприобретатель у пакета
+// разные сущности (`Victim` и `Beneficiary`), и утверждение «это одно и то же
+// лицо» правом не выводится: оно приходит из дела, как и связка расчёта с
+// происшествием в пункте 3 статьи 22.
+
+relation beneficiary_is_the_victim(holder: Beneficiary, victim: Victim) kind empirical {
+    label ru-KZ official "выгодоприобретателем выступает сам потерпевший";
+}
+relation beneficiary_entitled_on_victim_death(holder: Beneficiary, victim: Victim)
+    kind empirical {
+    label ru-KZ official "лицо имеет согласно законам Республики Казахстан право на возмещение вреда в связи со смертью потерпевшего";
+}
+relation beneficiary_compensated_victim_harm(holder: Beneficiary, accident: TrafficAccident,
+        victim: Victim) kind empirical {
+    label ru-KZ official "страхователь (застрахованный) или иное лицо возместило потерпевшему (лицу, имеющему право на возмещение вреда) причинённый вред в пределах объёма ответственности страховщика и получило право на страховую выплату";
+}
+
+pub relation beneficiary_recognized(accident: TrafficAccident, holder: Beneficiary)
+    kind institutional {
+    label ru-KZ official "лицо является выгодоприобретателем по данному транспортному происшествию (статья 25 пункт 4)";
+}
+
+@source(LAW_446_ART25) {
+    rule VictimIsBeneficiary(
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        victim: Victim,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 4. Выгодоприобретателем является потерпевший";
+        when victim_recognized(accident, victim);
+        when beneficiary_is_the_victim(holder, victim);
+        then beneficiary_recognized(accident, holder);
+    }
+
+    rule PersonEntitledOnDeathIsBeneficiary(
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        victim: Victim,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 4. В случае смерти потерпевшего выгодоприобретателем является лицо, имеющее согласно законам Республики Казахстан право на возмещение вреда в связи со смертью потерпевшего";
+        when harm_to_life_or_health(accident, victim, Death);
+        when beneficiary_entitled_on_victim_death(holder, victim);
+        then beneficiary_recognized(accident, holder);
+    }
+
+    rule CompensatingPersonIsBeneficiary(
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        victim: Victim,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 4. Выгодоприобретателем является страхователь (застрахованный) или иное лицо, возместившее потерпевшему причинённый вред в пределах объёма ответственности страховщика и получившее право на страховую выплату";
+        when victim_recognized(accident, victim);
+        when beneficiary_compensated_victim_harm(holder, accident, victim);
+        then beneficiary_recognized(accident, holder);
+    }
+}
+
+// --- Часть вторая: собственник имущества признаётся потерпевшим -------------
+//
+// Голова здесь — `victim_recognized` статьи 22, и это не заимствование чужого
+// предиката, а буквальный состав нормы: пункт 4 определяет, КТО признаётся
+// потерпевшим при вреде имуществу. Два правила, потому что текст называет два
+// основания через «а в случае его смерти».
+
+relation property_damaged_in_accident(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "в транспортном происшествии причинён вред имуществу";
+}
+relation damaged_property_owner(accident: TrafficAccident, owner: Victim) kind empirical {
+    label ru-KZ official "лицо является собственником имущества, которому причинён вред";
+}
+relation damaged_property_owner_died(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "собственник повреждённого имущества умер";
+}
+relation entitled_on_owner_death(accident: TrafficAccident, person: Victim) kind empirical {
+    label ru-KZ official "лицо имеет право на возмещение вреда в связи со смертью собственника повреждённого имущества";
+}
+
+@source(LAW_446_ART25) {
+    rule PropertyOwnerIsVictim(accident: TrafficAccident, owner: Victim) strict {
+        label ru-KZ official "Статья 25 пункт 4. При причинении вреда имуществу потерпевшим признаётся собственник данного имущества";
+        when property_damaged_in_accident(accident);
+        when damaged_property_owner(accident, owner);
+        then victim_recognized(accident, owner);
+    }
+
+    rule EntitledPersonIsVictimOnOwnerDeath(accident: TrafficAccident, person: Victim)
+        strict {
+        label ru-KZ official "Статья 25 пункт 4. В случае смерти собственника повреждённого имущества потерпевшими признаются лица, имеющие право на возмещение вреда";
+        when property_damaged_in_accident(accident);
+        when damaged_property_owner_died(accident);
+        when entitled_on_owner_death(accident, person);
+        then victim_recognized(accident, person);
+    }
+}
+
+// ============================================================================
+// Пункт 5: выплата непосредственно лечащему (восстанавливающему) лицу
+// ============================================================================
+//
+// ДВА ОСНОВАНИЯ ЧЕРЕЗ «ИЛИ» — два правила (§206): письменно оформленное
+// заявление потерпевшего либо нотариально удостоверенная доверенность.
+// Голова — институциональный факт «выплата такому лицу допустима», а решение
+// осуществить её остаётся у страховщика и выражено отдельной `liberty`: текст
+// говорит «может быть осуществлена», а не «осуществляется».
+
+relation victim_written_application_for_direct_service_payment(demand: PaymentClaim,
+        provider: RestorationServiceProvider) kind empirical {
+    label ru-KZ official "потерпевший письменно оформил заявление об осуществлении страховой выплаты непосредственно названному лицу";
+}
+relation notarised_power_of_attorney_for_service_payment(demand: PaymentClaim,
+        provider: RestorationServiceProvider) kind empirical {
+    label ru-KZ official "представлена нотариально удостоверенная доверенность на осуществление страховой выплаты непосредственно названному лицу";
+}
+relation provider_rendered_restoration_services(provider: RestorationServiceProvider,
+        victim: Victim) kind empirical {
+    label ru-KZ official "лицо оказало (оказывает) потерпевшему услуги по восстановлению здоровья и (или) имущества";
+}
+
+relation payment_to_service_provider_permitted(demand: PaymentClaim,
+        provider: RestorationServiceProvider) kind institutional {
+    label ru-KZ official "страховая выплата может быть осуществлена непосредственно лицу, оказавшему (оказывающему) потерпевшему услуги по восстановлению здоровья и (или) имущества";
+}
+relation payment_made_to_service_provider(demand: PaymentClaim,
+        provider: RestorationServiceProvider) kind empirical {
+    label ru-KZ official "страховая выплата осуществлена непосредственно лицу, оказавшему (оказывающему) услуги по восстановлению здоровья и (или) имущества";
+}
+
+@source(LAW_446_ART25) {
+    rule ServicePaymentPermittedByWrittenApplication(
+        demand: PaymentClaim,
+        provider: RestorationServiceProvider,
+        victim: Victim,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 5. По заявлению потерпевшего, оформленному письменно, страховая выплата может быть осуществлена непосредственно лицу, оказавшему (оказывающему) ему услуги по восстановлению здоровья и (или) имущества";
+        effective [@2026-07-23, @2026-10-21);
+        when provider_rendered_restoration_services(provider, victim);
+        when victim_written_application_for_direct_service_payment(demand, provider);
+        then payment_to_service_provider_permitted(demand, provider);
+    }
+
+    rule ServicePaymentPermittedByNotarisedPowerOfAttorney(
+        demand: PaymentClaim,
+        provider: RestorationServiceProvider,
+        victim: Victim,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 5. По нотариально удостоверенной доверенности страховая выплата может быть осуществлена непосредственно лицу, оказавшему (оказывающему) потерпевшему услуги по восстановлению здоровья и (или) имущества";
+        effective [@2026-07-23, @2026-10-21);
+        when provider_rendered_restoration_services(provider, victim);
+        when notarised_power_of_attorney_for_service_payment(demand, provider);
+        then payment_to_service_provider_permitted(demand, provider);
+    }
+
+    rule InsurerMayPayServiceProvider(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+        provider: RestorationServiceProvider,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 5. Страховщик вправе осуществить страховую выплату непосредственно лицу, оказавшему (оказывающему) потерпевшему услуги по восстановлению здоровья и (или) имущества";
+        effective [@2026-07-23, @2026-10-21);
+        when payment_claim_of(demand, accident, holder, insurer);
+        when payment_to_service_provider_permitted(demand, provider);
+        then liberty OsushchestvitVyplatuNeposredstvennoUslugodatelyu {
+            holder insurer;
+            action payment_made_to_service_provider(demand, provider);
+            window [@2026-07-23, @2026-10-21);
+        };
+    }
+}
+
+relation payment_transferred_to_beneficiary_account(demand: PaymentClaim,
+        holder: Beneficiary) kind empirical {
+    label ru-KZ official "страховая выплата перечислена на банковский счёт выгодоприобретателя";
+}
+relation bank_transfer_cost_paid_by_insurer(demand: PaymentClaim,
+        insurer: Insurer) kind empirical {
+    label ru-KZ official "банковские услуги по переводу, зачислению и выплате страховой суммы оплачены из собственных средств страховщика";
+}
+
+@source(LAW_352) {
+    rule InsurerMustTransferToBeneficiaryAccount(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 5 в редакции Закона № 352-VIII. Страховая выплата перечисляется на банковский счёт выгодоприобретателя";
+        effective [@2026-10-21, infinity);
+        when payment_claim_of(demand, accident, holder, insurer);
+        then duty PerechislitVyplatuNaSchetVygodopriobretatelya {
+            bearer insurer;
+            beneficiary holder;
+            achieve payment_transferred_to_beneficiary_account(demand, holder)
+                during [@2026-10-21, infinity);
+        };
+    }
+
+    rule InsurerMustPayBankTransferCosts(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 5 в редакции Закона № 352-VIII. Банковские услуги по выплате оплачиваются из собственных средств страховщика";
+        effective [@2026-10-21, infinity);
+        when payment_claim_of(demand, accident, holder, insurer);
+        then duty OplatitBankovskieUslugiPoVyplate {
+            bearer insurer;
+            beneficiary holder;
+            achieve bank_transfer_cost_paid_by_insurer(demand, insurer)
+                during [@2026-10-21, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Пункт 6: независимость выплаты за вред жизни и здоровью
+// ============================================================================
+//
+// ПРАВОВОЕ ДЕЙСТВИЕ НОРМЫ — ЗАПРЕТ ЗАЧЁТА, и он назван вслух прочтением
+// модуля: «осуществляется независимо от сумм, причитающихся по другим
+// договорам страхования» отнимает у страховщика именно уменьшение выплаты на
+// эти суммы. Один институциональный факт «выплата независима» ничего бы не
+// изменил в деле; поэтому за фактом стоит `prohibition` §128, адресованный
+// тому, кто считает выплату.
+
+relation life_or_health_payment_independent(accident: TrafficAccident, victim: Victim)
+    kind institutional {
+    label ru-KZ official "страховая выплата за вред, причинённый жизни и здоровью потерпевшего, осуществляется независимо от сумм, причитающихся ему (лицам, имеющим право на возмещение вреда) по другим договорам страхования";
+}
+relation payment_reduced_by_other_insurance(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик уменьшил страховую выплату на суммы, причитающиеся по другим договорам страхования";
+}
+
+@source(LAW_446_ART25) {
+    rule LifeOrHealthPaymentIsIndependent(
+        accident: TrafficAccident,
+        victim: Victim,
+        outcome: HarmToLifeOrHealthOutcome,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 6. Страховая выплата за вред, причинённый жизни и здоровью потерпевшего, осуществляется независимо от сумм, причитающихся ему (лицам, имеющим право на возмещение вреда) по другим договорам страхования";
+        when harm_to_life_or_health(accident, victim, outcome);
+        then life_or_health_payment_independent(accident, victim);
+    }
+
+    rule InsurerMayNotDeductOtherInsurance(
+        demand: PaymentClaim,
+        accident: TrafficAccident,
+        holder: Beneficiary,
+        insurer: Insurer,
+        victim: Victim,
+    ) strict {
+        label ru-KZ official "Статья 25 пункт 6. Суммы, причитающиеся потерпевшему по другим договорам страхования, не уменьшают страховую выплату за вред, причинённый его жизни и здоровью";
+        when payment_claim_of(demand, accident, holder, insurer);
+        when life_or_health_payment_independent(accident, victim);
+        then prohibition UmenshitVyplatuNaSummyPoDrugimDogovoram {
+            bearer insurer;
+            beneficiary holder;
+            action payment_reduced_by_other_insurance(demand);
+            window [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Пункт 7: запрет ограничивающих условий
+// ============================================================================
+
+relation limiting_conditions_demanded(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик потребовал от выгодоприобретателя принятия условий, ограничивающих его право требования к страховщику";
+}
+
+@source(LAW_446_ART25, quote = "При осуществлении страховой выплаты страховщик не вправе требовать от выгодоприобретателя принятие условий, ограничивающих его право требования к страховщику.")
+rule InsurerMayNotDemandLimitingConditions(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 25 пункт 7. При осуществлении страховой выплаты страховщик не вправе требовать от выгодоприобретателя принятие условий, ограничивающих его право требования к страховщику";
+    when payment_claim_of(demand, accident, holder, insurer);
+    then prohibition TrebovatUsloviyaOgranichivayushchiePravoTrebovaniya {
+        bearer insurer;
+        beneficiary holder;
+        action limiting_conditions_demanded(demand);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// ============================================================================
+// Пункт 8: право страховщика на имущество или его остатки
+// ============================================================================
+//
+// РАВЕНСТВО СУММ ВЫРАЖЕНО ОДНОЙ ПЕРЕМЕННОЙ, а не сравнением: право возникает
+// «в случае осуществления им страховой выплаты В РАЗМЕРЕ рыночной стоимости
+// данного имущества на день наступления страхового случая», то есть выплата и
+// рыночная стоимость — одна и та же величина. Подстановка одной переменной в
+// обе посылки и есть это условие.
+
+relation market_value_at_accident_day(accident: TrafficAccident, victim: Victim,
+        amount: Money) kind empirical {
+    key(accident, victim);
+    label ru-KZ official "рыночная стоимость имущества потерпевшего на день наступления страхового случая";
+}
+relation insurer_entitled_to_property_or_remains(accident: TrafficAccident,
+        insurer: Insurer, victim: Victim) kind institutional {
+    label ru-KZ official "страховщик имеет право на имущество потерпевшего или его остатки";
+}
+
+@source(LAW_446_ART25, quote = "Страховщик имеет право на имущество или его остатки в случае осуществления им страховой выплаты в размере рыночной стоимости данного имущества на день наступления страхового случая.")
+rule InsurerEntitledToPropertyOrRemains(
+    accident: TrafficAccident,
+    insurer: Insurer,
+    victim: Victim,
+    amount: Money,
+) strict {
+    label ru-KZ official "Статья 25 пункт 8. Страховщик имеет право на имущество или его остатки в случае осуществления им страховой выплаты в размере рыночной стоимости данного имущества на день наступления страхового случая";
+    when market_value_at_accident_day(accident, victim, amount);
+    when insurance_payment_made_by(accident, insurer, amount);
+    then insurer_entitled_to_property_or_remains(accident, insurer, victim);
+}
+
+// ============================================================================
+// Пункт 9: выплата по протоколу о нарушении правил дорожного движения
+// ============================================================================
+//
+// Условие «при отсутствии факта причинения вреда жизни и здоровью
+// потерпевшего» — тот же факт дела, которым открывается статья 22-2
+// (`no_life_or_health_victims`): второго словаря для одного понятия пакет не
+// заводит.
+
+relation traffic_violation_protocol_with_scheme(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "органами внутренних дел выдан протокол о нарушении правил дорожного движения со схемой происшествия";
+}
+
+@source(LAW_446_ART25, quote = "Страховщик вправе осуществить страховую выплату на основании протокола о нарушении правил дорожного движения со схемой происшествия, выданного органами внутренних дел, при отсутствии факта причинения вреда жизни и здоровью потерпевшего.")
+rule InsurerMayPayOnTrafficViolationProtocol(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 25 пункт 9. Страховщик вправе осуществить страховую выплату на основании протокола о нарушении правил дорожного движения со схемой происшествия, выданного органами внутренних дел, при отсутствии факта причинения вреда жизни и здоровью потерпевшего";
+    when payment_claim_of(demand, accident, holder, insurer);
+    when traffic_violation_protocol_with_scheme(accident);
+    when no_life_or_health_victims(accident);
+    then liberty OsushchestvitVyplatuPoProtokoluONarushenii {
+        holder insurer;
+        action insurance_payment_made(demand);
+        window [@2026-07-23, infinity);
+    };
+}

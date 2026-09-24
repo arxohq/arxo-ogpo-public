@@ -1,0 +1,28 @@
+// Payment for repairs against the insurance payout: clause 8.
+//
+// PURPOSE. The insurer's right, by agreement with the victim, to organize and
+// pay for the repair instead of a monetary payment.
+//
+// SOURCE PROVISIONS: clause 8.
+//
+// MODEL BOUNDARY. This is a §131 liberty, not a duty: the text gives the
+// insurer a right ("is entitled"), and the window is open from the day the Rules entered into force.
+
+// --- Clause 8. Payment for repairs against the insurance payout -----------------------
+// The agreement fact is read by the application-facing facade `vehicle.incident`: it does not
+// reproduce the right of clause 8, but only shows that for a specific
+// accident file the position provided for by the Rules has arisen for the insurer.
+pub relation oplata_remonta_soglasovana(r: RaschetVreda, p: Poterpevshiy) kind empirical { label ru official "С потерпевшим согласована оплата ремонта в счёт страховой выплаты"; }
+relation strakhovshchik_organizuet_i_oplachivaet_remont(s: Strakhovshchik, r: RaschetVreda) kind empirical { label ru official "Страховщик организует и осуществляет оплату ремонта поврежденного транспортного средства"; }
+
+@source(VRED_TS_PT_8, quote = "По согласованию с потерпевшим (выгодоприобретателем) или их представителями страховщик в счет страховой выплаты организует и осуществляет оплату ремонта поврежденного транспортного средства.")
+rule OplataRemontaVSchetVyplaty(r: RaschetVreda, s: Strakhovshchik, p: Poterpevshiy) strict {
+    label ru official "Пункт 8. По согласованию с потерпевшим страховщик вправе в счёт страховой выплаты организовать и оплатить ремонт поврежденного транспортного средства";
+    when strakhovshchik_po_raschetu(r: r, s: s);
+    when oplata_remonta_soglasovana(r: r, p: p);
+    then liberty OrganizovatOplatuRemonta {
+        holder s;
+        action strakhovshchik_organizuet_i_oplachivaet_remont(s: s, r: r);
+        window [@2016-02-08, infinity);
+    };
+}

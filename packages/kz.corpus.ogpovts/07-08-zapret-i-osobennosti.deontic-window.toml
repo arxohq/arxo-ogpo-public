@@ -1,0 +1,49 @@
+# Экземпляр шаблона `deontic-window` — ДАННЫЕ, не код.
+# Контракт: corpus/templates/deontic-window/TEMPLATE.ru.md
+# Правится руками; правила в .law порождаются из этого файла между маркерами генерации.
+
+target = "07-08-zapret-i-osobennosti.law"
+
+[[rule]]
+name      = "TrafficControlMustVerifyInsuranceDuty"
+strength  = "strict"
+anchors   = ["LAW_446_ART7"]
+label     = { lang = "ru-KZ", status = "official", text = "Статья 7 пункт 2. Подразделения уполномоченного органа по обеспечению безопасности дорожного движения и органы транспортного контроля при проверке документов обязаны проверить выполнение владельцами транспортных средств обязанности по заключению договора обязательного страхования ответственности владельцев транспортных средств" }
+params    = ["body: TrafficControlBody", "vehicle: Vehicle", "at: Date"]
+premises  = ["vehicle_documents_checked_at(body: body, vehicle: vehicle, at: at)"]
+layout    = { indent = 0, params = "inline", wrapped = false }
+
+[rule.norm]
+modality      = "duty"
+name          = "ProveritVypolnenieObyazannostiPoDogovoru"
+bearer        = "body"
+beneficiary   = "none"
+goal          = "achieve"
+condition     = "insurance_duty_compliance_verified(body, vehicle)"
+start         = "at"
+start_event   = "vehicle_documents_checked_at(body: body, vehicle: vehicle, at: at)"
+end           = "at"
+end_event     = "vehicle_documents_checked_at(body: body, vehicle: vehicle, at: at)"
+end_inclusive = true
+
+[[rule]]
+name      = "NewlyCreatedInsurerMustJoinGuaranteeFundWithinDeadline"
+strength  = "strict"
+anchored_by_block = true
+label     = { lang = "ru-KZ", status = "official", text = "Статья 8 пункт 1. Вновь создаваемая страховая организация обязана заключить договор участия с Фондом гарантирования страховых выплат в течение тридцати календарных дней с даты получения лицензии" }
+params    = ["insurer: Insurer", "at: Date", "due: Date"]
+premises  = ["license_obtained(insurer: insurer, at: at)", "guarantee_fund_contract_deadline(insurer: insurer, due: due)"]
+layout    = { indent = 4, params = "inline", wrapped = false }
+
+[rule.norm]
+modality      = "duty"
+name          = "ZaklyuchitDogovorUchastiyaSFondomVTridtsatidnevnyySrok"
+bearer        = "insurer"
+beneficiary   = "none"
+goal          = "achieve"
+condition     = "guarantee_fund_participation_contract_concluded(insurer)"
+start         = "at"
+start_event   = "license_obtained(insurer: insurer, at: at)"
+end           = "due"
+end_event     = "guarantee_fund_contract_deadline(insurer: insurer, due: due)"
+end_inclusive = true

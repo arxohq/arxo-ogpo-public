@@ -1,0 +1,321 @@
+// СТАТЬЯ 24. ПРЕДЕЛЫ ОТВЕТСТВЕННОСТИ СТРАХОВЩИКА (СТРАХОВАЯ СУММА).
+//
+// Вопрос «сколько мне заплатят» до этого модуля в корпусе отвечался только
+// внутри упрощённого порядка (`kz.corpus.uproshchennoe_uregulirovanie`, сто
+// МРП). Общая страховая сумма — здесь.
+//
+// ФОРМА. Каждый предел закон называет КРАТНОСТЬЮ месячного расчётного
+// показателя, а не суммой в тенге. Поэтому в модуле стоят кратности (целые
+// числа статьи), а тенге получаются умножением на МРП. Вписать тенге значило
+// бы закрепить в норме число, которого в норме нет.
+//
+// ПОЧЕМУ МРП ЗДЕСЬ СВОЙ, А НЕ `applicable_mrp` СТАТЬИ 19. Молчание статьи 19 о
+// дне показателя — свойство её текста, и `package.law` замещает его объявленным
+// прочтением. Статья 24 пункт 3 день НАЗЫВАЕТ: «на день осуществления страховой
+// выплаты». Читать предел статьи 24 через прочтение, придуманное для статьи 19,
+// значило бы спрятать названное законом под выдуманным. Отношение поэтому своё,
+// с якорем на статью 24, и окно `effective` у него — не прочтение, а буквальная
+// проводка «день выплаты → МРП того года».
+//
+// ГРАНИЦЫ СРЕЗА, ОБЪЯВЛЕННЫЕ 05.09.2026, СНЯТЫ 10.09.2026 модулем
+// `24a-neskolko-poterpevshikh.law`:
+//
+//   пункт 1 подпункт 3) — вред имуществу ДВУХ И БОЛЕЕ потерпевших. Общий
+//              предел в две тысячи месячных расчётных показателей и
+//              соразмерное распределение при превышении выведены там же
+//              двумя агрегатами (число потерпевших и сумма вреда). Здесь
+//              осталось первое утверждение подпункта — «шестьсот на
+//              каждого», — и оно получило посылку `property_payment_by_own_limit`,
+//              которая отводит его в соразмерной ветви.
+//
+//   пункт 4 часть третья («расходы возмещаются непосредственно лицу,
+//              понесшему их») взята позицией здесь; часть вторая — общая
+//              сумма выплаты и компенсации в пределах объёма ответственности
+//              — выражена там же недеривационным ограничением §14.
+
+
+// ============================================================================
+// Месячный расчётный показатель дня выплаты (пункт 3)
+// ============================================================================
+
+relation payment_day_mrp(amount: Money) kind institutional {
+    label ru-KZ official "месячный расчётный показатель, установленный на день осуществления страховой выплаты (статья 24 пункт 3)";
+}
+
+@source(LAW_446_ART24, quote = "Для расчета размера страховой выплаты используется месячный расчетный показатель, установленный в соответствии с законодательным актом Республики Казахстан, на день осуществления страховой выплаты.")
+rule PaymentDayMrp2026(amount: Money) strict {
+    label ru-KZ official "Статья 24 пункт 3. Для расчёта размера страховой выплаты, осуществляемой в 2026 году, используется месячный расчётный показатель, установленный законом о республиканском бюджете на 2026 – 2028 годы";
+    effective [@2026-01-01, @2027-01-01);
+    when kz.corpus.budget::mrp(2026, amount);
+    then payment_day_mrp(amount);
+}
+
+// ============================================================================
+// Кратности статьи 24 — числа нормы
+// ============================================================================
+
+relation life_or_health_limit_multiple(outcome: HarmToLifeOrHealthOutcome, multiple: Integer)
+    kind institutional {
+    key(outcome);
+    label ru-KZ official "предельный объём ответственности страховщика за вред жизни или здоровью потерпевшего в месячных расчётных показателях (статья 24 пункт 1 подпункт 1))";
+}
+
+@source(LAW_446_ART24) {
+    assert life_or_health_limit_multiple(Death, 2000);
+    assert life_or_health_limit_multiple(DisabilityGroupOne, 1600);
+    assert life_or_health_limit_multiple(DisabilityGroupTwo, 1200);
+    assert life_or_health_limit_multiple(DisabilityGroupThree, 500);
+    assert life_or_health_limit_multiple(ChildWithDisability, 1000);
+    assert life_or_health_limit_multiple(InjuryWithoutDisability, 300);
+}
+
+relation property_limit_multiple(multiple: Integer) kind institutional {
+    label ru-KZ official "предельный объём ответственности страховщика за вред, причинённый имуществу одного потерпевшего, в месячных расчётных показателях (статья 24 пункт 1 подпункт 2))";
+}
+@source(LAW_446_ART24)
+assert property_limit_multiple(600);
+
+relation burial_expenses_multiple(multiple: Integer) kind institutional {
+    label ru-KZ official "размер возмещения расходов на погребение потерпевшего в месячных расчётных показателях (статья 24 пункт 6)";
+}
+@source(LAW_446_ART24)
+assert burial_expenses_multiple(100);
+
+// ============================================================================
+// Факты дела
+// ============================================================================
+
+relation accident_insurer(accident: TrafficAccident, insurer: Insurer) kind empirical {
+    label ru-KZ official "страховщик, к которому предъявлено требование по данному транспортному происшествию";
+}
+relation accident_insured(accident: TrafficAccident, owner: VehicleOwner) kind empirical {
+    label ru-KZ official "страхователь (застрахованный), гражданско-правовая ответственность которого наступила в результате транспортного происшествия";
+}
+relation harm_to_life_or_health(accident: TrafficAccident, victim: Victim,
+                                outcome: HarmToLifeOrHealthOutcome) kind empirical {
+    key(accident, victim);
+    label ru-KZ official "вред, причинённый жизни или здоровью потерпевшего, повлёк названное последствие";
+}
+relation treatment_expenses(accident: TrafficAccident, victim: Victim, amount: Money)
+    kind empirical {
+    key(accident, victim);
+    label ru-KZ official "фактические расходы потерпевшего на амбулаторное и (или) стационарное лечение";
+}
+relation property_harm_amount(accident: TrafficAccident, victim: Victim, amount: Money)
+    kind empirical {
+    key(accident, victim);
+    label ru-KZ official "размер вреда, причинённого имуществу потерпевшего";
+}
+relation actual_harm_amount(accident: TrafficAccident, victim: Victim, amount: Money)
+    kind empirical {
+    key(accident, victim);
+    label ru-KZ official "фактический размер вреда, причинённого потерпевшему";
+}
+relation burial_performed_by(accident: TrafficAccident, victim: Victim, payer: Beneficiary)
+    kind empirical {
+    label ru-KZ official "лицо осуществило погребение погибшего потерпевшего";
+}
+relation loss_prevention_expenses(accident: TrafficAccident, payer: Beneficiary, amount: Money)
+    kind empirical {
+    key(accident, payer);
+    label ru-KZ official "расходы, понесённые страхователем (застрахованным) в целях предотвращения или уменьшения убытков";
+}
+relation loss_prevention_expenses_necessary(accident: TrafficAccident, payer: Beneficiary)
+    kind empirical {
+    label ru-KZ official "расходы по предотвращению или уменьшению убытков были необходимы либо произведены для выполнения указаний страховщика";
+}
+relation harm_difference_compensated(victim: Victim, owner: VehicleOwner) kind empirical {
+    label ru-KZ official "страхователь возместил потерпевшему разницу между страховой суммой и фактическим размером вреда";
+}
+relation loss_prevention_expenses_reimbursed(accident: TrafficAccident, payer: Beneficiary)
+    kind empirical {
+    label ru-KZ official "расходы по предотвращению или уменьшению убытков возмещены страховщиком понёсшему их лицу";
+}
+
+// ============================================================================
+// Предельный объём ответственности и размер выплаты
+// ============================================================================
+
+relation insurer_liability_limit(accident: TrafficAccident, victim: Victim, amount: Money)
+    kind institutional {
+    label ru-KZ official "предельный объём ответственности страховщика по одному страховому случаю в отношении данного потерпевшего (страховая сумма)";
+}
+
+@source(LAW_446_ART24, quote = "за вред, причиненный жизни или здоровью каждого потерпевшего и повлекший:")
+rule LifeOrHealthLiabilityLimit(
+    accident: TrafficAccident,
+    victim: Victim,
+    outcome: HarmToLifeOrHealthOutcome,
+    multiple: Integer,
+    mrp: Money,
+) strict {
+    label ru-KZ official "Статья 24 пункт 1 подпункт 1). Предельный объём ответственности страховщика за вред, причинённый жизни или здоровью каждого потерпевшего, составляет названное число месячных расчётных показателей";
+    when harm_to_life_or_health(accident, victim, outcome);
+    when life_or_health_limit_multiple(outcome, multiple);
+    when payment_day_mrp(mrp);
+    then insurer_liability_limit(accident, victim, mrp * multiple);
+}
+
+// `pub` — читает пакет-мост `kz.corpus.strakhovaya_neustoyka`: база и
+// стороны неустойки статьи 353 ГК живут здесь, а расчёт — там.
+pub relation insurance_payment_amount(accident: TrafficAccident, victim: Victim, amount: Money)
+    kind institutional {
+    label ru-KZ official "размер страховой выплаты, причитающейся потерпевшему по данному страховому случаю";
+}
+
+// Пункт 2: при гибели или установлении инвалидности выплата равна ПРЕДЕЛУ, а
+// не фактическому вреду. Это единственное место статьи, где предел и есть
+// сумма, — и потому правило отдельное, а не общая формула с минимумом.
+//
+// ПЯТЬ ПОСЛЕДСТВИЙ ПЕРЕЧИСЛЕНЫ ПОЛОЖИТЕЛЬНО, а не заданы отличием от
+// шестого. Сравнение переменной с доменной константой в гарде тела
+// (`outcome != InjuryWithoutDisability`) вне ядра 0.1, а замыкание §70 здесь
+// избыточно: перечисление конечно и стоит в самой норме, так что пять
+// утверждений и есть буквальный список пункта 2.
+relation payment_equals_liability_limit_outcome(outcome: HarmToLifeOrHealthOutcome)
+    kind institutional {
+    label ru-KZ official "последствие вреда, при котором страховая выплата осуществляется в размере предельного объёма ответственности страховщика (статья 24 пункт 2)";
+}
+@source(LAW_446_ART24) {
+    assert payment_equals_liability_limit_outcome(Death);
+    assert payment_equals_liability_limit_outcome(DisabilityGroupOne);
+    assert payment_equals_liability_limit_outcome(DisabilityGroupTwo);
+    assert payment_equals_liability_limit_outcome(DisabilityGroupThree);
+    assert payment_equals_liability_limit_outcome(ChildWithDisability);
+
+    rule DeathOrDisabilityPaymentEqualsLimit(
+        accident: TrafficAccident,
+        victim: Victim,
+        outcome: HarmToLifeOrHealthOutcome,
+        limit: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 2. Страховая выплата за вред, причинённый жизни и здоровью потерпевшего, повлёкший гибель или установление инвалидности, осуществляется в размере предельного объёма ответственности страховщика";
+        when harm_to_life_or_health(accident, victim, outcome);
+        when payment_equals_liability_limit_outcome(outcome);
+        when insurer_liability_limit(accident, victim, limit);
+        then insurance_payment_amount(accident, victim, limit);
+    }
+
+    // Увечье без установления инвалидности: «в размере фактических расходов на
+    // амбулаторное и (или) стационарное лечение, но не более 300». Здесь предел
+    // именно ПОТОЛОК, и форма — минимум, а не равенство.
+    rule InjuryPaymentIsActualTreatmentCostCapped(
+        accident: TrafficAccident,
+        victim: Victim,
+        spent: Money,
+        limit: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 1 подпункт 1). За увечье, травму или иное повреждение здоровья без установления инвалидности страховая выплата осуществляется в размере фактических расходов на амбулаторное и (или) стационарное лечение, но не более трёхсот месячных расчётных показателей";
+        when harm_to_life_or_health(accident, victim, InjuryWithoutDisability);
+        when treatment_expenses(accident, victim, spent);
+        when insurer_liability_limit(accident, victim, limit);
+        then insurance_payment_amount(accident, victim, min(spent, limit));
+    }
+
+    rule PropertyLiabilityLimit(
+        accident: TrafficAccident,
+        victim: Victim,
+        multiple: Integer,
+        mrp: Money,
+        harm: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 1 подпункт 2). Предельный объём ответственности страховщика за вред, причинённый имуществу одного потерпевшего, составляет шестьсот месячных расчётных показателей";
+        when property_harm_amount(accident, victim, harm);
+        when property_limit_multiple(multiple);
+        when payment_day_mrp(mrp);
+        then insurer_liability_limit(accident, victim, mrp * multiple);
+    }
+
+    // ПОСЫЛКА `property_payment_by_own_limit` ДОБАВЛЕНА 10.09.2026 вместе с
+    // модулем `24a-neskolko-poterpevshikh.law`. Без неё правило отвечало бы
+    // «вред, но не более шестисот» и там, где подпункт 3) предписывает
+    // соразмерную долю общего предела, — то есть выдавало бы ВТОРОЕ значение
+    // той же головы на одном и том же деле. Ветви разведены положительно, а
+    // не дефитером: голову `insurance_payment_amount` читает СТРОГОЕ правило
+    // статьи 22 пункта 4, а строгое правило не может читать вывод
+    // поражаемого (LDC-E4103 §111).
+    rule PropertyPaymentIsHarmCapped(
+        accident: TrafficAccident,
+        victim: Victim,
+        harm: Money,
+        limit: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 1 подпункт 2). За вред, причинённый имуществу одного потерпевшего, страховая выплата осуществляется в размере причинённого вреда, но не более предельного объёма ответственности";
+        when property_payment_by_own_limit(accident);
+        when property_harm_amount(accident, victim, harm);
+        when insurer_liability_limit(accident, victim, limit);
+        then insurance_payment_amount(accident, victim, min(harm, limit));
+    }
+}
+
+// Пункт 6: сто МРП лицу, осуществившему погребение. Это НЕ страховая выплата
+// потерпевшему и потому своё отношение: получатель здесь другой, и предел
+// пункта 1 на него не распространяется.
+relation burial_expenses_reimbursement(accident: TrafficAccident, payer: Beneficiary, amount: Money)
+    kind institutional {
+    label ru-KZ official "размер возмещения расходов на погребение, причитающийся лицу, осуществившему погребение потерпевшего";
+}
+
+@source(LAW_446_ART24) {
+    rule BurialExpensesReimbursement(
+        accident: TrafficAccident,
+        victim: Victim,
+        payer: Beneficiary,
+        multiple: Integer,
+        mrp: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 6. В случае смерти потерпевшего лицу, осуществившему погребение потерпевшего, страховщиком возмещаются расходы на погребение в размере ста месячных расчётных показателей";
+        when harm_to_life_or_health(accident, victim, Death);
+        when burial_performed_by(accident, victim, payer);
+        when burial_expenses_multiple(multiple);
+        when payment_day_mrp(mrp);
+        then burial_expenses_reimbursement(accident, payer, mrp * multiple);
+    }
+
+    // ============================================================================
+    // Позиции §127
+    // ============================================================================
+
+    // Пункт 5. Носитель — СТРАХОВАТЕЛЬ, а не страховщик: закон возлагает разницу
+    // на причинителя. Условие возникновения — фактический вред больше предела;
+    // сама разница остаётся числом дела, потому что предел здесь уже исчерпан, а
+    // вычитание одного из другого правового решения не добавляет.
+    rule InsuredCompensatesHarmAboveLimit(
+        accident: TrafficAccident,
+        victim: Victim,
+        owner: VehicleOwner,
+        limit: Money,
+        actual: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 5. При недостаточности предельного объёма ответственности для полного возмещения причинённого вреда страхователь возмещает потерпевшему разницу между страховой суммой и фактическим размером вреда";
+        when accident_insured(accident, owner);
+        when insurer_liability_limit(accident, victim, limit);
+        when actual_harm_amount(accident, victim, actual);
+        when actual > limit;
+        then duty VozmestitRaznitsuSverkhStrakhovoySummy {
+            bearer owner;
+            beneficiary victim;
+            achieve harm_difference_compensated(victim, owner) during [@2026-07-23, infinity);
+        };
+    }
+
+    // Пункт 4 части первая и третья. Обязанность страховщика, и адресат её —
+    // понёсшее расходы лицо, а не потерпевший.
+    rule InsurerReimbursesLossPreventionExpenses(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        payer: Beneficiary,
+        amount: Money,
+    ) strict {
+        label ru-KZ official "Статья 24 пункт 4. Расходы, понесённые страхователем (застрахованным) в целях предотвращения или уменьшения убытков, подлежат возмещению страховщиком непосредственно лицу, понёсшему их, если такие расходы были необходимы или были произведены для выполнения указаний страховщика";
+        when accident_insurer(accident, insurer);
+        when loss_prevention_expenses(accident, payer, amount);
+        when loss_prevention_expenses_necessary(accident, payer);
+        then duty VozmestitRaskhodyPoUmensheniyuUbytkov {
+            bearer insurer;
+            beneficiary payer;
+            achieve loss_prevention_expenses_reimbursed(accident, payer)
+                during [@2026-07-23, infinity);
+        };
+    }
+}

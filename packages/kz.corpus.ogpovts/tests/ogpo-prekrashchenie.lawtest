@@ -1,0 +1,163 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 14 — прекращение договора.
+//
+// ВТОРОЙ СЦЕНАРИЙ — ГЛАВНЫЙ, И ОТВЕТ В НЁМ FALSE_ONLY, А НЕ NEITHER. Пункт 2
+// говорит: «Договор не прекращает свое действие при осуществлении страховой
+// выплаты». Выразить это правилом нечем — правило о несуществующем основании
+// было бы правилом ни о чём; выражает это ЗАМЫКАНИЕ §70 над перечнем пункта
+// 1. Дело, в котором есть выплата и нет ни истечения срока, ни досрочного
+// прекращения, получает «договор НЕ прекращён» — утверждение, а не молчание.
+// Сними замыкание — и тест покраснеет на разнице между FALSE_ONLY и NEITHER,
+// то есть ровно на том, что пункт 2 и утверждает.
+//
+// Политика §86 здесь без `month_end`: срок договора взят из договора (иной
+// срок пункта 4 статьи 13), а сообщение в базу данных считается рабочими
+// днями — обе единицы это поле отвергают.
+
+context profile KZ_OGPO_DAY_DEADLINES {
+    deadline_policy KZ_OGPO_CALENDAR_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-terminated-by-expiry" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t14-a0": contract_in_question(entity_ref("urn:kz:ogpo:contract:u1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-a1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:u1"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-a2": other_term_ground(entity_ref("urn:kz:ogpo:contract:u1"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-a3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:u1"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-a4": termination_assessment_day(entity_ref("urn:kz:ogpo:contract:u1"), @2026-05-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_terminated(entity_ref("urn:kz:ogpo:contract:u1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пара к первому: тот же договор оценивается ДО дня окончания срока.
+test "urn:query:ogpo-not-terminated-before-expiry" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t14-b0": contract_in_question(entity_ref("urn:kz:ogpo:contract:u2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-b1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:u2"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-b2": other_term_ground(entity_ref("urn:kz:ogpo:contract:u2"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-b3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:u2"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-b4": termination_assessment_day(entity_ref("urn:kz:ogpo:contract:u2"), @2026-03-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_terminated(entity_ref("urn:kz:ogpo:contract:u2")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пункт 2: страховая выплата осуществлена — договор НЕ прекращён. Выплата
+// связана с договором через страховой случай статьи 22 (пять фактов дела),
+// а не через день выплаты: день выплаты запускает срок в РАБОЧИХ днях, и
+// сценарии с ним вынесены в `ogpo-vyplata-i-baza-dannykh.lawtest` — им нужен
+// снимок календаря §85 в мире.
+test "urn:query:ogpo-payment-does-not-terminate" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t14-c0": contract_in_question(entity_ref("urn:kz:ogpo:contract:u3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:u3"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c2": other_term_ground(entity_ref("urn:kz:ogpo:contract:u3"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:u3"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c4": termination_assessment_day(entity_ref("urn:kz:ogpo:contract:u3"), @2026-03-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c5": contract_insured_person(entity_ref("urn:kz:ogpo:contract:u3"), entity_ref("urn:kz:ogpo:owner:o1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c6": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:u3"), entity_ref("urn:kz:ogpo:vehicle:v11")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c7": accident_arose_from_vehicle_operation(entity_ref("urn:kz:ogpo:accident:x3"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:vehicle:v11")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c8": victim_recognized(entity_ref("urn:kz:ogpo:accident:x3"), entity_ref("urn:kz:ogpo:victim:p3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c9": property_harm_amount(entity_ref("urn:kz:ogpo:accident:x3"), entity_ref("urn:kz:ogpo:victim:p3"), 500000 KZT) {
+            origin case_input;
+        }
+
+        assert "ogpo-t14-c10": insurance_payment_made_by(entity_ref("urn:kz:ogpo:accident:x3"), entity_ref("urn:kz:ogpo:insurer:i1"), 500000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_terminated(entity_ref("urn:kz:ogpo:contract:u3")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

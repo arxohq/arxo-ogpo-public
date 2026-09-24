@@ -1,0 +1,45 @@
+# Учебные дела над Правилами определения размера вреда (kz.corpus.vred_ts):
+# нормы остаются у канона, здесь только факты дел и сохранённые вопросы.
+[package]
+name = "examples.vred_ts.gibel_i_detali"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:law:examples:vred-ts:gibel-i-detali"
+
+[dependencies]
+"kz.corpus.vred_ts" = "0.1.0"
+
+[[cases]]
+name = "Gibel"
+path = "cases/gibel.lawcase"
+
+[[cases]]
+name = "PeredachaOstatkov"
+path = "cases/peredacha-ostatkov.lawcase"
+
+[[cases]]
+name = "Porog"
+path = "cases/porog.lawcase"
+
+[[cases]]
+name = "Molchanie"
+path = "cases/molchanie.lawcase"
+
+[[cases]]
+name = "MolchanieSnyato"
+path = "cases/molchanie-snyato.lawcase"
+
+[[cases]]
+name = "DetalFizlitso"
+path = "cases/detal-fizlitso.lawcase"
+
+[[cases]]
+name = "DetalRemont"
+path = "cases/detal-remont.lawcase"
+
+[[cases]]
+name = "DetalYurlitso"
+path = "cases/detal-yurlitso.lawcase"
+
+[metadata]
+act = "kz-vred-ts-examples-gibel-i-detali"

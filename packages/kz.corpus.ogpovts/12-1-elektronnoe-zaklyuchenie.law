@@ -1,0 +1,516 @@
+// СТАТЬЯ 12-1. ТРЕБОВАНИЯ К СТРАХОВЩИКУ И ИНТЕРНЕТ-РЕСУРСАМ ПРИ ЗАКЛЮЧЕНИИ
+// ДОГОВОРА И УРЕГУЛИРОВАНИИ СТРАХОВЫХ СЛУЧАЕВ ПУТЁМ ОБМЕНА ЦИФРОВЫМИ
+// РЕСУРСАМИ.
+//
+// Статья почти целиком состоит из ОБЯЗАННОСТЕЙ СТРАХОВЩИКА, и потому её форма
+// здесь — деонтические позиции §127 с носителем-страховщиком, а не
+// институциональные факты. Пункт 3 — восемь обязанностей в одном предложении
+// («страховщик обязан обеспечить: 1)…6)», и подпункт 6) сам разворачивается в
+// шесть целей), пункт 6 — девятая. Записать их фактами значило бы стереть
+// того, кто отвечает.
+//
+// ДВЕ НОВЫЕ СУЩНОСТИ. Организация по формированию и ведению базы данных
+// упоминалась метками статей 14 и 26-1, но сущностью не была: обязанность
+// абзаца третьего пункта 1 и абзаца предпоследнего пункта 3 возложена именно
+// на неё, и носителя позиции без неё не назвать. Страховой агент нужен пункту
+// 7 по той же причине: запрет адресован ему.
+//
+// ПОЧЕМУ ПУНКТ 4 — ДЕФИТЕР, А НЕ ГАРД. «…считается заключенным с даты уплаты
+// страхователем страховой премии…, ЕСЛИ ИНОЕ НЕ ПРЕДУСМОТРЕНО ДОГОВОРОМ»:
+// оговорка отводит общее правило, а не сужает его состав. Форма —
+// каноническая §95.3 (`defeasible` + `defeater` + строгое правило исключения),
+// та же, что у `PaymentDueDayIsGeneralTerm` в `26-poryadok-vyplaty.law`, и
+// тело дефитера само связывает ОБЕ переменные головы: иначе подстановка
+// приходит без второй, и оракул падает на первом же деле с договорной датой.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ И ПОЧЕМУ (решение формализатора, 10.09.2026):
+//
+//   пункт 2    — «Порядок обмена цифровыми ресурсами… определяется
+//                нормативным правовым актом уполномоченного органа». Чистое
+//                делегирование: ни условия, ни последствия, ни адресата
+//                обязанности у пункта нет. Маркер неисполнимости —
+//                «определяется нормативным правовым актом уполномоченного
+//                органа».
+//
+//   пункт 3 абзац последний — «Требования к порядку и содержанию уведомлений…
+//                определяются уполномоченным органом». Тот же маркер и та же
+//                причина. Обязанность УВЕДОМИТЬ взята (подпункты 1 и 2);
+//                неисполнимо здесь именно СОДЕРЖАНИЕ уведомления.
+//
+//   пункт 3 подпункт 6) абзац об урегулировании споров «с учетом
+//                особенностей, предусмотренных статьей 29-1 настоящего
+//                Закона» в части самих особенностей — отсылка к статье 29-1,
+//                которая в срез пакета не входит. Цель отправки сведений для
+//                урегулирования споров взята членом перечисления; состав
+//                особенностей — нет.
+
+
+// ============================================================================
+// Сущности статьи 12-1
+// ============================================================================
+
+
+entity InsuranceAgent {
+    label ru-KZ official "страховой агент";
+}
+
+// ============================================================================
+// Пункт 1. Через что идёт обмен и чего требовать нельзя
+// ============================================================================
+
+relation insurer_internet_resource_used(contract: InsuranceContract, insurer: Insurer)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "при заключении договора и урегулировании страховых случаев по нему используется интернет-ресурс и (или) информационная система страховщика";
+}
+
+relation database_organization_maintains_base(organization: DatabaseOrganization)
+    kind empirical {
+    label ru-KZ official "названная организация формирует и ведёт базу данных";
+}
+
+relation specialized_software_required(insurer: Insurer, policyholder: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "страховщик потребовал от страхователя (застрахованного, выгодоприобретателя) использования специализированного программного обеспечения";
+}
+
+relation link_to_insurer_resource_published(organization: DatabaseOrganization,
+                                            insurer: Insurer) kind empirical {
+    label ru-KZ official "на интернет-ресурсе организации по формированию и ведению базы данных размещена ссылка на интернет-ресурс страховой организации";
+}
+
+relation digital_exchange_runs_on_insurer_resource(contract: InsuranceContract,
+                                                   insurer: Insurer)
+    kind institutional {
+    label ru-KZ official "обмен цифровыми ресурсами между организацией по формированию и ведению базы данных, страховщиком и страхователем идёт через интернет-ресурс и (или) информационную систему страховщика";
+}
+
+@source(LAW_446_ART12_1) {
+    // Абзац первый. Посылка читается у статьи 10 пункта 5-1 (`conclusion_
+    // channel_used`): «обмен цифровыми ресурсами» назван там способом
+    // заключения, и второго признака того же для этой статьи не заводится.
+    rule DigitalExchangeRunsOnInsurerResource(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 1 абзац первый. При заключении договора обязательного страхования в электронной форме и урегулировании страховых случаев по ним для обмена цифровыми ресурсами используются интернет-ресурс и (или) информационная система страховщика";
+        when insurance_contract_of(contract, policyholder, insurer);
+        when conclusion_channel_used(contract, DigitalResourceExchange);
+        then digital_exchange_runs_on_insurer_resource(contract, insurer);
+    }
+
+    // Абзац второй — ЗАПРЕТ, а не описание удобства. «Не требуется
+    // использование специализированного программного обеспечения» обращено к
+    // тому, кто мог бы его потребовать, то есть к страховщику: требование
+    // такого обеспечения и есть запрещённое действие. Прочтение записано
+    // вслух и закреплено сценарием — см. отчёт наряда, «Открытые вопросы».
+    rule InsurerMayNotRequireSpecializedSoftware(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 1 абзац второй. При подаче заявления для заключения договора обязательного страхования и уведомлении о совершении транспортного происшествия, заявления для определения размера причиненного вреда, осуществления страховой выплаты от страхователя (застрахованного, выгодоприобретателя) в электронной форме не требуется использование специализированного программного обеспечения";
+        when insurance_application_submitted(contract, policyholder, insurer);
+        when insurer_internet_resource_used(contract, insurer);
+        then prohibition TrebovatSpecializirovannoePO {
+            bearer insurer;
+            beneficiary policyholder;
+            action specialized_software_required(insurer, policyholder);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Абзац третий — обязанность ОРГАНИЗАЦИИ, а не страховщика. Цель длящаяся
+    // (`maintain`): ссылка должна БЫТЬ размещена, а не быть размещённой
+    // однажды.
+    rule DatabaseOrganizationMustPublishLink(
+        organization: DatabaseOrganization,
+        contract: InsuranceContract,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 1 абзац третий. На интернет-ресурсе организации по формированию и ведению базы данных размещается ссылка на интернет-ресурс страховой организации, используемый для заключения договоров обязательного страхования и урегулирования страховых случаев в электронной форме";
+        when database_organization_maintains_base(organization);
+        when insurer_internet_resource_used(contract, insurer);
+        then duty RazmestitSsylkuNaResursStrakhovshchika {
+            bearer organization;
+            maintain link_to_insurer_resource_published(organization, insurer)
+                during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Пункт 3. Что страховщик обязан обеспечить
+// ============================================================================
+
+relation conclusion_notification_sent(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователю отправлено уведомление о заключении договора обязательного страхования либо об отказе в его заключении с указанием причин отказа в виде электронного сообщения";
+}
+
+relation settlement_stage_notification_sent(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователь (застрахованный) уведомлён об основных этапах процесса урегулирования страхового случая, включая отказ в приёме документов для урегулирования, в виде электронного сообщения";
+}
+
+relation contract_information_verifiable(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователю (застрахованному) обеспечена возможность проверки информации по заключённому договору обязательного страхования на интернет-ресурсе страховой организации";
+}
+
+relation insured_event_information_verifiable(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователю (застрахованному, выгодоприобретателю) обеспечена возможность проверки информации по страховому случаю на интернет-ресурсе страховой организации";
+}
+
+relation contract_stored_with_round_the_clock_access(contract: InsuranceContract)
+    kind empirical {
+    label ru-KZ official "договор обязательного страхования в электронной форме и информация по страховому случаю хранятся с обеспечением круглосуточного доступа страхователя (застрахованного, выгодоприобретателя) к интернет-ресурсу страховщика";
+}
+
+// Подпункт 6) перечисляет ШЕСТЬ ЦЕЛЕЙ, ради которых страхователю должна быть
+// обеспечена возможность создать и отправить страховщику сведения в
+// электронной форме. Перечисление, а не шесть предикатов: цели не исключают
+// друг друга, но каждая называется делом отдельно, и обязанность возникает по
+// каждой названной цели своя.
+enum ElectronicSubmissionPurpose {
+    label ru-KZ official "цель, ради которой страхователю (застрахованному, выгодоприобретателю) обеспечивается создание и отправка страховщику сведений в электронной форме (статья 12-1 пункт 3 подпункт 6))";
+    ContractConclusion;
+    EarlyContractTermination;
+    InsuredEventNotification;
+    HarmAmountDetermination;
+    InsurancePaymentReceipt;
+    DisputeSettlement;
+}
+
+relation electronic_submission_purpose(purpose: ElectronicSubmissionPurpose)
+    kind institutional {
+    label ru-KZ official "цель, названная подпунктом 6) пункта 3 статьи 12-1";
+}
+
+relation electronic_submission_available(contract: InsuranceContract,
+                                         purpose: ElectronicSubmissionPurpose)
+    kind empirical {
+    label ru-KZ official "страхователю (застрахованному, выгодоприобретателю) обеспечена возможность создания и отправки страховщику информации в электронной форме для названной цели";
+}
+
+@source(LAW_446_ART12_1) {
+    assert electronic_submission_purpose(ContractConclusion);
+
+    assert electronic_submission_purpose(EarlyContractTermination);
+
+    assert electronic_submission_purpose(InsuredEventNotification);
+
+    assert electronic_submission_purpose(HarmAmountDetermination);
+
+    assert electronic_submission_purpose(InsurancePaymentReceipt);
+
+    assert electronic_submission_purpose(DisputeSettlement);
+}
+
+@source(LAW_446_ART12_1) {
+    rule InsurerMustNotifyOnConclusion(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 3 подпункт 1). Страховщик обязан обеспечить незамедлительное отправление страхователю уведомления о заключении договора обязательного страхования либо отказе в его заключении (с указанием причин отказа) в виде электронного сообщения";
+        when insurance_application_submitted(contract, policyholder, insurer);
+        when insurer_internet_resource_used(contract, insurer);
+        then duty OtpravitUvedomlenieOZaklyuchenii {
+            bearer insurer;
+            beneficiary policyholder;
+            achieve conclusion_notification_sent(contract) during [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerMustNotifyOnSettlementStages(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 3 подпункт 2). Страховщик обязан обеспечить уведомление страхователя (застрахованного) об основных этапах процесса урегулирования страхового случая, включая отказ в приеме документов для урегулирования (с указанием причин отказа), в виде электронного сообщения";
+        when insurance_contract_of(contract, policyholder, insurer);
+        when insurer_internet_resource_used(contract, insurer);
+        then duty UvedomlyatObEtapakhUregulirovaniya {
+            bearer insurer;
+            beneficiary policyholder;
+            achieve settlement_stage_notification_sent(contract)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerMustAllowContractCheck(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 3 подпункт 3). Страховщик обязан обеспечить возможность проверки страхователем (застрахованным) информации по заключенному договору обязательного страхования на интернет-ресурсе страховой организации";
+        when insurance_contract_of(contract, policyholder, insurer);
+        when insurer_internet_resource_used(contract, insurer);
+        then duty ObespechitProverkuInformaciiPoDogovoru {
+            bearer insurer;
+            beneficiary policyholder;
+            maintain contract_information_verifiable(contract)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerMustAllowInsuredEventCheck(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 3 подпункт 4). Страховщик обязан обеспечить возможность проверки страхователем (застрахованным, выгодоприобретателем) информации по страховому случаю по договору обязательного страхования на интернет-ресурсе страховой организации";
+        when insurance_contract_of(contract, policyholder, insurer);
+        when insurer_internet_resource_used(contract, insurer);
+        then duty ObespechitProverkuInformaciiPoSluchayu {
+            bearer insurer;
+            beneficiary policyholder;
+            maintain insured_event_information_verifiable(contract)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    rule InsurerMustStoreContractWithAccess(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 3 подпункт 5). Страховщик обязан обеспечить хранение договора обязательного страхования в электронной форме и информации по страховому случаю по нему с обеспечением круглосуточного доступа для страхователя (застрахованного, выгодоприобретателя) к интернет-ресурсу страховщика";
+        when insurance_contract_of(contract, policyholder, insurer);
+        when insurer_internet_resource_used(contract, insurer);
+        then duty KhranitDogovorSKruglosutochnymDostupom {
+            bearer insurer;
+            beneficiary policyholder;
+            maintain contract_stored_with_round_the_clock_access(contract)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // Одно правило и шесть позиций на деле: переменная цели связывается
+    // перечнем подпункта 6), и каждая цель даёт свою позицию.
+    rule InsurerMustAllowElectronicSubmission(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+        purpose: ElectronicSubmissionPurpose,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 3 подпункт 6). Страховщик обязан обеспечить возможность страхователю (застрахованному, выгодоприобретателю) создания и отправки страховщику информации в электронной форме (заявления, уведомления и (или) иные документы, сведения), необходимой для названной цели";
+        when insurance_contract_of(contract, policyholder, insurer);
+        when insurer_internet_resource_used(contract, insurer);
+        when electronic_submission_purpose(purpose);
+        then duty ObespechitOtpravkuSvedeniyVElektronnoyForme {
+            bearer insurer;
+            beneficiary policyholder;
+            maintain electronic_submission_available(contract, purpose)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    // Абзац предпоследний пункта 3 — ОТПРАВИТЕЛЬ уведомления. Обязанность
+    // подпункта 1) лежит на страховщике («обеспечить отправление»), а само
+    // уведомление идёт ОТ организации по формированию и ведению базы данных;
+    // это две позиции с разными носителями, а не повтор одной.
+    rule DatabaseOrganizationDispatchesNotification(
+        organization: DatabaseOrganization,
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 3 абзац предпоследний. Уведомление о заключении договора обязательного страхования и урегулировании страховых случаев по нему направляется от организации по формированию и ведению базы данных";
+        when database_organization_maintains_base(organization);
+        when insurance_application_submitted(contract, policyholder, insurer);
+        when insurer_internet_resource_used(contract, insurer);
+        then duty NapravitUvedomlenieOtOrganizaciiBazyDannykh {
+            bearer organization;
+            beneficiary policyholder;
+            achieve conclusion_notification_sent(contract) during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Пункты 4 и 5. Момент заключения и согласие на договор присоединения
+// ============================================================================
+
+relation premium_paid_on(contract: InsuranceContract, day: Date) kind empirical {
+    key(contract);
+    label ru-KZ official "день уплаты страхователем страховой премии по договору";
+}
+
+relation first_premium_instalment_paid_on(contract: InsuranceContract, day: Date)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "день уплаты страхователем — юридическим лицом первого страхового взноса при уплате страховой премии в рассрочку";
+}
+
+relation contract_stipulates_conclusion_day(contract: InsuranceContract, day: Date)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "договором обязательного страхования предусмотрен иной день, с которого он считается заключённым";
+}
+
+relation insurance_terms_reviewed_before_payment(contract: InsuranceContract)
+    kind empirical {
+    label ru-KZ official "страхователь уплатил страховую премию после ознакомления с условиями страхования, предусмотренными настоящим Законом";
+}
+
+relation contract_concluded_on(contract: InsuranceContract, day: Date) kind institutional {
+    key(contract);
+    label ru-KZ official "день, с которого договор обязательного страхования считается заключённым";
+}
+
+relation adhesion_consent_expressed(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "страхователь подтвердил своё согласие заключить договор присоединения на предложенных ему условиях";
+}
+
+// ЧТО ИМЕННО ОТВОДИТ ОГОВОРКА «ЕСЛИ ИНОЕ НЕ ПРЕДУСМОТРЕНО ДОГОВОРОМ»
+// (DECISION-0344). Оговорка пункта 4 отводит не «день 5 августа», а САМ
+// ПОРЯДОК: то, что днём заключения считается день платежа. Между порядком и
+// днём поэтому стоит БЕЗЗНАЧНОЕ отношение применимости, и дефитер бьёт по
+// нему.
+//
+// Прежняя запись била по литералу `contract_concluded_on(contract, день
+// платежа)`. Поражение §95/§107 адресно — снимается НАЗВАННЫЙ литерал, а не
+// «вывод вот этого правила», — и потому у прежней формы было скрытое условие
+// корректности: договорный день не должен совпасть с днём платежа. Совпал бы
+// — и отмена сняла бы тождественный вывод `ConcludedOnStipulatedDay`, о
+// котором дефитер не говорил ничего: оба промежуточных отношения стоят, день
+// заключения пуст, issue нет ни одного. Автор прежней записи различие двух
+// дат видел и развёл их двумя переменными (`day` — день платежа, `stipulated`
+// — день договора), но это спасает лишь от срабатывания дефитера «там, где
+// отводить нечего», а не от снятия чужого тождественного вывода.
+//
+// У беззначной цели такого условия нет вовсе: под `defeat
+// premium_payment_day_is_conclusion_day(contract)` не подпадает ни один день
+// — ни чужой, ни тождественный.
+relation premium_payment_day_is_conclusion_day(contract: InsuranceContract)
+    kind institutional {
+    label ru-KZ official "к данному договору применяется порядок пункта 4 статьи 12-1: договор считается заключённым с даты уплаты страховой премии";
+}
+
+relation first_instalment_day_is_conclusion_day(contract: InsuranceContract)
+    kind institutional {
+    label ru-KZ official "к данному договору применяется порядок пункта 4 статьи 12-1: договор считается заключённым с даты уплаты первого страхового взноса при уплате страховой премии в рассрочку";
+}
+
+@source(LAW_446_ART12_1) {
+    // Два основания общего правила (§206): физическое лицо платит премию,
+    // юридическое при рассрочке — первый взнос. Одной дизъюнкцией их не
+    // свести: на вопрос «почему договор заключён именно в этот день» акт
+    // обязан отвечать тем платежом, который день и определил. Отсюда и две
+    // применимости, а не одна: оговорка отводит порядок, а порядков два.
+    //
+    // Поражаемые умолчания стоят на тех же входах, что прежние общие правила,
+    // — поведение на всех прежних делах сохраняется дословно.
+    rule PremiumPaymentDayIsConclusionDay(contract: InsuranceContract, day: Date) defeasible {
+        label ru-KZ official "Статья 12-1 пункт 4. При заключении договора обязательного страхования путем обмена цифровыми ресурсами к договору применяется порядок, по которому он считается заключённым с даты уплаты страхователем страховой премии";
+        when conclusion_channel_used(contract, DigitalResourceExchange);
+        when premium_paid_on(contract, day);
+        then premium_payment_day_is_conclusion_day(contract);
+    }
+
+    rule FirstInstalmentDayIsConclusionDay(contract: InsuranceContract, day: Date) defeasible {
+        label ru-KZ official "Статья 12-1 пункт 4. При уплате страхователем – юридическим лицом страховой премии в рассрочку к договору применяется порядок, по которому он считается заключённым с даты уплаты первого страхового взноса";
+        when conclusion_channel_used(contract, DigitalResourceExchange);
+        when insured_kind_of(contract, LegalEntity);
+        when first_premium_instalment_paid_on(contract, day);
+        then first_instalment_day_is_conclusion_day(contract);
+    }
+
+    // §111: правило читает вывод поражаемого правила и потому само поражаемое
+    // — строгое было бы отклонено как поздний производитель (`LDC-E4103`).
+    rule ConcludedOnPremiumPaymentDay(contract: InsuranceContract, day: Date) defeasible {
+        label ru-KZ official "Статья 12-1 пункт 4. При заключении договора обязательного страхования путем обмена цифровыми ресурсами договор страхования считается заключенным с даты уплаты страхователем страховой премии";
+        when premium_payment_day_is_conclusion_day(contract);
+        when premium_paid_on(contract, day);
+        then contract_concluded_on(contract, day);
+    }
+
+    rule ConcludedOnFirstInstalmentDay(contract: InsuranceContract, day: Date) defeasible {
+        label ru-KZ official "Статья 12-1 пункт 4. При уплате страхователем – юридическим лицом страховой премии в рассрочку договор считается заключенным с даты уплаты первого страхового взноса";
+        when first_instalment_day_is_conclusion_day(contract);
+        when first_premium_instalment_paid_on(contract, day);
+        then contract_concluded_on(contract, day);
+    }
+
+    // Дефитеры отводят ПРИМЕНИМОСТЬ, и `stipulated` — единственная дата в
+    // теле: день договора. День платежа в теле остаётся лишь затем, чтобы
+    // каждый дефитер отводил СВОЙ порядок — тот, что этим платежом и
+    // задан; §95.3 (тело само связывает переменные головы) выполняется
+    // `contract_stipulates_conclusion_day(contract, stipulated)`.
+    rule StipulatedDayDefeatsPaymentDay(contract: InsuranceContract, day: Date,
+                                        stipulated: Date) defeater {
+        label ru-KZ official "Статья 12-1 пункт 4. Оговорка «если иное не предусмотрено договором обязательного страхования» отводит порядок, по которому днём заключения договора считается день уплаты страховой премии";
+        when premium_paid_on(contract, day);
+        when contract_stipulates_conclusion_day(contract, stipulated);
+        defeat premium_payment_day_is_conclusion_day(contract);
+    }
+
+    rule StipulatedInstalmentDayDefeatsPaymentDay(contract: InsuranceContract, day: Date,
+                                                  stipulated: Date) defeater {
+        label ru-KZ official "Статья 12-1 пункт 4. Оговорка «если иное не предусмотрено договором обязательного страхования» отводит порядок, по которому днём заключения договора считается день уплаты первого страхового взноса";
+        when first_premium_instalment_paid_on(contract, day);
+        when contract_stipulates_conclusion_day(contract, stipulated);
+        defeat first_instalment_day_is_conclusion_day(contract);
+    }
+
+    rule ConcludedOnStipulatedDay(contract: InsuranceContract, day: Date) strict {
+        label ru-KZ official "Статья 12-1 пункт 4. Договор обязательного страхования считается заключенным с иного дня, если такой день предусмотрен договором";
+        when conclusion_channel_used(contract, DigitalResourceExchange);
+        when contract_stipulates_conclusion_day(contract, day);
+        then contract_concluded_on(contract, day);
+    }
+
+    rule PaymentAfterReviewIsAdhesionConsent(contract: InsuranceContract, day: Date) strict {
+        label ru-KZ official "Статья 12-1 пункт 5. При заключении договора обязательного страхования путем обмена цифровыми ресурсами страхователь уплачивает страховую премию после ознакомления с условиями страхования, предусмотренными настоящим Законом, подтверждая тем самым свое согласие заключить договор присоединения на предложенных ему условиях";
+        when conclusion_channel_used(contract, DigitalResourceExchange);
+        when insurance_terms_reviewed_before_payment(contract);
+        when premium_paid_on(contract, day);
+        then adhesion_consent_expressed(contract);
+    }
+}
+
+// ============================================================================
+// Пункты 6 и 7
+// ============================================================================
+
+relation round_the_clock_service_available(insurer: Insurer) kind empirical {
+    label ru-KZ official "страховщик обеспечивает возможность заключения договора обязательного страхования и урегулирования страховых случаев по нему с использованием своего интернет-ресурса круглосуточно";
+}
+
+relation agent_concluded_contract(agent: InsuranceAgent, contract: InsuranceContract)
+    kind empirical {
+    label ru-KZ official "страховой агент заключил договор обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation insurance_agent_of(agent: InsuranceAgent, insurer: Insurer) kind empirical {
+    label ru-KZ official "лицо действует страховым агентом названного страховщика";
+}
+
+@source(LAW_446_ART12_1) {
+    rule InsurerMustServeRoundTheClock(contract: InsuranceContract, insurer: Insurer) strict {
+        label ru-KZ official "Статья 12-1 пункт 6. Страховщик обеспечивает возможность заключения договора обязательного страхования и урегулирования страховых случаев по нему с использованием интернет-ресурса страховщика круглосуточно";
+        when insurer_internet_resource_used(contract, insurer);
+        then duty ObespechitKruglosutochnyyDostup {
+            bearer insurer;
+            maintain round_the_clock_service_available(insurer)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    rule AgentsMayNotConcludeContracts(
+        agent: InsuranceAgent,
+        insurer: Insurer,
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+    ) strict {
+        label ru-KZ official "Статья 12-1 пункт 7. Не допускается деятельность страховых агентов по заключению договоров обязательного страхования ответственности владельцев транспортных средств";
+        when insurance_agent_of(agent, insurer);
+        when insurance_application_submitted(contract, policyholder, insurer);
+        then prohibition ZaklyuchatDogovoryCherezStrakhovogoAgenta {
+            bearer agent;
+            beneficiary policyholder;
+            action agent_concluded_contract(agent, contract);
+            window [@2026-07-23, infinity);
+        };
+    }
+}

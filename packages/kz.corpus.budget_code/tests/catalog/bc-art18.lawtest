@@ -1,0 +1,19 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 18 пункт 5. Не допускается доиспользование средств резерва Правительства Республики Казахстан в следующем финансовом году
+test "CATALOG-NOGOVERNMENTRESERVECARRYOVER" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": reserve_kind(entity_ref("urn:kz:catalog:nogovernmentreservecarryover:v0"), Government) { origin case_input; }
+        assert "cat-1": reuse_next_year_intended(entity_ref("urn:kz:catalog:nogovernmentreservecarryover:v0"), entity_ref("urn:kz:catalog:nogovernmentreservecarryover:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(CarryOverGovernmentReserve, ACTIVE);
+}

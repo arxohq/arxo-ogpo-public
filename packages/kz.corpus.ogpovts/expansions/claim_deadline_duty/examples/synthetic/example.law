@@ -1,0 +1,31 @@
+language "law.core" version "0.2";
+package law.expansions.examples.claim_deadline_duty_synthetic version "0.1.0";
+namespace "urn:law:expansions:examples:claim-deadline-duty-synthetic";
+
+// Учебная норма: не действующее право.
+entity Claim;
+entity Accident;
+entity Holder;
+entity Insurer;
+
+relation claim_of(c: Claim, a: Accident, h: Holder, i: Insurer) kind empirical;
+relation documents_insufficient(c: Claim) kind empirical;
+relation received_on(c: Claim, d: Date) kind empirical;
+relation answer_due_day(c: Claim, d: Date) kind empirical;
+relation missing_documents_notified(c: Claim) kind institutional;
+
+@source("SYN-CLAIM-1")
+expand claim_deadline_duty NotifyMissingDocuments {
+    label ru-KZ unofficial "Учебная норма: при недостаточности документов сообщить заявителю в срок с получения";
+    bind matter = c: Claim;
+    bind context = a: Accident;
+    bind beneficiary = h: Holder;
+    bind bearer = i: Insurer;
+    bind start = r: Date;
+    bind due = u: Date;
+    claim = claim_of;
+    started = received_on;
+    due_on = answer_due_day;
+    conditions = [documents_insufficient];
+    result = missing_documents_notified;
+}

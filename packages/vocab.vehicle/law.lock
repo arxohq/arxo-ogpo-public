@@ -1,0 +1,34 @@
+{
+  "dependencyEdges": [
+    {
+      "features": [],
+      "from": "vocab.vehicle",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "vocab.maintenance"
+    }
+  ],
+  "languageSemantics": "law.core/0.2.0",
+  "lockVersion": "0.1",
+  "packages": [
+    {
+      "contentHash": "sha256:c85fa41eef6ccb2af463d912eee0ea33d087c1ecbed8b78c47d6d79d61cfab73",
+      "features": [
+        "core-executable"
+      ],
+      "name": "vocab.maintenance",
+      "namespace": "urn:law:vocab:maintenance",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/vocab.maintenance/0.1.0",
+      "version": "0.1.0"
+    }
+  ],
+  "resolutionHash": "sha256:9859b620ba53dc335bb9db387ccd1c982f4c36f95f065b00567202962eea7dcd",
+  "root": {
+    "contentHash": "sha256:9bbdaa772bc8700510f8db807be94adc1b00f14747d6c3f9f461a39cafc99d1a",
+    "name": "vocab.vehicle",
+    "namespace": "urn:law:vocab:vehicle",
+    "version": "0.1.0"
+  },
+  "semanticLayer": "L1"
+}

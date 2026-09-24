@@ -1,0 +1,18 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 136 пункт 5. Не допускается односторонний отказ от исполнения обязательства по договору займа
+test "CATALOG-NOUNILATERALREFUSAL" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": unilateral_refusal(entity_ref("urn:kz:catalog:nounilateralrefusal:v0"), entity_ref("urn:kz:catalog:nounilateralrefusal:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(RefuseLoanObligation, ACTIVE);
+}

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор Страховки Авто в Казахстане | ОГПО 2026</title>
+	<meta name="description" content="Рассчитайте стоимость обязательной страховки на авто (ОГПО) в РК. ⏩Учитываются новые поправочные коэффициенты регионов, стаж, возраст и класс бонус-малус.">
+    <link rel="preload" href="https://calculators.kz/fonts/inter-regular.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="https://calculators.kz/fonts/inter-bold.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="https://calculators.kz/fonts/inter-medium.woff2" as="font" type="font/woff2" crossorigin>
+	
+    <link rel="stylesheet" href="https://calculators.kz/style.css">
+    <link rel="icon" type="image/png" href="/calculatorsicon.png">
+	<link rel="preload" href="/data.json" as="fetch" crossorigin="anonymous">
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=106039107', 'ym');
+
+    ym(106039107, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/106039107" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1539393614147151"
+     crossorigin="anonymous"></script>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo">
+                <svg viewBox="0 0 300 50" fill="none" xmlns="http://www.w3.org/2000/svg" style="height: 40px;">
+                    <rect width="40" height="40" rx="8" fill="white" fill-opacity="0.2"/>
+                    <path d="M10 20H30M20 10V30" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                    <text x="50" y="35" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="white">CALCULATORS<tspan fill="#93c5fd">.KZ</tspan></text>
+                </svg>
+            </a>
+            <nav class="main-nav">
+    <ul>
+        <li class="dropdown">
+            <a href="/finance/" class="dropbtn">Финансы ▾</a>
+            <ul class="dropdown-content">
+				<li><a href="/finance/credit/">Кредитный калькулятор</a></li>
+				<li><a href="/finance/deposit/">Депозитный калькулятор</a></li>
+				<li><a href="/finance/peni/">Калькулятор пени</a></li>
+                <li><a href="/finance/mrp-mzp/">МРП и МЗП</a></li>
+                <li><a href="/finance/alimony/">Алименты</a></li>
+				<li><a href="/finance/alimony-ip/">Алименты с ИП</a></li>
+				<li><a href="/finance/maternity/">Декретный калькулятор</a></li>
+				<li><a href="/finance/amount-in-words/">Сумма прописью</a></li>
+				<li><a href="/finance/pension/">Пенсионный калькулятор</a></li>
+            </ul>
+        </li>
+		<li class="dropdown">
+            <a href="/taxes/" class="dropbtn">Налоги и Бизнес ▾</a>
+            <ul class="dropdown-content">
+				<li><a href="/taxes/simplified/">Налоги ИП на упрощенке</a></li>
+				<li><a href="/taxes/ip-patent/">Налоги ИП на патенте</a></li>
+				<li><a href="/taxes/retail-tax/">Розничный налог для ИП</a></li>
+				<li><a href="/taxes/tax-compare/">Упрощенка или Розничный (сравнение по налогам)</a></li>
+				<li><a href="/taxes/vat/">Калькулятор НДС</a></li>
+				<li><a href="/taxes/goszakup-penalty/">Неустойка по госзакупкам</a></li>
+				<li><a href="/taxes/dumping/">Калькулятор демпинга</a></li>
+				<li><a href="/taxes/customs/">Расчет таможенной пошлины</a></li>
+            </ul>
+        </li>
+		<li class="dropdown">
+            <a href="/auto/" class="dropbtn">Авто ▾</a>
+            <ul class="dropdown-content">
+				<li><a href="/auto/tax/">Налог на транспорт</a></li>
+				<li><a href="/auto/rastamozhka/">Растаможка</a></li>
+				<li><a href="/auto/insurance/">Страховка ОГПО</a></li>
+				<li><a href="/auto/util-sbor/">Утильсбор</a></li>
+				<li><a href="/auto/rashod-topliva/">Расход топлива</a></li>
+				<li><a href="/auto/numbers/">VIP номера</a></li>
+				<li><a href="/auto/tires/">Шинный калькулятор</a></li>
+				<li><a href="/auto/fines/">Штрафы ПДД</a></li>
+				<li><a href="/auto/power/">Конвертер мощности двигателя</a></li>
+				<li><a href="/auto/braking-distance/">Тормозной путь</a></li>
+            </ul>
+        </li>
+		<li class="dropdown">
+            <a href="/work/" class="dropbtn">Работа ▾</a>
+            <ul class="dropdown-content">
+				<li><a href="/finance/salary/">Калькулятор зарплаты (Прямой)</a></li>
+				<li><a href="/work/salary-reverse/">Калькулятор зарплаты от обратного</a></li>
+				<li><a href="/work/hourly-wage/">Калькулятор зарплаты по часам</a></li>
+				<li><a href="/work/teacher-salary/">Зарплата учителя</a></li>
+				<li><a href="/work/nurse-salary/">Зарплата медсестры</a></li>
+				<li><a href="/work/military-salary/">Денежное довольствие военнослужащих</a></li>
+				<li><a href="/work/vacation/">Расчет отпускных</a></li>
+				<li><a href="/work/sick-leave/">Калькулятор больничных</a></li>
+				<li><a href="/work/compensation/">Компенсация при увольнении</a></li>
+				<li><a href="/work/seniority/">Калькулятор стажа</a></li>
+				<li><a href="/work/work-days/">Калькулятор рабочих дней</a></li>
+            </ul>
+        </li>
+		<li class="dropdown">
+            <a href="/health/" class="dropbtn">Здоровье ▾</a>
+            <ul class="dropdown-content">
+				<li><a href="/health/bmi/">ИМТ (Индекс массы тела)</a></li>
+				<li><a href="/health/bmi-child/">ИМТ для детей и подростков</a></li>
+				<li><a href="/health/calories/">Калькулятор калорий</a></li>
+				<li><a href="/health/kbzhu/">Калькулятор КБЖУ</a></li>
+				<li><a href="/health/alcohol/">Уровень алкоголя в крови</a></li>
+				<li><a href="/health/pregnancy/">Календарь беременности (ПДР)</a></li>
+				<li><a href="/health/water-balance/">Водный баланс</a></li>
+            </ul>
+        </li>
+		<li class="dropdown">
+            <a href="/math/" class="dropbtn">Математические ▾</a>
+            <ul class="dropdown-content">
+				<li><a href="/math/percent/">Калькулятор процентов</a></li>
+				<li><a href="/math/fractions/">Калькулятор дробей</a></li>
+				<li><a href="/math/trigonometry/">Тригонометрический калькулятор</a></li>
+				<li><a href="/math/geometry/">Геометрический калькулятор</a></li>
+				<li><a href="/math/password-generator/">Генератор паролей</a></li>
+            </ul>
+        </li>
+
+    </ul>
+</nav>
+			<button class="burger-btn" id="openMenu" aria-label="Открыть меню">
+            <span></span>
+            <span></span>
+            <span></span>
+            </button>
+        </div>
+		<div class="mobile-overlay" id="overlay"></div>
+    <div class="mobile-menu" id="menuSide">
+        <div class="menu-header">
+            <button id="closeMenu">&times;</button>
+        </div>
+        
+        <div class="menu-content">
+    <nav class="mobile-nav-links">
+        <div class="nav-group">
+            <h4><a href="/finance/">Финансовые</a></h4>
+            <ul>
+				<li><a href="/finance/credit/">Кредитный калькулятор</a></li>
+				<li><a href="/finance/deposit/">Депозитный калькулятор</a></li>
+				<li><a href="/finance/peni/">Калькулятор пени</a></li>
+                <li><a href="/finance/salary/">Калькулятор зарплаты</a></li>
+                <li><a href="/finance/mrp-mzp/">МРП и МЗП</a></li>
+                <li><a href="/finance/alimony/">Алименты</a></li>
+				<li><a href="/finance/alimony-ip/">Алименты с ИП</a></li>
+				<li><a href="/finance/maternity/">Декретный калькулятор</a></li>
+				<li><a href="/finance/amount-in-words/">Сумма прописью</a></li>
+				<li><a href="/finance/pension/">Пенсионный калькулятор</a></li>
+            </ul>
+			<h4><a href="/taxes/">Бизнес и Налоги</a></h4>
+            <ul class="dropdown-content">
+				<li><a href="/taxes/simplified/">Налоги ИП на упрощенке</a></li>
+				<li><a href="/taxes/ip-patent/">Налоги ИП на патенте</a></li>
+				<li><a href="/taxes/retail-tax/">Розничный налог для ИП</a></li>
+				<li><a href="/taxes/tax-compare/">Упрощенка или Розничный (сравнение по налогам)</a></li>
+				<li><a href="/taxes/vat/">Калькулятор НДС</a></li>
+				<li><a href="/taxes/goszakup-penalty/">Неустойка по госзакупкам</a></li>
+				<li><a href="/taxes/dumping/">Калькулятор демпинга</a></li>
+				<li><a href="/taxes/customs/">Расчет таможенной пошлины</a></li>
+            </ul>
+			<h4><a href="/auto/">Авто</a></h4>
+			<ul>
+				<li><a href="/auto/tax/">Налог на транспорт</a></li>
+				<li><a href="/auto/rastamozhka/">Растаможка</a></li>
+				<li><a href="/auto/insurance/">Страховка ОГПО</a></li>
+				<li><a href="/auto/util-sbor/">Утильсбор</a></li>
+				<li><a href="/auto/rashod-topliva/">Расход топлива</a></li>
+				<li><a href="/auto/numbers/">VIP номера</a></li>
+				<li><a href="/auto/tires/">Шинный калькулятор</a></li>
+				<li><a href="/auto/fines/">Штрафы ПДД</a></li>
+				<li><a href="/auto/power/">Конвертер мощности двигателя</a></li>
+				<li><a href="/auto/braking-distance/">Тормозной путь</a></li>
+			</ul>
+			<h4><a href="/work/">Работа</a></h4>
+			<ul>
+				<li><a href="/finance/salary/">Калькулятор зарплаты (Прямой)</a></li>
+				<li><a href="/work/salary-reverse/">Калькулятор зарплаты от обратного</a></li>
+				<li><a href="/work/hourly-wage/">Калькулятор зарплаты по часам</a></li>
+				<li><a href="/work/teacher-salary/">Зарплата учителя</a></li>
+				<li><a href="/work/nurse-salary/">Зарплата медсестры</a></li>
+				<li><a href="/work/military-salary/">Денежное довольствие военнослужащих</a></li>
+				<li><a href="/work/vacation/">Расчет отпускных</a></li>
+				<li><a href="/work/sick-leave/">Калькулятор больничных</a></li>
+				<li><a href="/work/compensation/">Компенсация при увольнении</a></li>
+				<li><a href="/work/seniority/">Калькулятор стажа</a></li>
+				<li><a href="/work/work-days/">Калькулятор рабочих дней</a></li>
+			</ul>
+			<h4><a href="/heath/">Здоровье</a></h4>
+			<ul>
+				<li><a href="/health/bmi/">ИМТ (Индекс массы тела)</a></li>
+				<li><a href="/health/bmi-child/">ИМТ для детей и подростков</a></li>
+				<li><a href="/health/calories/">Калькулятор калорий</a></li>
+				<li><a href="/health/kbzhu/">Калькулятор КБЖУ</a></li>
+				<li><a href="/health/alcohol/">Уровень алкоголя в крови</a></li>
+				<li><a href="/health/pregnancy/">Календарь беременности (ПДР)</a></li>
+				<li><a href="/health/water-balance/">Водный баланс</a></li>
+			</ul>
+			<h4><a href="/math/">Математические</a></h4>
+			<ul>
+				<li><a href="/math/percent/">Калькулятор процентов</a></li>
+				<li><a href="/math/fractions/">Калькулятор дробей</a></li>
+				<li><a href="/math/trigonometry/">Тригонометрический калькулятор</a></li>
+				<li><a href="/math/geometry/">Геометрический калькулятор</a></li>
+				<li><a href="/math/password-generator/">Генератор паролей</a></li>
+			</ul>
+        </div>
+
+    </nav>
+</div>
+    </div>
+    </header>
+	<script>
+    // Простейший скрипт управления меню
+    const menu = document.getElementById('menuSide');
+    const overlay = document.getElementById('overlay');
+    const openBtn = document.getElementById('openMenu');
+    const closeBtn = document.getElementById('closeMenu');
+
+    function toggleMenu() {
+        menu.classList.toggle('active');
+        overlay.classList.toggle('active');
+        document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : '';
+    }
+
+    openBtn.onclick = toggleMenu;
+    closeBtn.onclick = toggleMenu;
+    overlay.onclick = toggleMenu;
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Калькулятор страхования ОГПО Казахстан",
+  "operatingSystem": "All",
+  "applicationCategory": "FinanceApplication",
+  "description": "Онлайн расчет стоимости полиса обязательного автострахования в Казахстане.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "KZT"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "ratingCount": "321"
+  }
+}
+</script>
+
+<main class="container">
+    <div class="calculator-container">
+        <section class="calc-header">
+            <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Главная</a><span class="separator">/</span><a href="/auto/">🚗Авто</a><span class="separator">/</span><span class="current">Страховка ОГПО</span></nav><script type="application/ld+json">{"@context":"https:\/\/schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"https:\/\/calculators.kz\/"},{"@type":"ListItem","position":2,"name":"🚗Авто","item":"https:\/\/calculators.kz\/auto\/"},{"@type":"ListItem","position":3,"name":"Страховка ОГПО","item":"https:\/\/calculators.kz\/auto\/insurance\/"}]}</script>            <h1>Калькулятор авто страховки ОГПО в Казахстане</h1>
+            <p>Расчет стоимости обязательного страхования ответственности водителей в РК</p>
+        </section>
+
+        <div class="salary-calc-widget">
+            <div class="calc-main-grid">
+                <div class="calc-inputs-side">
+                    <div class="form-group">
+                        <label class="kd-label">Год страхования (МРП):</label>
+                        <select id="insYear" class="calc-input" onchange="calculateOGPO()">
+                            <option value="2025">2025 год (3 932 ₸)</option>
+                            <option value="2026" selected>2026 год (4 325 ₸)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="kd-label">Регион регистрации авто:</label>
+                        <select id="insRegion" class="calc-input" onchange="calculateOGPO()">
+                            <option value="almaty">Алматы</option>
+                            <option value="astana">Астана</option>
+                            <option value="shymkent">Шымкент</option>
+                            <option value="almaty_reg">Алматинская обл.</option>
+                            <option value="akmola">Акмолинская обл.</option>
+                            <option value="aktobe">Актюбинская обл.</option>
+                            <option value="atyrau">Атырауская обл.</option>
+                            <option value="vko">ВКО</option>
+                            <option value="zhambyl">Жамбылская обл.</option>
+                            <option value="zko">ЗКО</option>
+                            <option value="karaganda">Карагандинская обл.</option>
+                            <option value="kostanay">Костанайская обл.</option>
+                            <option value="kyzylorda">Кызылординская обл.</option>
+                            <option value="mangistau">Мангистауская обл.</option>
+                            <option value="pavlodar">Павлодарская обл.</option>
+                            <option value="sko">СКО</option>
+                            <option value="turkestan">Туркестанская обл.</option>
+                            <option value="abay">Абайская обл.</option>
+                            <option value="zhetysu">Жетысуская обл.</option>
+                            <option value="ulytau">Улытауская обл.</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="kd-label">Тип транспортного средства:</label>
+                        <select id="vType" class="calc-input" onchange="calculateOGPO()">
+                            <option value="2.09">Легковые автомобили</option>
+                            <option value="3.98">Грузовые автомобили</option>
+                            <option value="3.26">Автобусы (до 16 мест)</option>
+                            <option value="3.45">Автобусы (свыше 16 мест)</option>
+                            <option value="1.0">Мотоциклы и прицепы</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="kd-label">Возраст и стаж водителя:</label>
+                        <select id="vAgeExp" class="calc-input" onchange="calculateOGPO()">
+                            <option value="1.0">Старше 25 лет, стаж более 2 лет</option>
+                            <option value="1.05">Старше 25 лет, стаж менее 2 лет</option>
+                            <option value="1.05">Младше 25 лет, стаж более 2 лет</option>
+                            <option value="1.1">Младше 25 лет, стаж менее 2 лет</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="kd-label">Класс безаварийности (Бонус-Малус):</label>
+                        <select id="vBM" class="calc-input" onchange="calculateOGPO()">
+                            <option value="0.5">Класс 13 (Макс. скидка за 10+ лет)</option>
+                            <option value="1.0" selected>Класс 3 (Стандартный)</option>
+                            <option value="1.8">Класс А (Новичок / Впервые)</option>
+                            <option value="2.45">Класс М (Аварийный водитель)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="check-item">
+                            <input type="checkbox" id="vAge7" onchange="calculateOGPO()">
+                            <span>Срок эксплуатации авто более 7 лет (+10%)</span>
+                        </label>
+                    </div>
+
+                    <button class="btn-calculate" onclick="calculateOGPO()">Рассчитать стоимость</button>
+                </div>
+
+                <div class="calc-summary-side">
+                    <div class="summary-card accent">
+                        <div class="summary-year">Стоимость полиса ОГПО</div>
+                        <div class="summary-value" id="resInsuranceCost">0 ₸</div>
+                        <div class="summary-label">на 12 месяцев</div>
+                    </div>
+
+                    <div class="summary-card" style="text-align: left; font-size: 14px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span>Базовая премия (1.9 МРП):</span>
+                            <strong id="resBase">0 ₸</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: var(--primary-color);">
+                            <span>Регион + Поправка:</span>
+                            <strong id="resRegFactor">1.0</strong>
+                        </div>
+                    </div>
+
+                    <div class="example-box" style="padding: 15px; margin-top: 20px; font-size: 13px;">
+                        <strong>💡 Важно:</strong> С 2024 года в РК введены поправочные коэффициенты, которые зависят от аварийности региона. Цена страховки теперь меняется ежегодно.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+		<article class="salary-seo-content">
+    <h2>Как рассчитывается стоимость страховки ОГПО в Казахстане в 2026 году?</h2>
+    <p>
+    Обязательное страхование гражданско-правовой ответственности автовладельцев (ОГПО ВТС) строго регламентируется Законом РК. Стоимость полиса едина для всех страховых компаний и рассчитывается по нормативной формуле на базе <a href="https://calculators.kz/finance/mrp-mzp/">МРП</a> — так же, как и ежегодный <a href="https://calculators.kz/auto/tax/">налог на транспорт</a> в Казахстане.
+</p>
+
+    <div class="info-grid-text">
+        <div class="info-column">
+            <h3>Базовая премия и МРП 2026</h3>
+            <p>
+                Основой расчёта служит <strong>базовая страховая премия</strong> в размере 1.9 МРП. В 2026 году при МРП 4 325 тенге базовая сумма составляет <strong>8 217,5 тенге</strong>. На неё последовательно перемножаются коэффициенты типа транспортного средства, региона регистрации, возраста и стажа водителя, а также срока эксплуатации авто.
+            </p>
+        </div>
+        <div class="info-column">
+            <h3>Региональные коэффициенты АРРФР</h3>
+            <p>
+                Агентство РК по регулированию и развитию финансового рынка ежегодно пересчитывает <strong>таргетирующие коэффициенты убыточности</strong> для каждой области и городов республиканского значения. В регионах с высокой концентрацией ДТП (Алматы, Шымкент, Жамбылская область) полис обходится дороже, а в менее аварийных регионах применяется понижающий коэффициент.
+            </p>
+        </div>
+    </div>
+
+    <section class="values-box">
+        <h3>Система «Бонус-Малус» и класс водителя</h3>
+        <p>
+            Класс водителя (от М до 13) фиксируется в базе данных ЕСБД и определяет персональный коэффициент. Начинающий водитель стартует с 3-го класса (коэффициент 1.0). За каждый безаварийный год присваивается скидка 5% (до 50% на 13-м классе). При совершении ДТП по вашей вине класс снижается до уровня «М», увеличивая стоимость полиса до 2.45 раз.
+        </p>
+    </section>
+
+    <section class="values-box">
+        <h3>Комплексные расходы автовладельца</h3>
+        <p>
+            Оформление полиса ОГПО — обязательный шаг как для местных машин, так и при постановке на учёт автомобилей из-за рубежа. Если вы планируете ввоз или покупку машины, заранее рассчитайте полную стоимость процедур: воспользуйтесь калькулятором <a href="https://calculators.kz/auto/rastamozhka/">растаможки авто</a> и проверьте сумму обязательного <a href="https://calculators.kz/auto/util-sbor/">утилизационного сбора</a>.
+        </p>
+    </section>
+</article>
+    </div>
+</main>
+
+<script>
+const MRP_VALS = { 2025: 3932, 2026: 4325 };
+
+// Коэффициенты территории (k1) и поправочные (adj)
+const REGION_DATA = {
+    almaty: { k1: 2.96, adj25: 0.71, adj26: 0.71 },
+    astana: { k1: 2.20, adj25: 1.36, adj26: 1.44 },
+    shymkent: { k1: 1.01, adj25: 1.49, adj26: 1.61 },
+    almaty_reg: { k1: 1.78, adj25: 1.37, adj26: 1.44 },
+    akmola: { k1: 1.32, adj25: 1.03, adj26: 1.08 },
+    aktobe: { k1: 1.35, adj25: 0.97, adj26: 1.02 },
+    atyrau: { k1: 2.69, adj25: 0.49, adj26: 0.48 },
+    vko: { k1: 1.96, adj25: 0.72, adj26: 0.72 },
+    zhambyl: { k1: 1.00, adj25: 1.62, adj26: 1.74 },
+    zko: { k1: 1.17, adj25: 1.14, adj26: 1.19 },
+    karaganda: { k1: 1.39, adj25: 1.12, adj26: 1.18 },
+    kostanay: { k1: 1.95, adj25: 1.07, adj26: 1.11 },
+    kyzylorda: { k1: 1.09, adj25: 1.66, adj26: 1.85 },
+    mangistau: { k1: 1.15, adj25: 0.79, adj26: 0.79 },
+    pavlodar: { k1: 1.63, adj25: 0.81, adj26: 0.82 },
+    sko: { k1: 1.33, adj25: 0.67, adj26: 0.67 },
+    turkestan: { k1: 1.01, adj25: 1.57, adj26: 1.69 },
+    abay: { k1: 1.96, adj25: 0.78, adj26: 0.80 },
+    zhetysu: { k1: 1.78, adj25: 1.16, adj26: 1.20 },
+    ulytau: { k1: 1.39, adj25: 0.96, adj26: 0.99 }
+};
+
+function calculateOGPO() {
+    const year = document.getElementById('insYear').value;
+    const mrp = MRP_VALS[year];
+    const regionKey = document.getElementById('insRegion').value;
+    const vType = parseFloat(document.getElementById('vType').value);
+    const ageExp = parseFloat(document.getElementById('vAgeExp').value);
+    const bonusMalus = parseFloat(document.getElementById('vBM').value);
+    const isOldCar = document.getElementById('vAge7').checked;
+
+    const basePremium = 1.9 * mrp;
+    const region = REGION_DATA[regionKey];
+    const adjFactor = (year === '2025') ? region.adj25 : region.adj26;
+    
+    // Коэффициент срока эксплуатации
+    const ageFactor = isOldCar ? 1.1 : 1.0;
+
+    // Итоговая формула
+    const total = basePremium * region.k1 * adjFactor * vType * ageExp * bonusMalus * ageFactor;
+
+    const f = (n) => Math.round(n).toLocaleString('ru-RU') + ' ₸';
+    
+    document.getElementById('resInsuranceCost').innerText = f(total);
+    document.getElementById('resBase').innerText = f(basePremium);
+    document.getElementById('resRegFactor').innerText = (region.k1 * adjFactor).toFixed(2);
+}
+
+document.addEventListener('DOMContentLoaded', calculateOGPO);
+</script>
+
+<footer>
+    <div class="container footer-container">
+        <div class="footer-info">
+            <div class="footer-logo">
+                <svg viewBox="0 0 300 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="8" fill="#2563eb"></rect>
+                    <path d="M10 20H30M20 10V30" stroke="white" stroke-width="3" stroke-linecap="round"></path>
+                    <text x="50" y="35" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="white">CALCULATORS<tspan fill="#3b82f6">.KZ</tspan></text>
+                </svg>
+            </div>
+            <p class="footer-description">
+                Профессиональный сервис онлайн-расчетов для граждан и бизнеса в Казахстане. Актуальные данные по МРП, МЗП и налоговым ставкам.
+            </p>
+        </div>
+
+        <div class="footer-menu">
+			<h4><a href="/finance/" title="Финансовые калькуляторы">Финансовые</a></h4>
+            <ul>
+				<li><a href="/finance/amount-in-words/" title="Сумма прописью на казахском, русском и английском">Сумма прописью</a></li>
+				<li><a href="/finance/credit/" title="Кредитный калькулятор">Кредитный калькулятор</a></li>
+				<li><a href="/finance/deposit/" title="Депозитный калькулятор">Депозитный калькулятор</a></li>
+				<li><a href="/finance/peni/" title="Расчет пени по налогам">Калькулятор пени</a></li>
+                <li><a href="/finance/salary/" title="Калькулятор заработной платы">Зарплатный калькулятор</a></li>
+				<li><a href="/finance/maternity/" title="Декретный калькулятор">Декретный калькулятор</a></li>
+                <li><a href="/finance/mrp-mzp/" title="Калькулятор МРП">МРП и МЗП</a></li>
+				<li><a href="/finance/alimony/" title="Калькулятор Алиментов">Алименты</a></li>
+
+            </ul>
+			<h4><a href="/work/" title="Трудовые отношения">Работа</a></h4>
+            <ul>
+				<li><a href="/work/vacation/" title="Расчет отпускных">Расчет отпускных</a></li>
+				<li><a href="/work/sick-leave/" title="Калькулятор больничных в РК 2026">Калькулятор больничных</a></li>
+                <li><a href="/work/compensation/" title="Компенсация за неиспользованный отпуск">Компенсация при увольнении</a></li>
+				<li><a href="/work/seniority/" title="Калькулятор трудового стажа">Калькулятор стажа</a></li>
+				<li><a href="/work/hourly-wage/">Калькулятор зарплаты по часам</a></li>
+				<li><a href="/work/nurse-salary/">Зарплата медсестры</a></li>
+				<li><a href="/work/military-salary/">Денежное довольствие военнослужащих</a></li>
+            </ul>
+        </div>
+		<div class="footer-menu">
+			<h4><a href="/taxes/" title="Бизнес и налоги">Бизнес и налоги</a></h4>
+            <ul>
+				<li><a href="/taxes/simplified/" title="Расчет налогов ИП на упрощенке">Налоги ИП (упрощенка)</a></li>
+				<li><a href="/taxes/vat/" title="Расчет НДС сверху или в сумме">Калькулятор НДС</a></li>
+				<li><a href="/taxes/goszakup-penalty/">Неустойка по госзакупкам</a></li>
+				<li><a href="/taxes/dumping/">Калькулятор демпинга</a></li>
+				<li><a href="/taxes/customs/">Расчет таможенной пошлины</a></li>
+            </ul>
+			<h4><a href="/auto/" title="Транспортные калькуляторы">Транспорт</a></h4>
+            <ul>
+                <li><a href="/auto/tax/" title="Калькулятор налога на транспорт">Налог на транспорт</a></li>
+				<li><a href="/auto/rastamozhka/" title="Калькулятор растаможки">Растаможка</a></li>
+				<li><a href="/auto/insurance/" title="Расчет страховки ОГПО">Страховка ОГПО</a></li>
+				<li><a href="/auto/util-sbor/" title="Расчет утильсбора в РК">Утильсбор</a></li>
+				<li><a href="/auto/rashod-topliva/" title="Калькулятор расхода топлива">Расход топлива</a></li>
+				<li><a href="/auto/numbers/" title="Стоимость VIP номеров на авто в Казахстане">VIP номера</a></li>
+				<li><a href="/auto/tires/" title="Шинный калькулятор">Шинный калькулятор</a></li>
+				<li><a href="/auto/fines/" title="Таблица штрафов ПДД">Штрафы ПДД</a></li>
+				<li><a href="/auto/power/" title="Конвертация мощности двигателя литры в киловатты и обратно">Конвертер мощности двигателя</a></li>
+             </ul>
+        </div>
+
+        <div class="footer-menu">
+			<h4><a href="/health/" title="Медицинские калькуляторы">Здоровье</a></h4>
+            <ul>
+                <li><a href="/health/bmi/">Индекс массы тела</a></li>
+                <li><a href="/health/bmi-child/">Калькулятор ИМТ для детей</a></li>
+				<li><a href="/health/calories/">Калькулятор калорий</a></li>
+				<li><a href="/health/kbzhu/">Калькулятор КБЖУ</a></li>
+				<li><a href="/health/alcohol/">Уровень алкоголя в крови</a></li>
+				<li><a href="/health/pregnancy/">Календарь беременности (ПДР)</a></li>
+				<li><a href="/health/water-balance/">Водный баланс</a></li>
+             </ul>
+            <h4>Пользователю</h4>
+            <ul>
+                <li><a href="/privacy-policy/">Конфиденциальность</a></li>
+                <li><a href="/contacts/">Контакты</a></li>
+             </ul>
+        </div>
+    </div>
+
+    <div class="container footer-bottom">
+        <p>&copy; 2026 Calculators.kz. Все расчеты носят справочный характер.</p>
+    </div>
+</footer>
+<script src="/assets/js/script.js"></script>
+</body>
+</html>

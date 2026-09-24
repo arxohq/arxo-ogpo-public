@@ -1,0 +1,368 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 10 п. 4, ст. 11 пп. 1, 2 и 5, ст. 12 пп. 1, 2 и 5 — виды договора и то,
+// чья ответственность по каждому из них считается застрахованной.
+//
+// ГЛАВНАЯ ПАРА ФАЙЛА — РАЗНИЦА МЕЖДУ СТАТЬЯМИ 11 И 12. Пункт 5 статьи 11
+// знает управление по трудовому или иному письменному договору; пункт 5
+// статьи 12 такого подпункта НЕ ЗНАЕТ. Два сценария на одних и тех же фактах,
+// отличающихся только видом договора, показывают эту разницу ответом:
+// стандартный договор ответственность страхует, комплексный — нет. Сведи
+// статьи к одному предикату — и первая половина пары останется зелёной, а
+// вторая станет ложью.
+//
+// ВТОРАЯ ПАРА — МОСТ К ПУНКТУ 2 СТАТЬИ 28. Подпункты 1) и 2) пункта 5
+// статьи 11 дают `standard_contract_insured_answers_for_driver`, подпункт 3) —
+// нет: пункт 2 статьи 28 называет только первые два. Пара сторожит именно эту
+// границу, потому что покрытие ответственности даёт и подпункт 3).
+//
+// ТРЕТЬЯ ПАРА — ПОРОГ ПУНКТА 1 СТАТЬИ 12: две единицы транспорта против одной.
+
+test "urn:query:ogpo-contract-kind-established" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p4-a0": complex_contract(entity_ref("urn:kz:ogpo:contract:k1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_kind_established(entity_ref("urn:kz:ogpo:contract:k1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-standard-contract-insures-owner" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a11-a0": standard_contract(entity_ref("urn:kz:ogpo:contract:k2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-a1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:k2"), entity_ref("urn:kz:ogpo:owner:o1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(standard_contract_insures_owner(entity_ref("urn:kz:ogpo:contract:k2"), entity_ref("urn:kz:ogpo:owner:o1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-standard-contract-vehicle" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a11-b0": standard_contract(entity_ref("urn:kz:ogpo:contract:k3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-b1": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:k3"), entity_ref("urn:kz:ogpo:vehicle:v1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(standard_contract_vehicle(entity_ref("urn:kz:ogpo:contract:k3"), entity_ref("urn:kz:ogpo:vehicle:v1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 11 п. 5 подп. 2): водитель по письменному трудовому договору.
+test "urn:query:ogpo-standard-cover-driver-under-written-contract" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a11-c0": standard_contract(entity_ref("urn:kz:ogpo:contract:k4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-c1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:k4"), entity_ref("urn:kz:ogpo:owner:o1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-c2": driver_under_written_contract_with_insured(entity_ref("urn:kz:ogpo:contract:k4"), entity_ref("urn:kz:ogpo:owner:d1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-c3": harm_to_third_party_caused_by(entity_ref("urn:kz:ogpo:contract:k4"), entity_ref("urn:kz:ogpo:owner:d1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(liability_insured_under_standard_contract(entity_ref("urn:kz:ogpo:contract:k4"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:owner:d1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Тот же водитель по тому же письменному договору — предикат моста к статье 28.
+test "urn:query:ogpo-insured-answers-for-driver-bridge" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a11-d0": standard_contract(entity_ref("urn:kz:ogpo:contract:k5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-d1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:k5"), entity_ref("urn:kz:ogpo:owner:o1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-d2": driver_under_written_contract_with_insured(entity_ref("urn:kz:ogpo:contract:k5"), entity_ref("urn:kz:ogpo:owner:d1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(standard_contract_insured_answers_for_driver(entity_ref("urn:kz:ogpo:contract:k5"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:owner:d1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пара к мосту: подпункт 3) даёт ПОКРЫТИЕ, но не даёт основания пункта 2
+// статьи 28 — он в перечне этого пункта не назван.
+test "urn:query:ogpo-unlawful-taker-covered-but-not-in-bridge" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a11-e0": standard_contract(entity_ref("urn:kz:ogpo:contract:k6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-e1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:k6"), entity_ref("urn:kz:ogpo:owner:o1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-e2": driver_unlawfully_took_vehicle(entity_ref("urn:kz:ogpo:contract:k6"), entity_ref("urn:kz:ogpo:owner:d2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-e3": liability_imposed_on_insured_for_unlawful_taking(entity_ref("urn:kz:ogpo:contract:k6"), entity_ref("urn:kz:ogpo:owner:d2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a11-e4": harm_to_third_party_caused_by(entity_ref("urn:kz:ogpo:contract:k6"), entity_ref("urn:kz:ogpo:owner:d2")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(standard_contract_insured_answers_for_driver(entity_ref("urn:kz:ogpo:contract:k6"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:owner:d2")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Ст. 12 п. 1: две единицы транспорта у физического лица — комплексный
+// договор доступен.
+test "urn:query:ogpo-complex-contract-two-vehicles" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a12-a0": complex_contract(entity_ref("urn:kz:ogpo:contract:k7")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-a1": insured_kind_of(entity_ref("urn:kz:ogpo:contract:k7"), NaturalPerson) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-a2": contract_insured_person(entity_ref("urn:kz:ogpo:contract:k7"), entity_ref("urn:kz:ogpo:owner:o2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-a3": vehicle_of(entity_ref("urn:kz:ogpo:vehicle:v3"), entity_ref("urn:kz:ogpo:owner:o2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-a4": vehicle_of(entity_ref("urn:kz:ogpo:vehicle:v4"), entity_ref("urn:kz:ogpo:owner:o2")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(complex_contract_available_to_insured(entity_ref("urn:kz:ogpo:contract:k7"), entity_ref("urn:kz:ogpo:owner:o2")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пара к порогу: одна единица транспорта — комплексный договор недоступен.
+test "urn:query:ogpo-complex-contract-single-vehicle" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a12-b0": complex_contract(entity_ref("urn:kz:ogpo:contract:k8")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-b1": insured_kind_of(entity_ref("urn:kz:ogpo:contract:k8"), NaturalPerson) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-b2": contract_insured_person(entity_ref("urn:kz:ogpo:contract:k8"), entity_ref("urn:kz:ogpo:owner:o3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-b3": vehicle_of(entity_ref("urn:kz:ogpo:vehicle:v5"), entity_ref("urn:kz:ogpo:owner:o3")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(complex_contract_available_to_insured(entity_ref("urn:kz:ogpo:contract:k8"), entity_ref("urn:kz:ogpo:owner:o3")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-complex-contract-covers-all-vehicles" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a12-c0": complex_contract(entity_ref("urn:kz:ogpo:contract:k9")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-c1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:k9"), entity_ref("urn:kz:ogpo:owner:o4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-c2": vehicle_of(entity_ref("urn:kz:ogpo:vehicle:v6"), entity_ref("urn:kz:ogpo:owner:o4")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(complex_contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:k9"), entity_ref("urn:kz:ogpo:vehicle:v6")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Половина главной пары: по КОМПЛЕКСНОМУ договору водитель по письменному
+// трудовому договору покрытия не даёт — такого подпункта в пункте 5 статьи 12
+// нет.
+test "urn:query:ogpo-complex-no-cover-for-written-contract-driver" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a12-d0": complex_contract(entity_ref("urn:kz:ogpo:contract:k10")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-d1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:k10"), entity_ref("urn:kz:ogpo:owner:o5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-d2": driver_under_written_contract_with_insured(entity_ref("urn:kz:ogpo:contract:k10"), entity_ref("urn:kz:ogpo:owner:d3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-d3": harm_to_third_party_caused_by(entity_ref("urn:kz:ogpo:contract:k10"), entity_ref("urn:kz:ogpo:owner:d3")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(liability_insured_under_complex_contract(entity_ref("urn:kz:ogpo:contract:k10"), entity_ref("urn:kz:ogpo:owner:o5"), entity_ref("urn:kz:ogpo:owner:d3")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Вторая половина: тот же водитель в присутствии страхователя — подпункт 1)
+// пункта 5 статьи 12 покрытие даёт.
+test "urn:query:ogpo-complex-cover-driver-in-presence" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-a12-e0": complex_contract(entity_ref("urn:kz:ogpo:contract:k11")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-e1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:k11"), entity_ref("urn:kz:ogpo:owner:o5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-e2": driver_had_right_to_drive_in_presence_of_insured(entity_ref("urn:kz:ogpo:contract:k11"), entity_ref("urn:kz:ogpo:owner:d3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-a12-e3": harm_to_third_party_caused_by(entity_ref("urn:kz:ogpo:contract:k11"), entity_ref("urn:kz:ogpo:owner:d3")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(liability_insured_under_complex_contract(entity_ref("urn:kz:ogpo:contract:k11"), entity_ref("urn:kz:ogpo:owner:o5"), entity_ref("urn:kz:ogpo:owner:d3")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,70 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 22 п. 3: три срока в РАБОЧИХ днях, каждый пороговой парой.
+// Даты посчитаны вручную по снимку официального календаря 2026 года
+// (выходные — суббота и воскресенье; в сентябре 2026 праздников и
+// перенесённых дней отдыха нет). Порядок исчисления §86 — общий порядок
+// права РК (ГК ст. 173, 176): срок в N рабочих дней истекает в N-й рабочий
+// день ПОСЛЕ дня события.
+//
+//   заявление подано во вторник 1 сентября 2026;
+//   согласование осмотра — 3 рабочих дня: ср 2 (1), чт 3 (2), пт 4 (3) → 4 сентября;
+//   осмотр — 5 рабочих дней: + сб 5, вс 6 не считаются, пн 7 (4), вт 8 (5) → 8 сентября;
+//   акт осмотра составлен во вторник 8 сентября, определение размера вреда —
+//   5 рабочих дней: ср 9 (1), чт 10 (2), пт 11 (3), пн 14 (4), вт 15 (5) → 15 сентября.
+
+context profile KZ_OGPO_SLUCHAY_DEADLINES {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-st22-osmotr-sroki-soglasovanie" {
+    given {
+        context extends KZ_OGPO_SLUCHAY_DEADLINES {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st22-osm-a0": harm_assessment_application_filed_on(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-01) { origin case_input; }
+    }
+
+    evaluate truth(inspection_scheduling_due_day(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-04));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(inspection_scheduling_due_day(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-03));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(inspection_due_day(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-08));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(inspection_due_day(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-07));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-st22-opredelenie-razmera-srok" {
+    given {
+        context extends KZ_OGPO_SLUCHAY_DEADLINES {
+            decision_time @2026-09-08T12:00:00+05:00;
+            knowledge_time @2026-09-08T12:00:00+05:00;
+            legal_time @2026-09-08;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st22-opr-a0": inspection_act_drawn_up_on(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-08) { origin case_input; }
+    }
+
+    evaluate truth(property_harm_determination_due_day(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-15));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(property_harm_determination_due_day(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-14));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

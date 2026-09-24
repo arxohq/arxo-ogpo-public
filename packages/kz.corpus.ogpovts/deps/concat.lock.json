@@ -1,0 +1,15 @@
+{
+  "format": "law.concat-lock/0.1",
+  "files": [
+    {
+      "name": "kz.corpus.clir.official_calendar",
+      "path": "deps/concat/kz.corpus.clir.official_calendar.lawir.json",
+      "sha256": "sha256:111e2b340c56f3a57513346680878e4fb78c4afafc78c8df9da559c4e6e32374"
+    },
+    {
+      "name": "kz.corpus.popravochnye_koeffitsienty",
+      "path": "deps/concat/kz.corpus.popravochnye_koeffitsienty.lawir.json",
+      "sha256": "sha256:e3318cc1df1acf92b16d21b6c220c0eda15cdd1edfc4d144d9794d0e4939383b"
+    }
+  ]
+}

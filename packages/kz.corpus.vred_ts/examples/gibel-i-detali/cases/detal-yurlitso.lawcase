@@ -1,0 +1,35 @@
+language "law.core" version "0.2";
+package examples.vred_ts.gibel_i_detali version "0.1.0";
+namespace "urn:law:examples:vred-ts:gibel-i-detali";
+
+// Пункт 10 подпункт 2 и сноска приложения 3. Автомобиль юридического лица на
+// гарантийном обслуживании, пробег 18 000 км в год, деталь не повреждалась
+// и не ремонтировалась: в калькуляцию идёт рыночная стоимость НОВОЙ детали
+// (200 000), стоимость с учётом износа (120 000) вытесняется. Дело парно
+// к DetalFizlitso: условия другие (гарантия вместо необязательного
+// техосмотра, порог 20 000 вместо 15 000 км), правило другое, вывод тот же.
+// Без этой сцены банк регрессии не отличал правило для физического лица
+// от общего правила о детали — amend снимал общее.
+case DetalYurlitso {
+    context {
+        legal_time @2026-09-01;
+        knowledge_time @2026-09-01T12:00:00+05:00;
+        decision_time @2026-09-01T12:00:00+05:00;
+        timezone "Asia/Almaty";
+    }
+
+    const ts: kz.corpus.vred_ts::TransportnoeSredstvo = entity_ref("urn:example:vred:ts");
+    const raschet: kz.corpus.vred_ts::RaschetVreda = entity_ref("urn:example:vred:raschet");
+    const detal: kz.corpus.vred_ts::Detal = entity_ref("urn:example:vred:detal");
+
+    assert "raschet-po-ts": kz.corpus.vred_ts::raschet_po_ts(raschet, ts) { origin case_input; }
+    assert "detal-ts": kz.corpus.vred_ts::detal_ts(detal, ts) { origin case_input; }
+    assert "detal-k-zamene": kz.corpus.vred_ts::detal_podlezhit_zamene(detal) { origin case_input; }
+    assert "yurlitso": kz.corpus.vred_ts::vladelets_yuridicheskoe_litso(ts) { origin case_input; }
+    assert "garantiya": kz.corpus.vred_ts::nakhoditsya_na_garantiynom_obsluzhivanii(ts) { origin case_input; }
+    assert "probeg": kz.corpus.vred_ts::srednegodovoy_probeg(ts, 18000 km) { origin case_input; }
+    assert "ne-povrezhdalas": kz.corpus.vred_ts::detal_ranee_ne_povrezhdalas(detal) { origin case_input; }
+    assert "ne-remontirovalas": kz.corpus.vred_ts::detal_ne_podvergalas_remontu(detal) { origin case_input; }
+    assert "novaya-detal": kz.corpus.vred_ts::rynochnaya_stoimost_novoy_detali(detal, 200000 KZT) { origin case_input; }
+    assert "s-iznosom": kz.corpus.vred_ts::stoimost_detali_s_uchetom_iznosa(detal, 120000 KZT) { origin case_input; }
+}

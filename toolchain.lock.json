@@ -1,0 +1,10 @@
+{
+  "asset": "law-package-tools-0.2.0-x86_64-unknown-linux-musl.zip",
+  "format": "law.package-toolchain-lock/0.1",
+  "repository": "arxohq/arxo-ogpo-public",
+  "sha256": "311f5ae50cb3fd2f061a52cfc1f7db5f850ce8a0b7ff8d3f94cf1e4dbf0b4a7e",
+  "sourceCommit": "0df68369a5c67fc3c241e2159005f0dd63eae346",
+  "tag": "law-package-tools@0.2.0",
+  "target": "x86_64-unknown-linux-musl",
+  "version": "0.2.0"
+}

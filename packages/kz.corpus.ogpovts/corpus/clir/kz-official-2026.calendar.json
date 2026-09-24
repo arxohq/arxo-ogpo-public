@@ -1,0 +1,422 @@
+{
+  "id": "urn:kz:corpus:clir:official-calendar#dataset-2026",
+  "metadata": {
+    "note": "официальный календарь 2025-2026: выведен исполнением закона о праздниках (учебная формализация) на legalTime каждого года, поэтому состав года берётся из редакции, действовавшей В ЭТОМ году; переносы совпавших выходных — абз. 3 ст. 5 того же закона, подстановка года человеком. ID узла и имя ресурса сохраняют '2026' по причинам совместимости лока — охват шире имени (см. official_calendar в gen_kz_clir.py). НЕ ПОКРЫТО: выходные дни ТК ст. 84 п. 5 (первый день Курбан-айта, 7 января) и переносы постановлениями Правительства по ТК ст. 85 п. 3 — другие акты."
+  },
+  "overrides": [
+    {
+      "date": "2025-01-01",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NovyyGod (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-01-02",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NovyyGod (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-03-08",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#MezhdunarodnyyZhenskiyDen (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-03-10",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2025-03-08; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-03-21",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NauryzMeyramy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-03-22",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NauryzMeyramy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-03-23",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NauryzMeyramy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-03-24",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2025-03-22; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-03-25",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2025-03-23; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-05-01",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#PrazdnikEdinstva (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-05-07",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenZashchitnika (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-05-09",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenPobedy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-07-06",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenStolitsy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-07-07",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2025-07-06; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-08-30",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenKonstitutsii (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-09-01",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2025-08-30; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-10-25",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenRespubliki (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-10-27",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2025-10-25; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2025-12-16",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenNezavisimosti (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-01-01",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NovyyGod (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-01-02",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NovyyGod (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-03-08",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#MezhdunarodnyyZhenskiyDen (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-03-09",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2026-03-08; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-03-15",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenKonstitutsii (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-03-16",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2026-03-15; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-03-21",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NauryzMeyramy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-03-22",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NauryzMeyramy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-03-23",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#NauryzMeyramy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-03-24",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2026-03-21; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-03-25",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2026-03-22; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-05-01",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#PrazdnikEdinstva (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-05-07",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenZashchitnika (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-05-09",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenPobedy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-05-11",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2026-05-09; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-07-06",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenStolitsy (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-10-25",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenRespubliki (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-10-26",
+      "intervals": [],
+      "reason": "перенесённый день отдыха (с 2026-10-25; абз. 3 ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    },
+    {
+      "date": "2026-12-16",
+      "intervals": [],
+      "reason": "праздничный день: prazdniki#DenNezavisimosti (ст. 5 закона 267-II)",
+      "sourceFragments": [
+        "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+      ],
+      "working": false
+    }
+  ],
+  "schemaVersion": "law.calendar/0.1",
+  "sourceArtifacts": [
+    "urn:kz:corpus:clir:prazdniki#PRAZ_ART5"
+  ],
+  "timezone": "Asia/Qyzylorda",
+  "timezoneDbSnapshot": "iana-tzdb@2026a",
+  "valid": {
+    "endExclusive": "2027-01-01",
+    "start": "2025-01-01"
+  },
+  "weeklySchedule": [
+    {
+      "day": "monday",
+      "intervals": [
+        {
+          "end": "18:00:00",
+          "start": "09:00:00"
+        }
+      ],
+      "working": true
+    },
+    {
+      "day": "tuesday",
+      "intervals": [
+        {
+          "end": "18:00:00",
+          "start": "09:00:00"
+        }
+      ],
+      "working": true
+    },
+    {
+      "day": "wednesday",
+      "intervals": [
+        {
+          "end": "18:00:00",
+          "start": "09:00:00"
+        }
+      ],
+      "working": true
+    },
+    {
+      "day": "thursday",
+      "intervals": [
+        {
+          "end": "18:00:00",
+          "start": "09:00:00"
+        }
+      ],
+      "working": true
+    },
+    {
+      "day": "friday",
+      "intervals": [
+        {
+          "end": "18:00:00",
+          "start": "09:00:00"
+        }
+      ],
+      "working": true
+    },
+    {
+      "day": "saturday",
+      "intervals": [],
+      "working": false
+    },
+    {
+      "day": "sunday",
+      "intervals": [],
+      "working": false
+    }
+  ]
+}

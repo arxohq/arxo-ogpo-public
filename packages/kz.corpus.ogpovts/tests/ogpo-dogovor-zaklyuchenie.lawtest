@@ -1,0 +1,227 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 10 пп. 3, 5, 5-1 и 5-2 — порядок заключения договора.
+//
+// ТРИ ПАРЫ. Запрет отказа (п. 3 абз. третий) проверяется с обеих сторон
+// исключения «за исключением случаев, предусмотренных законами Республики
+// Казахстан»: молчание дела запрет РОЖДАЕТ (в этом и смысл замыкания §70), а
+// названное законом основание отказа его снимает. Запрет п. 5-2 проверяется с
+// обеих сторон оговорки о государственной регистрации.
+
+test "urn:query:ogpo-licensed-insurer-required" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p3-a0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p3-a1": insurer_licensed(entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_insurer_requirement_met(entity_ref("urn:kz:ogpo:contract:c1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пара к предыдущему: у страховщика лицензии нет, и требование пункта 3 не
+// выполнено. Ответ NEITHER, а не FALSE: закон не объявляет такой договор
+// ничтожным, он лишь не даёт ему требуемого свойства.
+test "urn:query:ogpo-unlicensed-insurer-requirement-unmet" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p3-b0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:c2"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i2")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_insurer_requirement_met(entity_ref("urn:kz:ogpo:contract:c2")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-refusal-prohibited" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p3-c0": contract_in_question(entity_ref("urn:kz:ogpo:contract:c3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p3-c1": insurance_application_submitted(entity_ref("urn:kz:ogpo:contract:c3"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(OtkazatVZaklyucheniiDogovora, ACTIVE);
+}
+
+// Вторая сторона той же нормы: закон предусмотрел отказ, и запрета нет.
+test "urn:query:ogpo-refusal-permitted-by-law" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p3-d0": contract_in_question(entity_ref("urn:kz:ogpo:contract:c4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p3-d1": insurance_application_submitted(entity_ref("urn:kz:ogpo:contract:c4"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p3-d2": refusal_of_conclusion_permitted_by_law(entity_ref("urn:kz:ogpo:contract:c4")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect not position(OtkazatVZaklyucheniiDogovora, ACTIVE);
+}
+
+test "urn:query:ogpo-concluded-by-electronic-policy" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p5-a0": electronic_policy_issued(entity_ref("urn:kz:ogpo:contract:c5"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_concluded(entity_ref("urn:kz:ogpo:contract:c5")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-digital-channel-permitted" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p51-a0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:c6"), DigitalResourceExchange) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(conclusion_channel_permitted(entity_ref("urn:kz:ogpo:contract:c6"), DigitalResourceExchange));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// П. 5-2: транспортное средство вне международного движения и государственной
+// регистрации не подлежит — заключение договора запрещено.
+test "urn:query:ogpo-conclusion-forbidden-unregistered" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p52-a0": insurance_application_submitted(entity_ref("urn:kz:ogpo:contract:c7"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p52-a1": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:c7"), entity_ref("urn:kz:ogpo:vehicle:v1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p52-a2": international_movement_status(entity_ref("urn:kz:ogpo:vehicle:v1"), NotInInternationalMovement) {
+            origin case_input;
+        }
+
+        assert "ogpo-p52-a3": vehicle_registration_status(entity_ref("urn:kz:ogpo:vehicle:v1"), NeitherRegisteredNorSubjectToRegistration) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(ZaklyuchitDogovorVneMezhdunarodnogoDvizheniya, ACTIVE);
+}
+
+// Пара: то же дело, но транспортное средство подлежит государственной
+// регистрации — исключение пункта 5-2 снимает запрет.
+test "urn:query:ogpo-conclusion-allowed-registered" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-p52-b0": insurance_application_submitted(entity_ref("urn:kz:ogpo:contract:c8"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p52-b1": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:c8"), entity_ref("urn:kz:ogpo:vehicle:v2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-p52-b2": international_movement_status(entity_ref("urn:kz:ogpo:vehicle:v2"), NotInInternationalMovement) {
+            origin case_input;
+        }
+
+        assert "ogpo-p52-b3": vehicle_registration_status(entity_ref("urn:kz:ogpo:vehicle:v2"), RegisteredOrSubjectToRegistration) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect not position(ZaklyuchitDogovorVneMezhdunarodnogoDvizheniya, ACTIVE);
+}

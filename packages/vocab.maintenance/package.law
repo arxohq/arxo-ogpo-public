@@ -1,0 +1,27 @@
+// GENERATED from vocabulary.json; do not edit by hand.
+language "law.core" version "0.2";
+package vocab.maintenance version "0.1.0";
+namespace "urn:law:vocab:maintenance";
+
+pub entity Measurement { label ru official "Измерение предъявленного объекта"; }
+pub entity Evidence { label ru official "Доказательство измерения или события"; }
+pub entity ObservedEvent { label ru official "Наблюдаемое событие"; }
+pub entity Condition { label ru official "Условие (ворота) перехода"; }
+pub entity Deviation { label ru official "Согласованное отступление"; }
+
+pub enum ReadinessOutcome { label ru official "ReadinessOutcome"; Ready; Blocked; InsufficientEvidence; Conflict; }
+
+pub relation measurement_subject(m: Measurement, subject: Text) kind empirical { label ru official "measurement_subject"; }
+pub relation measurement_value(m: Measurement, value: Quantity) kind empirical { label ru official "measurement_value"; }
+pub relation evidence_measurement(e: Evidence, m: Measurement) kind empirical { label ru official "evidence_measurement"; }
+pub relation evidence_event(e: Evidence, occurrence: ObservedEvent) kind empirical { label ru official "evidence_event"; }
+pub relation evidence_method(e: Evidence, method: Text) kind empirical { label ru official "evidence_method"; }
+pub relation evidence_instrument(e: Evidence, instrument: Text) kind empirical { label ru official "evidence_instrument"; }
+pub relation evidence_date(e: Evidence, date: Date) kind empirical { label ru official "evidence_date"; }
+pub relation evidence_performer(e: Evidence, performer: Text) kind empirical { label ru official "evidence_performer"; }
+pub relation evidence_reference(e: Evidence, document_ref: Text) kind empirical { label ru official "evidence_reference"; }
+pub relation evidence_lot(e: Evidence, lot: Text) kind empirical { label ru official "evidence_lot"; }
+pub relation evidence_technical_card_edition(e: Evidence, card_edition: Text) kind empirical { label ru official "evidence_technical_card_edition"; }
+pub relation condition_subject(c: Condition, subject: Text) kind empirical { label ru official "condition_subject"; }
+pub relation deviation_subject(d: Deviation, subject: Text) kind empirical { label ru official "deviation_subject"; }
+pub relation deviation_approved_by(d: Deviation, person: Text) kind empirical { label ru official "deviation_approved_by"; }

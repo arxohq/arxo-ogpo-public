@@ -1,0 +1,32 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 3: имущественный интерес владельца, чья ответственность подлежит
+// обязательному страхованию по составу статьи 5 пункта 1 (одно из трёх
+// оснований — здесь регистрация ТС), признаётся объектом обязательного
+// страхования.
+
+test "urn:query:ogpo-art3-object-of-insurance" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "art3-a0": vehicle_of(entity_ref("urn:kz:ogpo:vehicle:v1"), entity_ref("urn:kz:ogpo:owner:o1")) {
+            origin case_input;
+        }
+        assert "art3-a1": compulsory_insurance_ground(entity_ref("urn:kz:ogpo:vehicle:v1"), RegisteredVehicle) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(insured_property_interest(entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:vehicle:v1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

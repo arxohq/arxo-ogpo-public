@@ -1,0 +1,90 @@
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// ПУНКТ 3 — ПОРОГ ДВУХСОТ СЕМИДЕСЯТИ ДНЕЙ, ОБЕ ЕГО СТОРОНЫ И СЕРЕДИНА.
+//
+// Независимый ожидаемый результат взят из текста и приложения, а не из
+// правил: действующий класс 3, столбец «0 страховых случаев» приложения даёт
+// класс 4, коэффициент класса 4 — 0,95. Без двухсот семидесяти дней класс
+// остаётся третьим, коэффициент 1,00.
+
+// BM-P3-1 — РОВНО 270 ДНЕЙ: повышение состоялось. Порог «не менее» включает
+// сам рубеж.
+test "urn:query:bm-p3-rovno-270" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "a0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:d:1"), OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "a1": deystvuyushchiy_klass(entity_ref("urn:kz:bm:d:1"), Klass3) { origin case_input; }
+        assert "a2": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:d:1"), 270) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:d:1"), 0.95));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// BM-P3-2 — 269 ДНЕЙ: повышения нет, класс остаётся третьим.
+test "urn:query:bm-p3-269-dney" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "b0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:d:2"), OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "b1": deystvuyushchiy_klass(entity_ref("urn:kz:bm:d:2"), Klass3) { origin case_input; }
+        assert "b2": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:d:2"), 269) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:d:2"), 1.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// BM-P3-3 — ЛИШЕНИЕ ПРАВА УПРАВЛЕНИЯ: дней достаточно, но класс не повышается.
+test "urn:query:bm-p3-lishenie-prava" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "c0": osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:d:3"), OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "c1": deystvuyushchiy_klass(entity_ref("urn:kz:bm:d:3"), Klass3) { origin case_input; }
+        assert "c2": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:d:3"), 400) { origin case_input; }
+        assert "c3": lishen_prava_upravleniya(entity_ref("urn:kz:bm:d:3")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:d:3"), 1.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// BM-P3-4 — СВЕДЕНИЙ НЕТ ВОВСЕ: коэффициент не выводится НИКАКОЙ.
+//
+// Это и есть различение, которого требуют пункты 2 и 3: молчание дела о базе
+// данных не есть подтверждённое отсутствие страховых случаев. Ни единицы, ни
+// нуля, ни последнего известного класса пакет не подставляет.
+test "urn:query:bm-p2-net-svedeniy" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "d1": deystvuyushchiy_klass(entity_ref("urn:kz:bm:d:4"), Klass3) { origin case_input; }
+        assert "d2": dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:d:4"), 400) { origin case_input; }
+    }
+    evaluate collect k: Decimal where koeffitsient_bonus_malus(entity_ref("urn:kz:bm:d:4"), k);
+    expect result_kind == COLLECTION;
+    expect collected_count(0);
+}

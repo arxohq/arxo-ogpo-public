@@ -1,0 +1,65 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 22-1: обязанность уведомить страховщика, право страховщика направить
+// представителя и порог пятидесяти МРП для самостоятельной схемы.
+//
+// РАСЧЁТ ПОРОГА ВРУЧНУЮ. МРП 2026 года — 4 325 тенге (закон о республиканском
+// бюджете на 2026 – 2028 годы, читается пакетом `kz.corpus.budget`).
+// 50 × 4 325 = 216 250 тенге. Порог проверен парой: 216 250 (ровно предел,
+// «не должен превышать» — значит входит) и 216 251 (на один тенге выше).
+
+test "urn:query:ogpo-st22-1-uvedomlenie-i-predstavitel" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st221-a-a0": no_life_or_health_victims(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st221-a-a1": accident_participant(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:participant:p1")) { origin case_input; }
+        assert "st221-a-a2": notification_possible(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:participant:p1")) { origin case_input; }
+        assert "st221-a-a3": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+    }
+
+    // Окно обязанности ОТКРЫТО: срока уведомления часть первая не называет.
+    // Поэтому обязанность действует, но нарушенной по сроку не становится.
+    evaluate positions();
+    expect position(UvedomitStrakhovshchikaOProisshestviiUchastnikom, ACTIVE);
+    expect not position(UvedomitStrakhovshchikaOProisshestviiUchastnikom, VIOLATED);
+    expect not position(UvedomitStrakhovshchikaOProisshestviiUchastnikom, SATISFIED);
+    expect position(NapravitPredstavitelyaNaMestoProisshestviya, ACTIVE);
+}
+
+test "urn:query:ogpo-st22-1-porog-50-mrp" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st221-b-a0": no_life_or_health_victims(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st221-b-a1": mutual_agreement_on_circumstances_and_harm(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st221-b-a2": estimated_property_harm(entity_ref("urn:kz:ogpo:accident:a1"), 216250 KZT) { origin case_input; }
+        assert "st221-b-a3": no_life_or_health_victims(entity_ref("urn:kz:ogpo:accident:a2")) { origin case_input; }
+        assert "st221-b-a4": mutual_agreement_on_circumstances_and_harm(entity_ref("urn:kz:ogpo:accident:a2")) { origin case_input; }
+        assert "st221-b-a5": estimated_property_harm(entity_ref("urn:kz:ogpo:accident:a2"), 216251 KZT) { origin case_input; }
+        assert "st221-b-a6": accident_participant(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:participant:p1")) { origin case_input; }
+    }
+
+    evaluate truth(self_drawn_scheme_permitted(entity_ref("urn:kz:ogpo:accident:a1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(self_drawn_scheme_permitted(entity_ref("urn:kz:ogpo:accident:a2")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+
+    evaluate positions();
+    expect position(SamostoyatelnoSostavitSkhemuProisshestviya, ACTIVE);
+}

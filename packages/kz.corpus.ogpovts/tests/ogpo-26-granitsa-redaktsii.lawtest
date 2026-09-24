@@ -1,0 +1,52 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// DECISION-0339: окно редакции открыто днём состояния портала — 23 июля 2026
+// года, а не днём получения байтов (31 августа). Статья 26 пункт 1: пятнадцать
+// рабочих дней со дня получения документов.
+//
+// Расчёт вручную. Документы получены в четверг 23.07.2026; счёт со следующего
+// дня: 24 (1), 27–31 (6), 3–7 августа (11), 10–13 (15) → 13 августа 2026 года.
+//
+//   * на 05.08.2026 — дате ВНУТРИ окна редакции, до прежней границы 31.08 —
+//     день истечения срока выводится (прежде пакет на эту дату молчал: F-21);
+//   * на 22.07.2026 — за день ДО окна — не выводится: текста, действовавшего
+//     до состояния 23.07.2026, в пакете нет, и он не отвечает.
+
+context profile KZ_OGPO_DEADLINES_26 {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-26-srok-vnutri-okna-redaktsii" {
+    given {
+        context extends KZ_OGPO_DEADLINES_26 {
+            decision_time @2026-08-05T12:00:00+05:00;
+            knowledge_time @2026-08-05T12:00:00+05:00;
+            legal_time @2026-08-05;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "r26-a0": documents_received_on(entity_ref("urn:kz:ogpo:claim:r26"), @2026-07-23) { origin case_input; }
+    }
+    evaluate truth(payment_due_day(entity_ref("urn:kz:ogpo:claim:r26"), @2026-08-13));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-26-srok-do-okna-redaktsii" {
+    given {
+        context extends KZ_OGPO_DEADLINES_26 {
+            decision_time @2026-07-22T12:00:00+05:00;
+            knowledge_time @2026-07-22T12:00:00+05:00;
+            legal_time @2026-07-22;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "r26-b0": documents_received_on(entity_ref("urn:kz:ogpo:claim:r26b"), @2026-07-01) { origin case_input; }
+    }
+    // 15 рабочих дней от 01.07.2026 с нерабочим 06.07 — 23.07.2026; до окна редакции не выводится.
+    evaluate truth(payment_due_day(entity_ref("urn:kz:ogpo:claim:r26b"), @2026-07-23));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

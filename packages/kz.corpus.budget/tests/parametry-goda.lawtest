@@ -1,0 +1,108 @@
+language "law.core" version "0.1";
+package kz.corpus.budget version "0.1.0";
+namespace "urn:kz:corpus:clir:budget";
+
+// Шесть параметров года статей 7 (МРП, МЗП, пенсии, прожиточный минимум) и
+// 9 (ставка ОСМС) — факты, установленные закреплённым текстом безусловно
+// (`assert` в самом .law, без посылок и без даты вне редакции). Сцены не
+// подают входа: они подтверждают, что закон читается движком и что
+// собственные `pub`-отношения пакета (мост к прежним именам, ст. 86 п. 4
+// Бюджетного кодекса) действительно принимают значение через forwarding-
+// правило, а не остаются пустыми. Значения ЗАКРЕПЛЕНЫ 27.08.2026 — до этого
+// пакет был учебным заместителем (ABSTRACT_ONLY) с другими числами (см.
+// комментарий вверху budget-2026.law); сцены проверяют именно закреплённые
+// байты, не пересказ.
+
+test "МРП 2026 года — 4 325 тенге (статья 7)" {
+    given {
+        context {
+            decision_time @2026-09-13T12:00:00+05:00;
+            knowledge_time @2026-09-13T12:00:00+05:00;
+            legal_time @2026-09-13;
+            timezone "Asia/Almaty";
+        }
+    }
+    evaluate truth(mrp(2026, 4325 KZT));
+    expect truth_status == TRUE_ONLY;
+}
+
+test "минимальная заработная плата 2026 года — 85 000 тенге (статья 7)" {
+    given {
+        context {
+            decision_time @2026-09-13T12:00:00+05:00;
+            knowledge_time @2026-09-13T12:00:00+05:00;
+            legal_time @2026-09-13;
+            timezone "Asia/Almaty";
+        }
+    }
+    evaluate truth(minimum_wage(2026, 85000 KZT));
+    expect truth_status == TRUE_ONLY;
+}
+
+test "минимальная базовая пенсионная выплата 2026 года — 35 596 тенге (статья 7)" {
+    given {
+        context {
+            decision_time @2026-09-13T12:00:00+05:00;
+            knowledge_time @2026-09-13T12:00:00+05:00;
+            legal_time @2026-09-13;
+            timezone "Asia/Almaty";
+        }
+    }
+    evaluate truth(base_pension(2026, 35596 KZT));
+    expect truth_status == TRUE_ONLY;
+}
+
+test "минимальный размер пенсии 2026 года — 69 049 тенге (статья 7)" {
+    given {
+        context {
+            decision_time @2026-09-13T12:00:00+05:00;
+            knowledge_time @2026-09-13T12:00:00+05:00;
+            legal_time @2026-09-13;
+            timezone "Asia/Almaty";
+        }
+    }
+    evaluate truth(minimum_pension(2026, 69049 KZT));
+    expect truth_status == TRUE_ONLY;
+}
+
+test "прожиточный минимум 2026 года — 50 851 тенге (статья 7)" {
+    given {
+        context {
+            decision_time @2026-09-13T12:00:00+05:00;
+            knowledge_time @2026-09-13T12:00:00+05:00;
+            legal_time @2026-09-13;
+            timezone "Asia/Almaty";
+        }
+    }
+    evaluate truth(subsistence_minimum(2026, 50851 KZT));
+    expect truth_status == TRUE_ONLY;
+}
+
+test "ставка взносов государства на ОСМС 2026 года — 2 процента (статья 9)" {
+    given {
+        context {
+            decision_time @2026-09-13T12:00:00+05:00;
+            knowledge_time @2026-09-13T12:00:00+05:00;
+            legal_time @2026-09-13;
+            timezone "Asia/Almaty";
+        }
+    }
+    evaluate truth(state_osms_rate(2026, 2 percent));
+    expect truth_status == TRUE_ONLY;
+}
+
+// Отрицательная граница: закон 2026 года не говорит о параметрах 2025 года —
+// ключ `year` (§45.1) держит их раздельно, forwarding-правило анкеровано
+// только на 2026-й.
+test "закон 2026 года не говорит о параметрах 2025 года" {
+    given {
+        context {
+            decision_time @2026-09-13T12:00:00+05:00;
+            knowledge_time @2026-09-13T12:00:00+05:00;
+            legal_time @2026-09-13;
+            timezone "Asia/Almaty";
+        }
+    }
+    evaluate truth(mrp(2025, 3932 KZT));
+    expect truth_status == NEITHER;
+}

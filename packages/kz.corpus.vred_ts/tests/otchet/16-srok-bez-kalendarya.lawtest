@@ -1,0 +1,34 @@
+language "law.core" version "0.1";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// The cl. 3 deadline in a world WITHOUT a §85 calendar snapshot: the day
+// unit always reads the snapshot (errata E-0029), and without it the
+// deadline is not computed — MISSING_INPUT (E-0105: MISSING_CALENDAR). The
+// world for this suite does not contain a calendar package, so the
+// automatic selection of a single node (§89, `calendar` axis) is not
+// possible here.
+
+context profile KZ_VRED_TS_DEADLINES {
+    deadline_policy {
+            start_count next_day;
+            include_end true;
+            roll next_working_day;
+        }
+}
+
+// There is no calendar snapshot in the world — MISSING_INPUT (MISSING_CALENDAR, E-0105).
+test "urn:query:vred-t16-a" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t16a-a0": otchet_poluchen_poterpevshim(r: entity_ref("urn:case:vred:raschet-1"), day: @2026-09-01) { origin case_input; }
+    }
+    evaluate truth(predel_otmetki_poterpevshego(r: entity_ref("urn:case:vred:raschet-1"), day: @2026-09-04));
+    expect truth_status == NEITHER;
+    expect evaluation_status == MISSING_INPUT;
+}

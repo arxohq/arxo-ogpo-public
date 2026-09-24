@@ -1,0 +1,58 @@
+language "law.core" version "0.2";
+package law.expansions.examples.claim_deadline_duty_synthetic version "0.1.0";
+namespace "urn:law:expansions:examples:claim-deadline-duty-synthetic";
+
+// Окно: [@2026-03-02, @2026-03-05] по датам дела.
+
+test "в окне при недостаточности документов — ACTIVE" {
+    given {
+        context { decision_time @2026-03-03T12:00:00Z; knowledge_time @2026-03-03T12:00:00Z; legal_time @2026-03-03; timezone "UTC"; }
+        assert "c": claim_of(entity_ref("urn:x:c"), entity_ref("urn:x:acc"), entity_ref("urn:x:h"), entity_ref("urn:x:ins")) { origin case_input; }
+        assert "ins": documents_insufficient(entity_ref("urn:x:c")) { origin case_input; }
+        assert "r": received_on(entity_ref("urn:x:c"), @2026-03-02) { origin case_input; }
+        assert "d": answer_due_day(entity_ref("urn:x:c"), @2026-03-05) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position("NotifyMissingDocuments/duty/norm", ACTIVE);
+}
+
+test "условие требования не установлено — позиции нет" {
+    given {
+        context { decision_time @2026-03-03T12:00:00Z; knowledge_time @2026-03-03T12:00:00Z; legal_time @2026-03-03; timezone "UTC"; }
+        assert "c": claim_of(entity_ref("urn:x:c"), entity_ref("urn:x:acc"), entity_ref("urn:x:h"), entity_ref("urn:x:ins")) { origin case_input; }
+        assert "r": received_on(entity_ref("urn:x:c"), @2026-03-02) { origin case_input; }
+        assert "d": answer_due_day(entity_ref("urn:x:c"), @2026-03-05) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect not position("NotifyMissingDocuments/duty/norm", ACTIVE);
+}
+
+test "сообщение в окне — SATISFIED" {
+    given {
+        context { decision_time @2026-03-03T12:00:00Z; knowledge_time @2026-03-03T12:00:00Z; legal_time @2026-03-03; timezone "UTC"; }
+        assert "c": claim_of(entity_ref("urn:x:c"), entity_ref("urn:x:acc"), entity_ref("urn:x:h"), entity_ref("urn:x:ins")) { origin case_input; }
+        assert "ins": documents_insufficient(entity_ref("urn:x:c")) { origin case_input; }
+        assert "r": received_on(entity_ref("urn:x:c"), @2026-03-02) { origin case_input; }
+        assert "d": answer_due_day(entity_ref("urn:x:c"), @2026-03-05) { origin case_input; }
+        assert "ok": missing_documents_notified(entity_ref("urn:x:c")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position("NotifyMissingDocuments/duty/norm", SATISFIED);
+}
+
+test "после срока при установленном неисполнении — VIOLATED" {
+    given {
+        context { decision_time @2026-03-10T12:00:00Z; knowledge_time @2026-03-10T12:00:00Z; legal_time @2026-03-10; timezone "UTC"; }
+        assert "c": claim_of(entity_ref("urn:x:c"), entity_ref("urn:x:acc"), entity_ref("urn:x:h"), entity_ref("urn:x:ins")) { origin case_input; }
+        assert "ins": documents_insufficient(entity_ref("urn:x:c")) { origin case_input; }
+        assert "r": received_on(entity_ref("urn:x:c"), @2026-03-02) { origin case_input; }
+        assert "d": answer_due_day(entity_ref("urn:x:c"), @2026-03-05) { origin case_input; }
+        assert "no": not missing_documents_notified(entity_ref("urn:x:c")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position("NotifyMissingDocuments/duty/norm", VIOLATED);
+}

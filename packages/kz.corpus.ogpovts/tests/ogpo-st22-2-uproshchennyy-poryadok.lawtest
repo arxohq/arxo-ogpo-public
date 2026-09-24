@@ -1,0 +1,135 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 22-2 пункты 2, 3, 5, 6, 7 и 8: что происходит после того, как условия
+// пункта 1 соблюдены (или не соблюдены).
+//
+// Условия пункта 1 (шесть конъюнктов) взяты первой очередью модуля статьи 22 и
+// здесь подаются целиком: без них ни осмотр пункта 6, ни надлежащее исполнение
+// пункта 7 не возникают.
+
+test "urn:query:ogpo-st22-2-deklaratsiya-i-fotomaterialy" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st222-a-a0": declaration_of_accident(entity_ref("urn:kz:ogpo:declaration:d1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-a-a1": accident_participant(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:participant:p1")) { origin case_input; }
+        assert "st222-a-a2": not database_notice_received(entity_ref("urn:kz:ogpo:declaration:d1")) { origin case_input; }
+        assert "st222-a-a3": photographs_insufficient(entity_ref("urn:kz:ogpo:declaration:d1")) { origin case_input; }
+        assert "st222-a-a4": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+    }
+
+    // Запрет покидать место действует; в ядре 0.1 `prohibition` не бывает
+    // VIOLATED, и ожидание записано именно так, а не «нарушен».
+    evaluate positions();
+    expect position(PokidatMestoProisshestviyaDoUvedomleniya, ACTIVE);
+    expect not position(PokidatMestoProisshestviyaDoUvedomleniya, VIOLATED);
+    // Часть вторая даёт страховщику право запросить фотоматериалы повторно,
+    // часть третья тем же условием ОТНИМАЕТ у него основание отказа.
+    expect position(ZaprositPovtornoeNapravlenieFotomaterialov, ACTIVE);
+    expect position(OtkazatVPrinyatiiDeklaratsiiIzZaFotomaterialov, ACTIVE);
+}
+
+test "urn:query:ogpo-st22-2-nesoglasie-vedet-v-statyu-25" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st222-b-a0": accident_participant(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:participant:p1")) { origin case_input; }
+        assert "st222-b-a1": participant_disagrees_with_simplified_settlement(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:participant:p1")) { origin case_input; }
+        assert "st222-b-a2": accident_participant(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:participant:p2")) { origin case_input; }
+    }
+
+    evaluate truth(general_settlement_order_applies(entity_ref("urn:kz:ogpo:accident:a1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    // Второе происшествие: участник есть, несогласия нет — общий порядок не
+    // включается. Молчание дела о несогласии НЕ есть несогласие (§113).
+    evaluate truth(general_settlement_order_applies(entity_ref("urn:kz:ogpo:accident:a2")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-st22-2-pryamoe-uregulirovanie-osmotr-i-ispolnenie" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        // Шесть конъюнктов пункта 1.
+        assert "st222-c-a0": no_life_or_health_victims(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-c-a1": two_insured_vehicles_interacted(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-c-a2": harm_only_to_those_two_vehicles(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-c-a3": no_disagreement_recorded_in_declaration(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-c-a4": participants_agree_on_payout_within_limit(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-c-a5": declaration_filed_through_information_systems(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        // Пункт 5: отметка об отсутствии разногласий в декларации.
+        assert "st222-c-a6": declaration_of_accident(entity_ref("urn:kz:ogpo:declaration:d1"), entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-c-a7": no_disagreement_marked_in_declaration(entity_ref("urn:kz:ogpo:declaration:d1")) { origin case_input; }
+        // Пункт 6: требование страховщика об осмотре; имущество изменено.
+        assert "st222-c-a8": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st222-c-a9": accident_participant(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:participant:p1")) { origin case_input; }
+        assert "st222-c-a10": vehicles_inspection_demanded(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st222-c-a11": accident_occurred_on(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-01) { origin case_input; }
+        assert "st222-c-a12": damaged_property_altered(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:participant:p1")) { origin case_input; }
+        // Пункт 7: выплата при упрощённом порядке осуществлена.
+        assert "st222-c-a13": simplified_payment_made(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st222-c-a14": harm_assessment_applicant(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+    }
+
+    evaluate truth(simplified_settlement_via_direct_settlement_available(entity_ref("urn:kz:ogpo:accident:a1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    evaluate truth(insurer_obligation_duly_performed(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    // Обязанность СОХРАНЯТЬ имущество (§124.2) нарушена одним
+    // противопримером: имущество изменено после происшествия.
+    evaluate positions();
+    expect position(SokhranyatPovrezhdennoeImushchestvo, VIOLATED);
+    expect position(PredostavitTransportnoeSredstvoDlyaOsmotra, ACTIVE);
+    expect not position(PredostavitTransportnoeSredstvoDlyaOsmotra, SATISFIED);
+    expect position(ProizvestiOsmotrTransportnykhSredstvUchastnikov, ACTIVE);
+    expect position(PredyavlyatDopolnitelnyeTrebovaniyaSverkhPredela, ACTIVE);
+}
+
+test "urn:query:ogpo-st22-2-pravo-otkazat" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st222-d-a0": no_life_or_health_victims(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-d-a1": two_insured_vehicles_interacted(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-d-a2": harm_only_to_those_two_vehicles(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-d-a3": no_disagreement_recorded_in_declaration(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-d-a4": participants_agree_on_payout_within_limit(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-d-a5": declaration_filed_through_information_systems(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st222-d-a6": payment_claim_of(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        // Основание отказа статьи 29 — подпункт о несоответствии документов
+        // упрощённого порядка.
+        assert "st222-d-a7": refusal_ground_established(entity_ref("urn:kz:ogpo:claim:c1"), SimplifiedProcedureDocumentsNonCompliant) { origin case_input; }
+    }
+
+    evaluate positions();
+    expect position(OtkazatVVyplatePriUproshchennomPoryadke, ACTIVE);
+}

@@ -1,0 +1,131 @@
+{
+ "schemaVersion": "law.decision/0.1",
+ "kind": "decision-table",
+ "id": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient",
+ "mode": "rules",
+ "hitPolicy": "unique",
+ "total": false,
+ "inputs": [
+  {
+   "id": "srok_ekspluatacii",
+   "name": "Срок эксплуатации транспортного средства, полных лет",
+   "type": {
+    "name": "urn:law:std#Integer"
+   }
+  }
+ ],
+ "outputs": [
+  {
+   "id": "koefficient",
+   "name": "Размер коэффициента в зависимости от срока эксплуатации транспортного средства",
+   "type": {
+    "name": "urn:law:std#Decimal"
+   }
+  }
+ ],
+ "emit": {
+  "predicate": "urn:kz:corpus:clir:ogpo-vts#operation_term_scale",
+  "polarity": "positive",
+  "args": [
+   {
+    "id": "srok_ekspluatacii",
+    "kind": "input"
+   },
+   {
+    "id": "koefficient",
+    "kind": "output"
+   }
+  ]
+ },
+ "labels": [
+  {
+   "language": "ru",
+   "status": "official",
+   "text": "Статья 19 пункт 9: коэффициенты в зависимости от срока эксплуатации транспортного средства. Граница между строками — включающая: «до 7 лет включительно» против «свыше 7 лет», и семь лет ровно принадлежит первой строке"
+  }
+ ],
+ "rows": [
+  {
+   "id": "do-7-let-vklyuchitelno",
+   "when": [
+    {
+     "input": "srok_ekspluatacii",
+     "condition": {
+      "kind": "comparison",
+      "op": "lte",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 7
+      }
+     }
+    }
+   ],
+   "then": [
+    {
+     "output": "koefficient",
+     "value": {
+      "kind": "value",
+      "type": {
+       "name": "urn:law:std#Decimal"
+      },
+      "value": "1.00"
+     }
+    }
+   ],
+   "anchors": [
+    "urn:kz:corpus:clir:ogpo-vts#LAW_446_ART19"
+   ],
+   "labels": [
+    {
+     "language": "ru",
+     "status": "official",
+     "text": "Статья 19 пункт 9 строка 1. До 7 лет включительно — 1,00"
+    }
+   ]
+  },
+  {
+   "id": "svyshe-7-let",
+   "when": [
+    {
+     "input": "srok_ekspluatacii",
+     "condition": {
+      "kind": "comparison",
+      "op": "gt",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 7
+      }
+     }
+    }
+   ],
+   "then": [
+    {
+     "output": "koefficient",
+     "value": {
+      "kind": "value",
+      "type": {
+       "name": "urn:law:std#Decimal"
+      },
+      "value": "1.10"
+     }
+    }
+   ],
+   "anchors": [
+    "urn:kz:corpus:clir:ogpo-vts#LAW_446_ART19"
+   ],
+   "labels": [
+    {
+     "language": "ru",
+     "status": "official",
+     "text": "Статья 19 пункт 9 строка 2. Свыше 7 лет — 1,10"
+    }
+   ]
+  }
+ ]
+}

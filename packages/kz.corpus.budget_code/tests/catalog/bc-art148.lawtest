@@ -1,0 +1,27 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 148 пункт 4 подпункт 2). Критерий по получателям выгод: проект относится к республиканским, если получателями выгод являются субъекты двух и более регион
+test "CATALOG-REPUBLICANBYBENEFICIARIES" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": beneficiaries_in_several_regions(entity_ref("urn:kz:catalog:republicanbybeneficiaries:v0")) { origin case_input; }
+    }
+    evaluate truth(republican_investment_project(entity_ref("urn:kz:catalog:republicanbybeneficiaries:v0")));
+    expect truth_status == TRUE_ONLY;
+}
+
+// Статья 148 пункт 4 подпункт 2). Проект относится к местным, если получателями экономических выгод являются субъекты одной области, города республиканского значе
+test "CATALOG-LOCALBYBENEFICIARIES" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": beneficiaries_in_one_region(entity_ref("urn:kz:catalog:localbybeneficiaries:v0")) { origin case_input; }
+    }
+    evaluate truth(local_investment_project(entity_ref("urn:kz:catalog:localbybeneficiaries:v0")));
+    expect truth_status == TRUE_ONLY;
+}

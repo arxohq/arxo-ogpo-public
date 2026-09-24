@@ -1,0 +1,46 @@
+language "law.core" version "0.2";
+package law.expansions.examples.matter_deadline_duty_synthetic version "0.1.0";
+namespace "urn:law:expansions:examples:matter-deadline-duty-synthetic";
+
+// Учебная норма: не действующее право.
+entity Accident;
+entity Insurer;
+entity Applicant;
+
+relation accident_insurer(a: Accident, i: Insurer) kind empirical;
+relation assessment_applicant(a: Accident, p: Applicant) kind empirical;
+relation application_filed_on(a: Accident, d: Date) kind empirical;
+relation scheduling_due_day(a: Accident, d: Date) kind empirical;
+relation inspection_agreed(a: Accident) kind institutional;
+
+@source("SYN-MATTER-1")
+expand matter_deadline_duty InsurerAgreesInspection {
+    label ru-KZ unofficial "Учебная норма: страховщик согласовывает осмотр в срок от подачи заявления";
+    bind matter = a: Accident;
+    bind bearer = i: Insurer;
+    bind beneficiary = p: Applicant;
+    bind start = f: Date;
+    bind due = u: Date;
+    bearer_of = accident_insurer;
+    beneficiary_of = assessment_applicant;
+    started = application_filed_on;
+    due_on = scheduling_due_day;
+    conditions = [];
+    result = inspection_agreed;
+}
+
+@source("SYN-MATTER-1")
+expand matter_deadline_duty ApplicantAgreesInspection {
+    label ru-KZ unofficial "Учебная норма: заявитель согласовывает осмотр в тот же срок";
+    bind matter = a: Accident;
+    bind bearer = p: Applicant;
+    bind beneficiary = i: Insurer;
+    bind start = f: Date;
+    bind due = u: Date;
+    bearer_of = assessment_applicant;
+    beneficiary_of = accident_insurer;
+    started = application_filed_on;
+    due_on = scheduling_due_day;
+    conditions = [];
+    result = inspection_agreed;
+}

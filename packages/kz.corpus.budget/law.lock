@@ -1,0 +1,33 @@
+{
+  "dependencyEdges": [
+    {
+      "features": [],
+      "from": "kz.corpus.budget",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.budget_code"
+    }
+  ],
+  "languageSemantics": "law.core/0.2.0",
+  "lockVersion": "0.1",
+  "packages": [
+    {
+      "contentHash": "sha256:e54ba547c66ee357e9a3fb12b4a2175b3544c8a560ae266d06a7b54a01836c53",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.budget_code",
+      "namespace": "urn:kz:corpus:clir:budget-code",
+      "registryId": "law-dsl-dev",
+      "resolverUri": "registry://law-dsl-dev/kz.corpus.budget_code/0.1.0",
+      "version": "0.1.0"
+    }
+  ],
+  "resolutionHash": "sha256:e62ae77a61bd69c6c9a88fc5fe1a05797ba46a6d9c85ad54e0b1def64c9528b2",
+  "root": {
+    "contentHash": "sha256:d75c37a85762d19f25051f7b1094628ccfb4df8060066903152baa51759bda0d",
+    "name": "kz.corpus.budget",
+    "namespace": "urn:kz:corpus:clir:budget",
+    "version": "0.1.0"
+  }
+}

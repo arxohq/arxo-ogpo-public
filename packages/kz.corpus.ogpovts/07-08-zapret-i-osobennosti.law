@@ -1,0 +1,228 @@
+// СТАТЬИ 7 И 8. НЕДОПУСТИМОСТЬ ЭКСПЛУАТАЦИИ БЕЗ ДОГОВОРА И ОСОБЕННОСТИ
+// ОСУЩЕСТВЛЕНИЯ ОБЯЗАТЕЛЬНОГО СТРАХОВАНИЯ.
+//
+// СТАТЬЯ 7 ПУНКТ 1 — ЗАПРЕТ (`prohibition`), а не литеральная голова: текст
+// прямо запрещает эксплуатацию («не допускается»), носитель — владелец,
+// эксплуатирующий ТС, по которому не заключён договор. Условие запрета —
+// СОСТАВ статьи 5 пункта 1 (`liability_subject_to_compulsory_insurance`,
+// `05-obyazannost-strakhovaniya.law`): запрет действует ровно там, где статья
+// 5 обязывает страховать, — иначе он покрыл бы и ТС, исключённые статьёй 5
+// пунктами 3–4, чего текст не говорит. Отсутствие договора взято НЕ через
+// `not`: правило безусловно запрещает эксплуатацию, а заключённый договор
+// ПОРАЖАЕТ запрет дефитером — тот же приём, что у пункта 3 статьи 5
+// (`RecognisedForeignPolicyDefeatsCompulsoryInsurance`). Запрет в ядре 0.1
+// не бывает `VIOLATED` (см. `docs/constructs/06-positions.law.md` п. 5):
+// сценарии стерегут `ACTIVE`/`DEFEATED`, а не факт нарушения.
+//
+// СТАТЬЯ 7 ПУНКТ 2 — ОБЯЗАННОСТЬ органа контроля, а не запрет: «обязаны
+// проверить выполнение… обязанности по заключению договора». Носитель —
+// орган, названный статьёй 6 пунктом 2 (подразделения уполномоченного органа
+// по обеспечению безопасности дорожного движения) и органы транспортного
+// контроля; текст соединяет их «и» как СОВМЕСТНЫХ носителей одной обязанности,
+// и потому один тип `TrafficControlBody`, а не два. Цель — достижение:
+// обязанность привязана к МОМЕНТУ проверки документов, а не к периоду, и
+// закон не называет для неё срок сверх самого момента проверки.
+//
+// СТАТЬЯ 8 ПУНКТ 1 — ДВЕ ОБЯЗАННОСТИ СТРАХОВЩИКА С РАЗНЫМИ СРОКАМИ, а не
+// обязанность с исключением: «до получения лицензии» (общий случай) и
+// «в течение тридцати календарных дней с даты получения лицензии» (вновь
+// созданная организация) — РАЗНЫЕ дедлайны для одного действия, поэтому
+// § 206 требует двух правил, а исключение оставлено ТОЛЬКО там, где оно и
+// стоит в тексте: `unless newly_created_insurer` снимает общий срок для
+// вновь созданной организации, у которой действует СВОЙ срок второго
+// правила. Отсылка «в порядке, определённом Законом… "О Фонде
+// гарантирования страховых выплат"» не переносится: порядок заключения
+// договора — норма чужого акта, взят только срок и факт обязанности.
+// Тридцать календарных дней считаются `add_calendar_period` с единицей
+// `calendar_day` — фиксированный календарный шаг без снимка §85 (errata
+// E-0109: `add_calendar_period(d, N calendar_day)` не читает рабочий
+// календарь), поэтому пакету не нужен `kz.corpus.clir.official_calendar`.
+// Именованная политика §86 всё равно ОБЯЗАТЕЛЬНА (ось дела §168.2, MISSING_
+// POLICY без неё — проверено пробой): `roll no_roll`, `include_end true`,
+// без `month_end` (иначе `DEADLINE_POLICY_INVALID` по §84.2). В сценариях
+// она подаётся ЗАМОРОЖЕННОЙ inline-формой 0.1 (`deadline_policy { … }` в
+// `context`, допустимой только при `language "law.core" version "0.1"` у
+// файла `.lawtest`); отдельной `deadline policy` §86 в самом пакете не
+// заводится — статья не называет применимость к другим срокам сверх этого.
+//
+// СТАТЬЯ 8 ПУНКТ 2 — ЗАПРЕТ на три вида недобросовестного поведения при
+// заключении договоров ОГПО ВТС. Виды соединены как единый состав
+// недопустимой практики (перечисление `CompetitionAndFairnessViolationKind`,
+// приём package.law для взаимоисключающих оснований одного последствия —
+// см. `CompulsoryInsuranceGround`), а не альтернативные условия одного
+// правила: последствие («не допускается») одно и то же для всех трёх, и вид
+// остаётся в аргументе факта, так что `law_explain`/`why_not` видят, КАКОЙ
+// вид практики назван делом.
+//
+// СТАТЬЯ 8 ПУНКТ 3 — СВОБОДА (`liberty`) владельца заключить договор с
+// иностранным страховщиком, ОТДЕЛЬНАЯ от статьи 5 пункта 3. Статья 5 пункт 3
+// снимает обязанность заключать договор ОГПО ВТС при признанном иностранном
+// полисе на въезде (мост в `05-obyazannost-strakhovaniya.law`); статья 8
+// пункт 3 — про ДРУГОЕ право: владелец МОЖЕТ вдобавок купить иностранное
+// страхование, которое действует ТОЛЬКО за пределами Казахстана и потому
+// обязанность статьи 5 не снимает и не заменяет. Два правила о двух разных
+// договорах не сведены в одно намеренно.
+
+// ============================================================================
+// Статья 7 пункт 1: запрет эксплуатации без договора
+// ============================================================================
+
+relation vehicle_operated_by(vehicle: Vehicle, owner: VehicleOwner) kind empirical {
+    label ru-KZ official "владелец эксплуатирует названное транспортное средство";
+}
+
+@source(LAW_446_ART7, quote = "Эксплуатация транспортного средства в случае незаключения договора обязательного страхования ответственности владельцев транспортных средств не допускается.")
+rule OperationWithoutContractProhibited(vehicle: Vehicle, owner: VehicleOwner) defeasible {
+    label ru-KZ official "Статья 7 пункт 1. Эксплуатация транспортного средства в случае незаключения договора обязательного страхования ответственности владельцев транспортных средств не допускается";
+    when vehicle_of(vehicle: vehicle, owner: owner);
+    when liability_subject_to_compulsory_insurance(vehicle: vehicle, owner: owner);
+    then prohibition EkspluatatsiyaBezDogovoraNeDopuskaetsya {
+        bearer owner;
+        action vehicle_operated_by(vehicle, owner);
+        window [@2026-07-23, infinity);
+    };
+    unless compulsory_insurance_contract_concluded(vehicle: vehicle, owner: owner);
+}
+
+// ============================================================================
+// Статья 7 пункт 2: обязанность органа контроля проверить договор
+// ============================================================================
+
+entity TrafficControlBody {
+    label ru-KZ official "подразделение уполномоченного органа по обеспечению безопасности дорожного движения либо орган транспортного контроля (статья 7 пункт 2)";
+}
+
+relation vehicle_documents_checked_at(body: TrafficControlBody, vehicle: Vehicle, at: Date)
+    kind empirical {
+    label ru-KZ official "названный орган проверяет документы транспортного средства в указанный день";
+}
+
+relation insurance_duty_compliance_verified(body: TrafficControlBody, vehicle: Vehicle)
+    kind empirical {
+    label ru-KZ official "орган проверил выполнение владельцем обязанности по заключению договора обязательного страхования";
+}
+
+// BEGIN GENERATED TrafficControlMustVerifyInsuranceDuty (deontic-window)
+@source(LAW_446_ART7, quote = "Подразделения уполномоченного органа по обеспечению безопасности дорожного движения и органы транспортного контроля при проверке документов обязаны проверить выполнение владельцами транспортных средств обязанности по заключению договора обязательного страхования ответственности владельцев транспортных средств.")
+rule TrafficControlMustVerifyInsuranceDuty(body: TrafficControlBody, vehicle: Vehicle, at: Date) strict {
+    label ru-KZ official "Статья 7 пункт 2. Подразделения уполномоченного органа по обеспечению безопасности дорожного движения и органы транспортного контроля при проверке документов обязаны проверить выполнение владельцами транспортных средств обязанности по заключению договора обязательного страхования ответственности владельцев транспортных средств";
+    when vehicle_documents_checked_at(body: body, vehicle: vehicle, at: at);
+    then duty ProveritVypolnenieObyazannostiPoDogovoru {
+        bearer body;
+        achieve insurance_duty_compliance_verified(body, vehicle) during [at, at];
+    };
+}
+// END GENERATED TrafficControlMustVerifyInsuranceDuty
+
+// ============================================================================
+// Статья 8 пункт 1: срок заключения договора со Фондом гарантирования
+// ============================================================================
+
+relation license_obtained(insurer: Insurer, at: Date) kind empirical {
+    key(insurer);
+    label ru-KZ official "страховая организация получила лицензию на право осуществления обязательного страхования ответственности владельцев транспортных средств в указанный день";
+}
+
+relation newly_created_insurer(insurer: Insurer) kind empirical {
+    label ru-KZ official "страховая организация является вновь создаваемой";
+}
+
+relation guarantee_fund_participation_contract_concluded(insurer: Insurer) kind empirical {
+    label ru-KZ official "страховая организация заключила договор участия с Фондом гарантирования страховых выплат";
+}
+
+relation guarantee_fund_contract_deadline(insurer: Insurer, due: Date) kind institutional {
+    label ru-KZ official "день истечения тридцатидневного срока заключения договора участия с Фондом гарантирования страховых выплат вновь созданной страховой организацией";
+}
+
+@source(LAW_446_ART8, quote = "за исключением вновь создаваемой страховой организации, которая заключает данный договор в течение тридцати календарных дней с даты получения лицензии по указанному виду обязательного страхования.")
+rule NewlyCreatedInsurerGuaranteeFundDeadline(insurer: Insurer, at: Date) strict {
+    label ru-KZ official "Статья 8 пункт 1. Вновь создаваемая страховая организация заключает договор участия с Фондом гарантирования страховых выплат в течение тридцати календарных дней с даты получения лицензии по указанному виду обязательного страхования";
+    when license_obtained(insurer: insurer, at: at);
+    when newly_created_insurer(insurer: insurer);
+    then guarantee_fund_contract_deadline(insurer, add_calendar_period(at, 30 calendar_day));
+}
+
+@source(LAW_446_ART8) {
+    // BEGIN GENERATED NewlyCreatedInsurerMustJoinGuaranteeFundWithinDeadline (deontic-window)
+    rule NewlyCreatedInsurerMustJoinGuaranteeFundWithinDeadline(insurer: Insurer, at: Date, due: Date) strict {
+        label ru-KZ official "Статья 8 пункт 1. Вновь создаваемая страховая организация обязана заключить договор участия с Фондом гарантирования страховых выплат в течение тридцати календарных дней с даты получения лицензии";
+        when license_obtained(insurer: insurer, at: at);
+        when guarantee_fund_contract_deadline(insurer: insurer, due: due);
+        then duty ZaklyuchitDogovorUchastiyaSFondomVTridtsatidnevnyySrok {
+            bearer insurer;
+            achieve guarantee_fund_participation_contract_concluded(insurer) during [at, due];
+        };
+    }
+    // END GENERATED NewlyCreatedInsurerMustJoinGuaranteeFundWithinDeadline
+
+    // Общий случай: обязанность действует ДО получения лицензии, и снимается
+    // ровно для вновь созданной организации, у которой действует правило
+    // выше со своим сроком. Дефитер обязателен ЗДЕСЬ, потому что общее
+    // правило безусловно (не читает «не вновь созданная») — молчаливое `not`
+    // не сработало бы (ловушка §113).
+    rule ExistingInsurerMustJoinGuaranteeFundBeforeLicense(insurer: Insurer, at: Date) defeasible {
+        label ru-KZ official "Статья 8 пункт 1. Страховая организация до получения лицензии на право осуществления обязательного страхования ответственности владельцев транспортных средств обязана заключить договор участия с Фондом гарантирования страховых выплат";
+        when license_obtained(insurer: insurer, at: at);
+        then duty ZaklyuchitDogovorUchastiyaSFondomDoLitsenzii {
+            bearer insurer;
+            achieve guarantee_fund_participation_contract_concluded(insurer) during [@0001-01-01, at);
+        };
+        unless newly_created_insurer(insurer: insurer) and license_obtained(insurer: insurer, at: at);
+    }
+}
+
+// ============================================================================
+// Статья 8 пункт 2: запрет недобросовестной конкуренции при заключении ОГПО
+// ============================================================================
+
+enum CompetitionAndFairnessViolationKind {
+    label ru-KZ official "вид недопустимой практики при заключении договоров обязательного страхования ответственности владельцев транспортных средств (статья 8 пункт 2)";
+    RestrictionOrEliminationOfCompetition;
+    UnjustifiedAdvantageBetweenInsurers;
+    PolicyholderRightsInfringement;
+}
+
+relation licensed_for_compulsory_insurance(insurer: Insurer) kind empirical {
+    label ru-KZ official "страховая организация имеет лицензию на осуществление обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation competition_or_fairness_violation(insurer: Insurer, kind: CompetitionAndFairnessViolationKind)
+    kind empirical {
+    label ru-KZ official "страховая организация осуществляет деятельность названного вида, ограничивающую конкуренцию либо ущемляющую права страхователей при заключении договоров обязательного страхования (статья 8 пункт 2)";
+}
+
+@source(LAW_446_ART8, quote = "Не допускается деятельность, направленная на ограничение или устранение конкуренции, предоставление или получение необоснованных преимуществ по заключению договоров обязательного страхования ответственности владельцев транспортных средств одними страховщиками перед другими, ущемление прав и законных интересов страхователей.")
+rule CompetitionAndFairnessViolationProhibited(insurer: Insurer, kind: CompetitionAndFairnessViolationKind) strict {
+    label ru-KZ official "Статья 8 пункт 2. Не допускается деятельность, направленная на ограничение или устранение конкуренции, предоставление или получение необоснованных преимуществ по заключению договоров обязательного страхования одними страховщиками перед другими, ущемление прав и законных интересов страхователей";
+    when licensed_for_compulsory_insurance(insurer: insurer);
+    when competition_or_fairness_violation(insurer: insurer, kind: kind);
+    then prohibition NedopustimayaPraktikaPriZaklyucheniiDogovorov {
+        bearer insurer;
+        action competition_or_fairness_violation(insurer, kind);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// ============================================================================
+// Статья 8 пункт 3: свобода заключить договор с иностранным страховщиком
+// ============================================================================
+
+relation foreign_insurer_contract_concluded(owner: VehicleOwner, vehicle: Vehicle) kind empirical {
+    label ru-KZ official "владелец транспортного средства заключил договор страхования ответственности со страховщиком другого государства";
+}
+
+relation foreign_insurance_covers_only_outside_kz(owner: VehicleOwner, vehicle: Vehicle) kind empirical {
+    label ru-KZ official "страхование по названному договору обеспечивает страховую защиту владельца транспортного средства только за пределами Республики Казахстан";
+}
+
+@source(LAW_446_ART8, quote = "Владельцы транспортных средств вправе заключать договоры страхования ответственности владельцев транспортных средств со страховщиками других государств, в том числе в электронной форме, при условии, что это страхование обеспечивает страховую защиту владельцев транспортных средств только за пределами Республики Казахстан.")
+rule OwnerMayContractWithForeignInsurerForCoverageOutsideKZ(owner: VehicleOwner, vehicle: Vehicle) strict {
+    label ru-KZ official "Статья 8 пункт 3. Владельцы транспортных средств вправе заключать договоры страхования ответственности владельцев транспортных средств со страховщиками других государств при условии, что это страхование обеспечивает страховую защиту владельцев транспортных средств только за пределами Республики Казахстан";
+    when foreign_insurance_covers_only_outside_kz(owner: owner, vehicle: vehicle);
+    then liberty MozhetZaklyuchitDogovorSInostrannymStrakhovshchikom {
+        holder owner;
+        action foreign_insurer_contract_concluded(owner, vehicle);
+        window [@2026-07-23, infinity);
+    };
+}

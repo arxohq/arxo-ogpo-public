@@ -1,0 +1,229 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 16 п. 2 пп. 2) и ст. 21: обязанность уплатить страховую премию в
+// размере статей 19—20 и в срок, установленный договором.
+//
+// РАЗМЕР СЧИТАЕТСЯ ВРУЧНУЮ И СВЕРЯЕТСЯ:
+//   базовая страховая премия  = 1,9 МРП = 1,9 × 4325 = 8217,5 тенге;
+//   территориальный коэффициент (временный въезд, п. 5)      = 4,4;
+//   тип транспортного средства (мототранспорт, п. 6)         = 1,00;
+//   страхователь — юридическое лицо (п. 8)                   = 1,2;
+//   срок эксплуатации 5 лет, до 7 включительно (п. 9)        = 1,00;
+//   бонус-малус (п. 10, вход дела)                           = 1,00.
+//   8217,5 × 4,4 = 36 157,0; × 1,00 = 36 157,0; × 1,2 = 43 388,4 тенге.
+//
+// МРП ПОДАН ДЕЛОМ, И ЭТО ОГРАНИЧЕНИЕ РАННЕРА, А НЕ НОРМЫ: `applicable_mrp`
+// выводится правилом `ApplicableMrp2026` из чужого пакета
+// `kz.corpus.budget`, а раннер `.lawtest` исполняет ОДИН CLIR без линковки
+// импортов. В общем прогоне семейства, где мир собран из снимков
+// (`world = ["kz.corpus.ogpovts", "kz.corpus.budget", "kz.corpus.budget_code"]`),
+// тот же факт приходит из бюджетного закона.
+//
+// Вход A3-таблицы пункта 9 подаётся фактом дела на внутреннем предикате
+// `<id таблицы>/input` (§A3.3.4) — так же, как в раннере `corpus/kz/acts/ogpo_vts.py`.
+
+// Срок уплаты по договору — 22 сентября 2026; проверка 17 сентября: срок не
+// вышел, уплаты нет — обязанность действует и не нарушена.
+//
+// ДАТЫ ЭТИХ ДВУХ СЦЕН СДВИНУТЫ НА 13.09.2026, и сдвиг содержателен. Премия
+// считается через коэффициент «бонус-малус», который выводит пакет
+// `kz.corpus.bonus_malus`; его закреплённая редакция объявлена действующей с
+// 12 сентября 2026 года (день получения байтов — дня первого официального
+// опубликования поправки источник не называет). На прежнее `legal_time`
+// 5 сентября проекция as-of §31 снимала подзаконный акт целиком, и премия не
+// выводилась вовсе. Это верное поведение, а не помеха: пакет не отвечает о
+// датах, на которые действие его редакции не установлено.
+test "urn:query:ogpo-21-premiya-active" {
+    given {
+        context {
+            decision_time @2026-09-17T12:00:00+05:00;
+            knowledge_time @2026-09-17T12:00:00+05:00;
+            legal_time @2026-09-17;
+            timezone "Asia/Almaty";
+        }
+        assert "u21-a-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "u21-a-a1": contract_concluded(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "u21-a-a2": contract_concluded_on(entity_ref("urn:kz:ogpo:contract:c1"), @2026-09-13) { origin case_input; }
+        assert "u21-a-a3": contract_premium_due_day(entity_ref("urn:kz:ogpo:contract:c1"), @2026-09-22) { origin case_input; }
+        assert "u21-a-a4": applicable_mrp(4325 KZT) { origin case_input; }
+        assert "u21-a-a5": territory_basis(entity_ref("urn:kz:ogpo:contract:c1"), TemporaryEntry) { origin case_input; }
+        assert "u21-a-a6": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:c1"), MotorVehicle) { origin case_input; }
+        assert "u21-a-a7": insured_kind_of(entity_ref("urn:kz:ogpo:contract:c1"), LegalEntity) { origin case_input; }
+        assert "u21-a-a8": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:c1"), 5) { origin case_input; }
+        assert "u21-a-a9": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(5) { origin case_input; }
+        assert "u21-a-a10": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:bm:ogpo:c1-a")) { origin case_input; }
+        assert "u21-a-a10-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:c1-a"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "u21-a-a10-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:c1-a"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "u21-a-a10-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:c1-a"), 269) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(UplatitStrakhovuyuPremiyu, ACTIVE);
+    expect not position(UplatitStrakhovuyuPremiyu, VIOLATED);
+    expect not position(UplatitStrakhovuyuPremiyu, SATISFIED);
+}
+
+// Премия уплачена в рассчитанном размере до истечения срока — исполнено.
+test "urn:query:ogpo-21-premiya-satisfied" {
+    given {
+        context {
+            decision_time @2026-09-17T12:00:00+05:00;
+            knowledge_time @2026-09-17T12:00:00+05:00;
+            legal_time @2026-09-17;
+            timezone "Asia/Almaty";
+        }
+        assert "u21-b-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "u21-b-a1": contract_concluded(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "u21-b-a2": contract_concluded_on(entity_ref("urn:kz:ogpo:contract:c1"), @2026-09-13) { origin case_input; }
+        assert "u21-b-a3": contract_premium_due_day(entity_ref("urn:kz:ogpo:contract:c1"), @2026-09-22) { origin case_input; }
+        assert "u21-b-a4": applicable_mrp(4325 KZT) { origin case_input; }
+        assert "u21-b-a5": territory_basis(entity_ref("urn:kz:ogpo:contract:c1"), TemporaryEntry) { origin case_input; }
+        assert "u21-b-a6": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:c1"), MotorVehicle) { origin case_input; }
+        assert "u21-b-a7": insured_kind_of(entity_ref("urn:kz:ogpo:contract:c1"), LegalEntity) { origin case_input; }
+        assert "u21-b-a8": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:c1"), 5) { origin case_input; }
+        assert "u21-b-a9": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(5) { origin case_input; }
+        assert "u21-b-a10": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:bm:ogpo:c1-b")) { origin case_input; }
+        assert "u21-b-a10-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:c1-b"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "u21-b-a10-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:c1-b"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "u21-b-a10-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:c1-b"), 269) { origin case_input; }
+        assert "u21-b-a11": premium_paid(entity_ref("urn:kz:ogpo:contract:c1"), 43388.4 KZT) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(UplatitStrakhovuyuPremiyu, SATISFIED);
+    expect not position(UplatitStrakhovuyuPremiyu, VIOLATED);
+}
+
+// Срок истёк 10 сентября, неуплата установлена — обязанность нарушена.
+test "urn:query:ogpo-21-premiya-violated" {
+    given {
+        context {
+            decision_time @2026-09-20T12:00:00+05:00;
+            knowledge_time @2026-09-20T12:00:00+05:00;
+            legal_time @2026-09-20;
+            timezone "Asia/Almaty";
+        }
+        assert "u21-c-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "u21-c-a1": contract_concluded(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "u21-c-a2": contract_concluded_on(entity_ref("urn:kz:ogpo:contract:c1"), @2026-09-01) { origin case_input; }
+        assert "u21-c-a3": contract_premium_due_day(entity_ref("urn:kz:ogpo:contract:c1"), @2026-09-10) { origin case_input; }
+        assert "u21-c-a4": applicable_mrp(4325 KZT) { origin case_input; }
+        assert "u21-c-a5": territory_basis(entity_ref("urn:kz:ogpo:contract:c1"), TemporaryEntry) { origin case_input; }
+        assert "u21-c-a6": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:c1"), MotorVehicle) { origin case_input; }
+        assert "u21-c-a7": insured_kind_of(entity_ref("urn:kz:ogpo:contract:c1"), LegalEntity) { origin case_input; }
+        assert "u21-c-a8": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:c1"), 5) { origin case_input; }
+        assert "u21-c-a9": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(5) { origin case_input; }
+        assert "u21-c-a10": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:bm:ogpo:c1-c")) { origin case_input; }
+        assert "u21-c-a10-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:c1-c"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "u21-c-a10-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:c1-c"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "u21-c-a10-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:c1-c"), 269) { origin case_input; }
+        assert "u21-c-a11": not premium_paid(entity_ref("urn:kz:ogpo:contract:c1"), 43388.4 KZT) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(UplatitStrakhovuyuPremiyu, VIOLATED);
+    expect not position(UplatitStrakhovuyuPremiyu, SATISFIED);
+}
+
+// Рассрочка отводит умолчание пункта 1: обязанности разового платежа не
+// возникает вовсе, а возникает обязанность уплатить очередной взнос.
+test "urn:query:ogpo-21-rassrochka" {
+    given {
+        context {
+            decision_time @2026-09-05T12:00:00+05:00;
+            knowledge_time @2026-09-05T12:00:00+05:00;
+            legal_time @2026-09-05;
+            timezone "Asia/Almaty";
+        }
+        assert "u21-d-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "u21-d-a1": contract_concluded(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "u21-d-a2": contract_concluded_on(entity_ref("urn:kz:ogpo:contract:c1"), @2026-09-01) { origin case_input; }
+        assert "u21-d-a3": contract_premium_due_day(entity_ref("urn:kz:ogpo:contract:c1"), @2026-09-10) { origin case_input; }
+        assert "u21-d-a4": applicable_mrp(4325 KZT) { origin case_input; }
+        assert "u21-d-a5": territory_basis(entity_ref("urn:kz:ogpo:contract:c1"), TemporaryEntry) { origin case_input; }
+        assert "u21-d-a6": vehicle_type_of(entity_ref("urn:kz:ogpo:contract:c1"), MotorVehicle) { origin case_input; }
+        assert "u21-d-a7": insured_kind_of(entity_ref("urn:kz:ogpo:contract:c1"), LegalEntity) { origin case_input; }
+        assert "u21-d-a8": vehicle_operation_term_years(entity_ref("urn:kz:ogpo:contract:c1"), 5) { origin case_input; }
+        assert "u21-d-a9": "urn:kz:corpus:clir:ogpo-vts:table:operation-term-coefficient/input"(5) { origin case_input; }
+        assert "u21-d-a10": raschet_bonus_malus_dogovora(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:bm:ogpo:c1-d")) { origin case_input; }
+        assert "u21-d-a10-bm1": kz.corpus.bonus_malus::osnovanie_iz_bazy_dannykh(entity_ref("urn:kz:bm:ogpo:c1-d"), kz.corpus.bonus_malus::OtsutstvieInformatsiiOSluchayakh) { origin case_input; }
+        assert "u21-d-a10-bm2": kz.corpus.bonus_malus::deystvuyushchiy_klass(entity_ref("urn:kz:bm:ogpo:c1-d"), kz.corpus.bonus_malus::Klass3) { origin case_input; }
+        assert "u21-d-a10-bm3": kz.corpus.bonus_malus::dney_strakhovaniya_s_poslednego_izmeneniya(entity_ref("urn:kz:bm:ogpo:c1-d"), 269) { origin case_input; }
+        assert "u21-d-a11": instalment_payment_stipulated(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "u21-d-a12": instalment_schedule(entity_ref("urn:kz:ogpo:contract:c1"), 1, 21694.2 KZT, @2026-09-10) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(UplatitStrakhovuyuPremiyu, ACTIVE);
+    expect position(UplatitOcherednoyStrakhovoyVznos, ACTIVE);
+}
+
+// Способ уплаты при рассрочке — `Instalments`, и он ЕДИНСТВЕННЫЙ:
+// `key(contract)` у вывода поймал бы второй ответ конфликтом ключа.
+test "urn:query:ogpo-21-1-sposob-rassrochka" {
+    given {
+        context {
+            decision_time @2026-09-05T12:00:00+05:00;
+            knowledge_time @2026-09-05T12:00:00+05:00;
+            legal_time @2026-09-05;
+            timezone "Asia/Almaty";
+        }
+        assert "u21-e-a0": contract_concluded(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "u21-e-a1": instalment_payment_stipulated(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate truth(applicable_premium_payment_mode(entity_ref("urn:kz:ogpo:contract:c1"), Instalments));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Договором иное не предусмотрено — умолчание пункта 1: разовый платёж.
+test "urn:query:ogpo-21-1-sposob-razovyy" {
+    given {
+        context {
+            decision_time @2026-09-05T12:00:00+05:00;
+            knowledge_time @2026-09-05T12:00:00+05:00;
+            legal_time @2026-09-05;
+            timezone "Asia/Almaty";
+        }
+        assert "u21-f-a0": contract_concluded(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate truth(applicable_premium_payment_mode(entity_ref("urn:kz:ogpo:contract:c1"), SinglePayment));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пункт 2 предложение третье и пункт 3: неуплата очередного взноса даёт
+// страхователю ИММУНИТЕТ от досрочного прекращения договора и вместе с тем
+// обязанность уплатить неустойку по статье 353 ГК РК.
+test "urn:query:ogpo-21-2-3-immunitet-i-neustoyka" {
+    given {
+        context {
+            decision_time @2026-09-20T12:00:00+05:00;
+            knowledge_time @2026-09-20T12:00:00+05:00;
+            legal_time @2026-09-20;
+            timezone "Asia/Almaty";
+        }
+        assert "u21-g-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "u21-g-a1": contract_concluded(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "u21-g-a2": instalment_payment_stipulated(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "u21-g-a3": instalment_overdue(entity_ref("urn:kz:ogpo:contract:c1"), 1) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NeuplataVznosaNeVlechetPrekrashcheniya, ACTIVE);
+    expect position(UplatitNeustoykuZaProsrochkuVznosa, ACTIVE);
+}
+
+// Пункт 2 предложение второе: при рассрочке ответственность страховщика
+// покрывает весь срок действия договора.
+test "urn:query:ogpo-21-2-otvetstvennost-ves-srok" {
+    given {
+        context {
+            decision_time @2026-09-20T12:00:00+05:00;
+            knowledge_time @2026-09-20T12:00:00+05:00;
+            legal_time @2026-09-20;
+            timezone "Asia/Almaty";
+        }
+        assert "u21-h-a0": instalment_payment_stipulated(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate truth(insurer_liable_for_whole_contract_term(entity_ref("urn:kz:ogpo:contract:c1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,137 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 18 п. 1: каталог прав потерпевшего и вычисление превышения по
+// подпункту 7).
+
+test "urn:query:ogpo-p18-1-2026" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p18-a-a0": victim_of_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "p18-a-a1": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p18-a-a2": insured_event_document_presented(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SoobshchitStrakhovshchikuOProisshestvii, ACTIVE);
+    expect position(SobratIPredstavitDokumenty, ACTIVE);
+    expect position(VospolzovatsyaLyubymMeditsinskimUchrezhdeniem, ACTIVE);
+    expect position(PoterpevshiyOznakomitsyaSRezultatami, ACTIVE);
+    expect position(ObratitsyaKStrakhovshchikuVinovnogo, ACTIVE);
+    expect position(ObratitsyaVBazuDannykhZaSvedeniyami, ACTIVE);
+    expect not position(PoterpevshiyObratitsyaKOmbudsmanu, ACTIVE);
+    expect not position(PoterpevshiyNapravitZayavlenieNapryamuyu, ACTIVE);
+}
+
+// 15 февраля 2027: подпункты 5-1) и 6) введены в действие.
+test "urn:query:ogpo-p18-1-2027" {
+    given {
+        context {
+            decision_time @2027-02-15T12:00:00+05:00;
+            knowledge_time @2027-02-15T12:00:00+05:00;
+            legal_time @2027-02-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p18-b-a0": victim_of_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "p18-b-a1": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PoterpevshiyObratitsyaKStrakhovshchiku, ACTIVE);
+    expect position(PoterpevshiyObratitsyaKOmbudsmanu, ACTIVE);
+    expect position(PoterpevshiyObratitsyaVSud, ACTIVE);
+    expect position(PoterpevshiyNapravitZayavlenieNapryamuyu, ACTIVE);
+    expect position(PoterpevshiyNapravitZayavlenieCherezStrakhovshchika, ACTIVE);
+}
+
+// Подпункт 4-2): без документа, подтверждающего страховой случай, права
+// обратиться в базу данных не возникает.
+test "urn:query:ogpo-p18-1-4-2-bez-dokumenta" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p18-c-a0": victim_of_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VospolzovatsyaLyubymMeditsinskimUchrezhdeniem, ACTIVE);
+    expect not position(ObratitsyaVBazuDannykhZaSvedeniyami, ACTIVE);
+}
+
+// Подпункт 7): превышение считается над ПОЛУЧЕННОЙ ВЫПЛАТОЙ.
+//
+// Расчёт вручную. МРП дня выплаты — 4325 тенге (закон о республиканском
+// бюджете на 2026 – 2028 годы). Предельный объём ответственности за вред
+// имуществу (ст. 24 п. 1 пп. 2)) — 600 МРП = 4325 × 600 = 2 595 000 тенге.
+// Вред имуществу — 1 000 000 тенге, он меньше предела, и потому выплата
+// равна вреду имуществу: min(1 000 000; 2 595 000) = 1 000 000 тенге.
+// Фактический размер вреда потерпевшему — 3 000 000 тенге.
+// Превышение подпункта 7): 3 000 000 − 1 000 000 = 2 000 000 тенге.
+//
+// Разница пункта 5 статьи 24 считается над ДРУГОЙ величиной — над страховой
+// суммой: 3 000 000 − 2 595 000 = 405 000 тенге. Обе позиции в этой сцене
+// действуют одновременно и о разных суммах, что и есть довод завести
+// подпункту 7) своё отношение.
+test "urn:query:ogpo-p18-1-7-prevyshenie" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p18-d-a0": victim_of_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "p18-d-a1": accident_insured(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:owner:o1")) { origin case_input; }
+        assert "p18-d-a2": payment_day_mrp(4325 KZT) { origin case_input; }
+        assert "p18-d-a3": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 1000000 KZT) { origin case_input; }
+        assert "p18-d-a4": actual_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 3000000 KZT) { origin case_input; }
+    }
+    evaluate truth(excess_over_insurance_payment(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 2000000 KZT));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-p18-1-7-svoboda" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p18-e-a0": victim_of_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "p18-e-a1": accident_insured(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:owner:o1")) { origin case_input; }
+        assert "p18-e-a2": payment_day_mrp(4325 KZT) { origin case_input; }
+        assert "p18-e-a3": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 1000000 KZT) { origin case_input; }
+        assert "p18-e-a4": actual_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 3000000 KZT) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredyavitTrebovanieKVladeltsu, ACTIVE);
+    expect position(VozmestitRaznitsuSverkhStrakhovoySummy, ACTIVE);
+}
+
+// Выплата покрыла вред целиком — превышения нет, и права требовать его тоже.
+test "urn:query:ogpo-p18-1-7-net-prevysheniya" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p18-f-a0": victim_of_accident(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "p18-f-a1": accident_insured(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:owner:o1")) { origin case_input; }
+        assert "p18-f-a2": payment_day_mrp(4325 KZT) { origin case_input; }
+        assert "p18-f-a3": property_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 1000000 KZT) { origin case_input; }
+        assert "p18-f-a4": actual_harm_amount(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), 1000000 KZT) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(PredyavitTrebovanieKVladeltsu, ACTIVE);
+}

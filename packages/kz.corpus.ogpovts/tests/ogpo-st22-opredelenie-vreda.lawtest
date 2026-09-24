@@ -1,0 +1,165 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 22 пункты 2, 3 (части первая, третья и четвёртая) и 5: КТО определяет
+// размер вреда, ЧЕМ он определяется и какие позиции при этом возникают.
+// Сроки этих же частей проверены отдельно (`ogpo-st22-osmotr-sroki.lawtest`).
+
+context profile KZ_OGPO_OPREDELENIE_DEADLINES {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-st22-punkt-2-dokumenty-organizatsiy" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        // v1: последствие названо и документы представлены.
+        assert "st22-p2-a0": harm_to_life_or_health(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), DisabilityGroupThree) { origin case_input; }
+        assert "st22-p2-a1": harm_documents_issued(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        // v2: последствие названо, документов нет.
+        assert "st22-p2-a2": harm_to_life_or_health(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v2"), DisabilityGroupThree) { origin case_input; }
+    }
+
+    evaluate truth(life_or_health_harm_determined(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+
+    // Без документов, выданных соответствующими организациями, размер вреда
+    // жизни и здоровью этим Законом НЕ определён — даже когда последствие
+    // вреда известно и статья 24 уже знает предел.
+    evaluate truth(life_or_health_harm_determined(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v2")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-st22-punkt-3-kto-opredelyaet" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        // a1: определяет сам страховщик, СПО применено.
+        assert "st22-p3-a0": licensed_software_applied(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st22-p3-a1": determination_conducted_by_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        // a2: определяет привлечённый оценщик по договору об оказании услуг.
+        assert "st22-p3-a2": licensed_software_applied(entity_ref("urn:kz:ogpo:accident:a2")) { origin case_input; }
+        assert "st22-p3-a3": assessor_engaged_by_insurer(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:insurer:i1"), entity_ref("urn:kz:ogpo:assessor:e1")) { origin case_input; }
+        assert "st22-p3-a4": determination_conducted_by_assessor(entity_ref("urn:kz:ogpo:accident:a2"), entity_ref("urn:kz:ogpo:assessor:e1")) { origin case_input; }
+        // a3: оценщик определяет, но СПО не применено — требование части
+        // первой не выполнено ни одной ветвью.
+        assert "st22-p3-a5": assessor_engaged_by_insurer(entity_ref("urn:kz:ogpo:accident:a3"), entity_ref("urn:kz:ogpo:insurer:i1"), entity_ref("urn:kz:ogpo:assessor:e1")) { origin case_input; }
+        assert "st22-p3-a6": determination_conducted_by_assessor(entity_ref("urn:kz:ogpo:accident:a3"), entity_ref("urn:kz:ogpo:assessor:e1")) { origin case_input; }
+    }
+
+    evaluate truth(property_harm_determination_lawful(entity_ref("urn:kz:ogpo:accident:a1")));
+    expect truth_status == TRUE_ONLY;
+
+    evaluate truth(property_harm_determination_lawful(entity_ref("urn:kz:ogpo:accident:a2")));
+    expect truth_status == TRUE_ONLY;
+
+    evaluate truth(property_harm_determination_lawful(entity_ref("urn:kz:ogpo:accident:a3")));
+    expect truth_status == NEITHER;
+}
+
+test "urn:query:ogpo-st22-pozitsii-osmotra-i-uderzhaniya" {
+    given {
+        context extends KZ_OGPO_OPREDELENIE_DEADLINES {
+            decision_time @2026-09-02T12:00:00+05:00;
+            knowledge_time @2026-09-02T12:00:00+05:00;
+            legal_time @2026-09-02;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st22-poz-a0": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st22-poz-a1": harm_assessment_applicant(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+        assert "st22-poz-a2": harm_assessment_application_filed_on(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-01) { origin case_input; }
+        assert "st22-poz-a3": inspection_time_and_place_agreed(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st22-poz-a4": inspection_act_drawn_up_on(entity_ref("urn:kz:ogpo:accident:a1"), @2026-09-02) { origin case_input; }
+        assert "st22-poz-a5": payment_claim_of(entity_ref("urn:kz:ogpo:claim:c1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+    }
+
+    evaluate positions();
+    // Часть третья: согласование состоялось — обе обязанности исполнены, и
+    // носителей у них двое, как в тексте («страховщик И страхователь»).
+    expect position("InsurerMustAgreeInspectionAppointment/duty/norm", SATISFIED);
+    expect position("ApplicantMustAgreeInspectionAppointment/duty/norm", SATISFIED);
+    // Осмотр ещё не произведён, срок (8 сентября) не истёк.
+    expect position("InsurerMustConductInspectionWithinTerm/duty/norm", ACTIVE);
+    expect not position("InsurerMustConductInspectionWithinTerm/duty/norm", VIOLATED);
+    // Часть пятая: акт составлен 2 сентября, размер вреда не определён,
+    // срок (9 сентября) не истёк.
+    expect position("InsurerMustDeterminePropertyHarmWithinTerm/duty/norm", ACTIVE);
+    // Пункт 5: запрет удерживать собственные расходы возникает от одного
+    // предъявления требования.
+    expect position(UderzhatSobstvennyeRaskhodyNaOpredelenieVreda, ACTIVE);
+}
+
+test "urn:query:ogpo-st22-povtornoe-obrashchenie" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "st22-pov-a0": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "st22-pov-a1": harm_assessment_applicant(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+        assert "st22-pov-a2": inspection_failed_through_applicant_fault(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st22-pov-a3": inspection_failed_by_circumstances_beyond_control(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+        assert "st22-pov-a4": repeat_harm_assessment_application_filed(entity_ref("urn:kz:ogpo:accident:a1")) { origin case_input; }
+    }
+
+    // Два основания части четвёртой — две самостоятельные позиции. Дело
+    // называет оба, и обе исполнены одним повторным обращением: исполнение у
+    // них одно, а основания разные.
+    evaluate positions();
+    expect position(PovtornoObratitsyaSZayavleniem, SATISFIED);
+    expect position(PovtornoObratitsyaSZayavleniemPriObstoyatelstvakh, SATISFIED);
+}
+
+// E-0179: пара отличается только установленным удержанием расходов.
+test "urn:query:ogpo-st22-p5-zapret-bez-svedeniy" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert payment_claim_of(entity_ref("urn:kz:ogpo:claim:forbearance"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1"));
+    }
+    evaluate positions();
+    expect position(UderzhatSobstvennyeRaskhodyNaOpredelenieVreda, ACTIVE);
+    expect not position(UderzhatSobstvennyeRaskhodyNaOpredelenieVreda, VIOLATED);
+    expect evaluation_status == COMPUTED;
+}
+
+// E-0179: пара отличается только установленным удержанием расходов.
+test "urn:query:ogpo-st22-p5-zapret-narushen" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert payment_claim_of(entity_ref("urn:kz:ogpo:claim:forbearance"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1"));
+        assert own_assessment_costs_withheld(entity_ref("urn:kz:ogpo:claim:forbearance"));
+    }
+    evaluate positions();
+    expect position(UderzhatSobstvennyeRaskhodyNaOpredelenieVreda, VIOLATED);
+    expect not position(UderzhatSobstvennyeRaskhodyNaOpredelenieVreda, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

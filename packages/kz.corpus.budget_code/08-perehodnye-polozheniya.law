@@ -1,0 +1,154 @@
+// РАЗДЕЛ 8. ПЕРЕХОДНЫЕ И ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ (главы 32–33, ст. 168–172).
+//
+// Выражено правилами: право Правительства реализовать пилотный проект
+// блочного бюджетирования, ОГРАНИЧЕННОЕ сроком действия самой статьи
+// (ст. 170 действует до 31.12.2027 — ст. 172 п. 4), и наступление
+// ответственности за нарушение бюджетного законодательства (ст. 171).
+//
+// ГРАНИЦЫ РАЗДЕЛА:
+//   - ст. 168, 169 (особенности исполнения бюджетов 2025 финансового года и
+//     составления годовых отчётов за 2024 год) — переходные нормы, чья
+//     структура бюджета и чьи нормативы распределения относятся к УЖЕ
+//     ЗАКРЫТЫМ финансовым годам; их адресуемость обеспечена фрагментами, а
+//     исполнение потребовало бы редакций закона о республиканском бюджете
+//     соответствующих лет (kz.corpus.budget закрепляет 2026 год);
+//   - ст. 172 (порядок введения в действие) — норма о самом кодексе, а не о
+//     делах: её содержание вынесено в edition пакета (`in_force @2025-01-01`)
+//     и в шапку 09-sources.law, где названы и изъятия по датам.
+
+
+// --- Ст. 170: блочное бюджетирование как пилотный проект --------------------
+// Окно позиции здесь НЕ технический пол: статья 172 п. 4 прямо ограничивает
+// действие статьи 170 датой 31 декабря 2027 года, и окно повторяет её.
+
+relation block_budgeting_pilot(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "пилотный проект предусматривает блочное бюджетирование";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation run_block_budgeting_pilot(p: BudgetProgramme) kind empirical {
+    label ru-KZ unofficial "действие нормы: run block budgeting pilot";
+}
+
+@source(BC_ART170)
+rule BlockBudgetingPilotLiberty(p: BudgetProgramme, b: Body) strict {
+    when government_of_kazakhstan(b);
+    when block_budgeting_pilot(p);
+    then liberty RunBlockBudgetingPilot {
+        holder b;
+        action run_block_budgeting_pilot(p);
+        window [@2025-01-01, @2027-12-31];
+    };
+    label ru-KZ official "Статья 170. В целях совершенствования бюджетного законодательства Правительство Республики Казахстан вправе осуществлять реализацию пилотного проекта, предусматривающего блочное бюджетирование";
+}
+
+// --- Ст. 171: ответственность за нарушение бюджетного законодательства ------
+// Статья отсылочная: вид и мера ответственности установлены ДРУГИМИ законами.
+// Поэтому выводится наступление ответственности, а не санкция; перенос меры
+// сюда был бы переносом чужой нормы через границу пакета.
+
+relation budget_law_violation(b: Body) kind institutional {
+    label ru-KZ official "лицом допущено нарушение бюджетного законодательства Республики Казахстан";
+}
+
+relation liability_arises(b: Body) kind institutional {
+    label ru-KZ official "наступает ответственность, установленная законами Республики Казахстан";
+}
+
+@source(BC_ART171) {
+    rule LiabilityForBudgetLawViolation(b: Body) strict {
+        when budget_law_violation(b);
+        then liability_arises(b);
+        label ru-KZ official "Статья 171. Нарушение бюджетного законодательства Республики Казахстан влечёт ответственность, установленную законами Республики Казахстан";
+    }
+
+    // Нарушение выводится из УЖЕ ВЫРАЖЕННЫХ норм кодекса, а не приходит фактом
+    // дела: иначе дело сообщало бы вывод, ради которого статья существует.
+    // Три входа — по одному на каждую группу выраженных запретов и нормативов.
+
+    rule ViolationByUnlawfulSequester(b: Body, p: BudgetProgramme, a: Administrator) strict {
+        when sequester_unlawful(p);
+        when programme_administrator(p, a);
+        when received_budget_funds(b, p);
+        then budget_law_violation(b);
+        label ru-KZ official "Статья 171. Секвестр расхода, секвестру не подлежащего, есть нарушение бюджетного законодательства";
+    }
+
+    rule ViolationByCrossLevelFunding(b: Body, p: BudgetProgramme, bud: Budget) strict {
+        when cross_level_funding(p, bud);
+        when received_budget_funds(b, p);
+        then budget_law_violation(b);
+        label ru-KZ official "Статья 171. Финансирование расхода из бюджета чужого уровня есть нарушение бюджетного законодательства";
+    }
+
+    rule ViolationByLateReturnOfMisusedFunds(b: Body, t: Transfer) strict {
+        when return_late(t);
+        when transfer_received_by(t, b);
+        then budget_law_violation(b);
+        label ru-KZ official "Статья 171. Невозврат нецелевого трансферта в трёхмесячный срок есть нарушение бюджетного законодательства";
+    }
+}
+
+// --- Мосты к целям акта (DECISION-0089) -------------------------------------
+// Домен свойства §270 в срезе v1 — ОДИН связыватель и УНАРНЫЙ предикат.
+// Нормы кодекса чаще двуместны (расход и бюджет, документ и участник), и
+// перевод их следствий в унарную форму — не новая норма, а проекция уже
+// выведенной: правило берёт СВОЙ же вывод и забывает второй аргумент.
+// Отдельные предикаты, а не переписанные головы, потому что забывание
+// аргумента есть утверждение о ПРЕДМЕТЕ («этот расход»), и оно должно быть
+// видно в разборе отдельной строкой.
+
+relation cross_level_funded(p: BudgetProgramme) kind institutional {
+    label ru-KZ official "расход финансируется из бюджета не своего уровня";
+}
+
+@source(BC_ART29)
+rule CrossLevelFundedProjection(p: BudgetProgramme, b: Budget) strict {
+    when cross_level_funding(p, b);
+    then cross_level_funded(p);
+    label ru-KZ official "Статья 29 пункт 3. Расход, финансируемый из бюджета чужого уровня, есть расход с межуровневым финансированием";
+}
+
+relation reserve_measured(r: Reserve) kind institutional {
+    label ru-KZ official "объём резерва и объём доходов соответствующего бюджета по делу известны";
+}
+
+@source(BC_ART19)
+rule ReserveMeasuredProjection(r: Reserve, b: Budget, amount: Money, revenue: Money) strict {
+    when reserve_of(r, b);
+    when reserve_amount(r, amount);
+    when planned_revenue_without_transfers(b, revenue);
+    then reserve_measured(r);
+    label ru-KZ official "Статья 19. Резерв, объём которого и объём доходов бюджета известны, поддаётся оценке по границам Кодекса";
+}
+
+relation publication_owed(d: ProcessDocument) kind institutional {
+    label ru-KZ official "документ бюджетного процесса подлежит публикации";
+}
+
+@source(BC_ART40)
+rule PublicationOwedProjection(d: ProcessDocument, b: Body) defeasible {
+    when publication_required(d, b);
+    then publication_owed(d);
+    label ru-KZ official "Статья 40. Документ, публикация которого отнесена к участнику, подлежит публикации";
+}
+
+relation credit_procedure_followed(c: BudgetCredit) kind institutional {
+    label ru-KZ official "решение о предоставлении бюджетного кредита прошло процедуру, названную статьёй 155 настоящего Кодекса";
+}
+
+@source(BC_ART155) {
+    rule CreditProcedureByExpediency(c: BudgetCredit) strict {
+        when credit_expediency_determined(c);
+        then credit_procedure_followed(c);
+        label ru-KZ official "Статья 155 подпункт 1). Процедура пройдена определением целесообразности бюджетного кредитования";
+    }
+
+    rule CreditProcedureByCashDeficitExemption(c: BudgetCredit) strict {
+        when cash_deficit_credit(c);
+        then credit_procedure_followed(c);
+        label ru-KZ official "Статья 155 подпункт 1). Для кредита на покрытие дефицита наличности процедура пройдена самим изъятием статьи";
+    }
+}
+

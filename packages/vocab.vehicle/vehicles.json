@@ -1,0 +1,143 @@
+{
+  "schemaVersion": "vocab.vehicle.vehicles/0.1",
+  "origin": "названия видов и категорий подтверждены закреплёнными байтами корпуса: статья 19 пункт 6 Закона РК № 446-II об ОГПО ВТС (corpus/laws/kz/laws/ogpo-vts/sources.law, столбец «Классификация в соответствии с НПА МВД РК»), ПДД РК пункт 151 и Закон о правах пассажиров (подкатегории C1, D1). Закреплённые тексты пишут буквы вразнобой (кириллические «Д», «С» и латинские D, D1); словарь нормализует коды к латинице",
+  "queue": "категории A1, B1, BE, CE, DE, Tm, Tb закона о дорожном движении заводятся после закрепления его байтов в дереве, новой версией словаря",
+  "categories": [
+    {
+      "name": "A",
+      "code": "A",
+      "parent": null,
+      "ru": "категория A (мототранспортные средства)",
+      "kk": "A санаты (мотокөлік құралдары)",
+      "en": "category A (motorcycle-class vehicles)"
+    },
+    {
+      "name": "B",
+      "code": "B",
+      "parent": null,
+      "ru": "категория B (легковые автомобили)",
+      "kk": "B санаты (жеңіл автомобильдер)",
+      "en": "category B (passenger cars)"
+    },
+    {
+      "name": "C",
+      "code": "C",
+      "parent": null,
+      "ru": "категория C (грузовые автомобили)",
+      "kk": "C санаты (жүк автомобильдері)",
+      "en": "category C (goods vehicles)"
+    },
+    {
+      "name": "D",
+      "code": "D",
+      "parent": null,
+      "ru": "категория D (автобусы)",
+      "kk": "D санаты (автобустар)",
+      "en": "category D (buses)"
+    },
+    {
+      "name": "E",
+      "code": "E",
+      "parent": null,
+      "ru": "категория E (составы транспортных средств с тягачом)",
+      "kk": "E санаты (тартқышы бар көлік құралдарының құрамдары)",
+      "en": "category E (vehicle combinations with a towing vehicle)"
+    },
+    {
+      "name": "C1",
+      "code": "C1",
+      "parent": "C",
+      "ru": "подкатегория C1",
+      "kk": "C1 қосалқы санаты",
+      "en": "subcategory C1"
+    },
+    {
+      "name": "D1",
+      "code": "D1",
+      "parent": "D",
+      "ru": "подкатегория D1 (автобусы малой вместимости)",
+      "kk": "D1 қосалқы санаты (аз сыйымдылықты автобустар)",
+      "en": "subcategory D1 (small-capacity buses)"
+    }
+  ],
+  "kinds": [
+    {
+      "name": "PASSENGER_CAR",
+      "category": "B",
+      "ru": "легковой автомобиль",
+      "kk": "жеңіл автомобиль",
+      "en": "passenger car"
+    },
+    {
+      "name": "BUS",
+      "category": "D",
+      "ru": "автобус",
+      "kk": "автобус",
+      "en": "bus"
+    },
+    {
+      "name": "FREIGHT_VEHICLE",
+      "category": "C",
+      "ru": "грузовой автомобиль",
+      "kk": "жүк автомобилі",
+      "en": "freight vehicle"
+    },
+    {
+      "name": "TROLLEYBUS",
+      "category": null,
+      "ru": "троллейбус",
+      "kk": "троллейбус",
+      "en": "trolleybus"
+    },
+    {
+      "name": "TRAM",
+      "category": null,
+      "ru": "трамвай",
+      "kk": "трамвай",
+      "en": "tram"
+    },
+    {
+      "name": "MOTOR_VEHICLE",
+      "category": "A",
+      "ru": "мототранспортное средство",
+      "kk": "мотокөлік құралы",
+      "en": "motor vehicle (motorcycle class)"
+    },
+    {
+      "name": "TRAILER",
+      "category": "E",
+      "ru": "прицеп",
+      "kk": "тіркеме",
+      "en": "trailer"
+    },
+    {
+      "name": "SEMI_TRAILER",
+      "category": "E",
+      "ru": "полуприцеп",
+      "kk": "жартылай тіркеме",
+      "en": "semi-trailer"
+    }
+  ],
+  "labels": "подписи — названия, не определения: пороги массы и числа мест принадлежат классификационному акту и предметным нормам, в словарь не входят",
+  "serviceVocabulary": {
+    "entities": [
+      ["Owner", "владелец транспортного средства"], ["Component", "обслуживаемый компонент транспортного средства"], ["ServiceEvent", "событие обслуживания"], ["OdometerReading", "показание одометра"], ["Tyre", "шина в позиции на оси"], ["Document", "документ водителя или транспортного средства"], ["Symptom", "предъявленный симптом"], ["DtcCode", "код диагностической неисправности"], ["FuelFill", "заправка топливом"], ["Trip", "поездка"], ["Axle", "ось транспортного средства"]
+    ],
+    "enums": [
+      ["ComponentKind", ["engine_oil", "oil_filter", "air_filter", "cabin_filter", "fuel_filter", "timing_belt", "brake_fluid", "coolant", "spark_plugs", "brake_pads", "brake_discs", "battery", "tyres"]],
+      ["DocumentKind", ["driver_licence", "registration", "ogpo_policy", "technical_inspection", "power_of_attorney"]],
+      ["TyreSeason", ["summer", "winter", "all_season"]],
+      ["TyrePosition", ["front_left", "front_right", "rear_left", "rear_right", "spare"]]
+    ],
+    "relations": [
+      "vehicle_vin(vehicle: Vehicle, vin: Text)", "vehicle_owner(vehicle: Vehicle, owner: Owner)", "ownership_started_on(vehicle: Vehicle, owner: Owner, date: Date)",
+      "component_kind(component: Component, kind: ComponentKind)", "service_component(service: ServiceEvent, component: Component)", "service_date(service: ServiceEvent, date: Date)", "service_odometer(service: ServiceEvent, reading: OdometerReading)", "service_evidence(service: ServiceEvent, proof: vocab.maintenance::Evidence)",
+      "odometer_vehicle(reading: OdometerReading, vehicle: Vehicle)", "odometer_value(reading: OdometerReading, value: Quantity)", "odometer_date(reading: OdometerReading, date: Date)", "odometer_evidence(reading: OdometerReading, proof: vocab.maintenance::Evidence)",
+      "tyre_vehicle(tyre: Tyre, vehicle: Vehicle)", "tyre_position(tyre: Tyre, position: TyrePosition)", "tyre_size(tyre: Tyre, size: Text)", "tyre_load_index(tyre: Tyre, index: Text)", "tyre_speed_index(tyre: Tyre, index: Text)", "tyre_dot_week(tyre: Tyre, week: Integer)", "tyre_dot_year(tyre: Tyre, year: Integer)", "tyre_tread_measurement(tyre: Tyre, measurement: vocab.maintenance::Measurement)", "tyre_season(tyre: Tyre, season: TyreSeason)",
+      "document_kind(document: Document, kind: DocumentKind)", "document_number(document: Document, number: Text)", "document_issued_on(document: Document, date: Date)", "document_valid_until(document: Document, date: Date)",
+      "symptom_vehicle(symptom: Symptom, vehicle: Vehicle)", "symptom_text(symptom: Symptom, text: Text)", "dtc_vehicle(code: DtcCode, vehicle: Vehicle)", "dtc_text(code: DtcCode, text: Text)",
+      "fuel_fill_vehicle(fill: FuelFill, vehicle: Vehicle)", "fuel_fill_date(fill: FuelFill, date: Date)", "fuel_fill_litres(fill: FuelFill, value: Quantity)", "fuel_fill_odometer(fill: FuelFill, reading: OdometerReading)", "fuel_fill_evidence(fill: FuelFill, proof: vocab.maintenance::Evidence)",
+      "trip_vehicle(trip: Trip, vehicle: Vehicle)", "trip_distance(trip: Trip, value: Quantity)", "trip_fuel(trip: Trip, value: Quantity)"
+    ]
+  }
+}

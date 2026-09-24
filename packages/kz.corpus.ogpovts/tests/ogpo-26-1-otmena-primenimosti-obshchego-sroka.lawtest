@@ -1,0 +1,143 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// DECISION-0344. ЧТО ИМЕННО ОТВОДИТ ПРЯМОЕ УРЕГУЛИРОВАНИЕ: применимость общего
+// срока, а не вывод с датой. Свойство, которое закрепляют эти сцены, —
+// «совпадение дня общего и специального срока не снимает специальный срок».
+//
+// Форма проверки. В действующем законе сроки не совпадают (7 и 15 рабочих
+// дней от одного дня), и построить совпадение из одних только фактов события
+// нельзя. Поэтому свойство предъявлено там, где оно живёт: цель поражения
+// `general_term_applies(demand)` БЕЗЗНАЧНА, и потому ни один день — ни чужой,
+// ни тождественный — под неё не подпадает. Последняя сцена доводит это до
+// самого опасного случая: день специального срока подан делом РАВНЫМ дню
+// общего срока, и вывод статьи 26-1 всё равно стоит.
+//
+// Расчёт дней вручную. Документы получены в четверг 23.07.2026; счёт со
+// следующего дня. Семь рабочих дней: 24 (1), 27 (2), 28 (3), 29 (4), 30 (5),
+// 31 (6), 3 августа (7) → 03.08.2026. Пятнадцать рабочих дней → 13.08.2026
+// (разобрано в `ogpo-26-granitsa-redaktsii.lawtest`).
+
+context profile KZ_OGPO_DEADLINES_26_1 {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+// 1. Общий срок к требованию прямого урегулирования НЕ ПРИМЕНЯЕТСЯ: дефитер
+//    статьи 26-1 пункта 2 снимает именно применимость.
+test "urn:query:ogpo-26-1-obshchiy-srok-neprimenim" {
+    given {
+        context extends KZ_OGPO_DEADLINES_26_1 {
+            decision_time @2026-08-05T12:00:00+05:00;
+            knowledge_time @2026-08-05T12:00:00+05:00;
+            legal_time @2026-08-05;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "d0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d261"), entity_ref("urn:kz:ogpo:accident:d261"), entity_ref("urn:kz:ogpo:holder:d261"), entity_ref("urn:kz:ogpo:insurer:d261")) { origin case_input; }
+        assert "d1": documents_received_on(entity_ref("urn:kz:ogpo:claim:d261"), @2026-07-23) { origin case_input; }
+        assert "d2": direct_settlement_requested(entity_ref("urn:kz:ogpo:claim:d261")) { origin case_input; }
+        assert "d3": tortfeasor_has_compulsory_policy(entity_ref("urn:kz:ogpo:accident:d261")) { origin case_input; }
+    }
+    evaluate truth(general_term_applies(entity_ref("urn:kz:ogpo:claim:d261")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2. День общего срока при этом ИСЧИСЛЕН и остаётся видимым: снята
+//    применимость, а не расчёт статьи 26 пункта 1. Отсюда же видно, что
+//    поражение не трогает ни одного дня.
+test "urn:query:ogpo-26-1-den-obshchego-sroka-ischislen" {
+    given {
+        context extends KZ_OGPO_DEADLINES_26_1 {
+            decision_time @2026-08-05T12:00:00+05:00;
+            knowledge_time @2026-08-05T12:00:00+05:00;
+            legal_time @2026-08-05;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "d0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d261"), entity_ref("urn:kz:ogpo:accident:d261"), entity_ref("urn:kz:ogpo:holder:d261"), entity_ref("urn:kz:ogpo:insurer:d261")) { origin case_input; }
+        assert "d1": documents_received_on(entity_ref("urn:kz:ogpo:claim:d261"), @2026-07-23) { origin case_input; }
+        assert "d2": direct_settlement_requested(entity_ref("urn:kz:ogpo:claim:d261")) { origin case_input; }
+        assert "d3": tortfeasor_has_compulsory_policy(entity_ref("urn:kz:ogpo:accident:d261")) { origin case_input; }
+    }
+    evaluate truth(general_payment_due_day(entity_ref("urn:kz:ogpo:claim:d261"), @2026-08-13));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// 3. Сроком требования остаётся семидневный срок статьи 26-1, и он один.
+test "urn:query:ogpo-26-1-srok-trebovaniya-semidnevnyy" {
+    given {
+        context extends KZ_OGPO_DEADLINES_26_1 {
+            decision_time @2026-08-05T12:00:00+05:00;
+            knowledge_time @2026-08-05T12:00:00+05:00;
+            legal_time @2026-08-05;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "d0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d261"), entity_ref("urn:kz:ogpo:accident:d261"), entity_ref("urn:kz:ogpo:holder:d261"), entity_ref("urn:kz:ogpo:insurer:d261")) { origin case_input; }
+        assert "d1": documents_received_on(entity_ref("urn:kz:ogpo:claim:d261"), @2026-07-23) { origin case_input; }
+        assert "d2": direct_settlement_requested(entity_ref("urn:kz:ogpo:claim:d261")) { origin case_input; }
+        assert "d3": tortfeasor_has_compulsory_policy(entity_ref("urn:kz:ogpo:accident:d261")) { origin case_input; }
+    }
+    evaluate truth(payment_due_day(entity_ref("urn:kz:ogpo:claim:d261"), @2026-08-03));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// 4. И день общего срока сроком требования НЕ становится.
+test "urn:query:ogpo-26-1-den-obshchego-sroka-ne-srok-trebovaniya" {
+    given {
+        context extends KZ_OGPO_DEADLINES_26_1 {
+            decision_time @2026-08-05T12:00:00+05:00;
+            knowledge_time @2026-08-05T12:00:00+05:00;
+            legal_time @2026-08-05;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "d0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d261"), entity_ref("urn:kz:ogpo:accident:d261"), entity_ref("urn:kz:ogpo:holder:d261"), entity_ref("urn:kz:ogpo:insurer:d261")) { origin case_input; }
+        assert "d1": documents_received_on(entity_ref("urn:kz:ogpo:claim:d261"), @2026-07-23) { origin case_input; }
+        assert "d2": direct_settlement_requested(entity_ref("urn:kz:ogpo:claim:d261")) { origin case_input; }
+        assert "d3": tortfeasor_has_compulsory_policy(entity_ref("urn:kz:ogpo:accident:d261")) { origin case_input; }
+    }
+    evaluate truth(payment_due_day(entity_ref("urn:kz:ogpo:claim:d261"), @2026-08-13));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 5. САМОЕ ОПАСНОЕ ДЕЛО: день специального срока СОВПАДАЕТ с днём общего.
+//    День возмещения подан делом (13.08.2026) — ровно тот день, который
+//    исчислила статья 26 пункта 1, — а посылок правила `DirectSettlementDueDay`
+//    делу не дано, чтобы в отношении стоял один-единственный день. Срок
+//    требования обязан быть выведен: поражена применимость общего порядка,
+//    и к выводу статьи 26-1 это отношения не имеет, каким бы днём он ни был.
+//
+//    ЧЕСТНАЯ ГРАНИЦА ЭТОЙ СЦЕНЫ (замер 20.09.2026). На ПРЕЖНЕЙ идиоме
+//    (`defeat payment_due_day(demand, <день общего срока>)`) она тоже зелена:
+//    здесь вывод статьи 26-1 держится СТРОГОЙ опорой, а «defeasible candidate
+//    никогда не побеждает strict support» (§107). Спящий дефект будил второй
+//    множитель — поражаемая опора специального дня; в находке F-26 его дала
+//    гипотетическая поправка, объявившая десятидневный срок поражаемым
+//    правилом, и тогда отмена по литералу сносила и специальный вывод. Из
+//    текста действующего закона этот множитель не строится, и потому сцена
+//    закрепляет СВОЙСТВО, а не воспроизводит отказ; разбор — DECISION-0344.
+test "urn:query:ogpo-26-1-sovpadenie-dney-ne-snimaet-spetsialnyy-srok" {
+    given {
+        context extends KZ_OGPO_DEADLINES_26_1 {
+            decision_time @2026-08-05T12:00:00+05:00;
+            knowledge_time @2026-08-05T12:00:00+05:00;
+            legal_time @2026-08-05;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s1": documents_received_on(entity_ref("urn:kz:ogpo:claim:d261s"), @2026-07-23) { origin case_input; }
+        assert "s2": direct_settlement_requested(entity_ref("urn:kz:ogpo:claim:d261s")) { origin case_input; }
+        assert "s3": direct_settlement_due_day(entity_ref("urn:kz:ogpo:claim:d261s"), @2026-08-13) { origin case_input; }
+    }
+    evaluate truth(payment_due_day(entity_ref("urn:kz:ogpo:claim:d261s"), @2026-08-13));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

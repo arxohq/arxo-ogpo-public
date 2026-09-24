@@ -1,0 +1,31 @@
+{
+  "retrieved_at": "2026-09-19T00:00:00Z",
+  "editions": [
+    {
+      "edition": "BONUS_MALUS_RU_2022",
+      "in_force": [
+        "2022-11-23",
+        "2025-04-08"
+      ],
+      "portal_revision": "2022-11-22",
+      "document": "7ce689e3-59f5-4a52-87e7-d893ab39065e",
+      "text": "sources/bonus-malus/v2022-11-23.txt",
+      "points": 5,
+      "annex_rows": 15,
+      "same_rules_body_as_portal_revision": "2024-12-26"
+    },
+    {
+      "edition": "BONUS_MALUS_RU_2025",
+      "in_force": [
+        "2025-04-08",
+        "2025-12-23"
+      ],
+      "portal_revision": "2025-04-07",
+      "document": "2c74d568-b354-4f90-869a-95e7896c5905",
+      "text": "sources/bonus-malus/v2025-04-08.txt",
+      "points": 15,
+      "annex_rows": 17,
+      "same_rules_body_as_portal_revision": null
+    }
+  ]
+}

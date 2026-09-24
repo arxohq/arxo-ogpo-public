@@ -1,0 +1,140 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// DECISION-0344 в статье 12-1 пункте 4. ЧТО ИМЕННО ОТВОДИТ ОГОВОРКА «ЕСЛИ
+// ИНОЕ НЕ ПРЕДУСМОТРЕНО ДОГОВОРОМ»: применимость порядка, по которому днём
+// заключения считается день платежа, а не сам день. Цель отмены беззначна
+// (`premium_payment_day_is_conclusion_day(contract)` и
+// `first_instalment_day_is_conclusion_day(contract)`), и потому под неё не
+// подпадает ни один день — ни чужой, ни тождественный.
+//
+// Прежние сцены пары пункта 4 (`ogpo-elektronnyy-obmen.lawtest`) остаются
+// зелёными дословно: применимость выводится на тех же входах, что прежде
+// выводился день, и отводится на том же единственном факте оговорки.
+//
+// ЧЕСТНАЯ ГРАНИЦА СЦЕНЫ 4 (та же, что у `ogpo-26-1-…`). На ПРЕЖНЕЙ идиоме
+// (`defeat contract_concluded_on(contract, <день платежа>)`) она тоже зелена:
+// договорный день выводит СТРОГОЕ `ConcludedOnStipulatedDay`, а «defeasible
+// candidate никогда не побеждает strict support» (§107). Из текста статьи
+// 12-1 второй множитель §3 DECISION-0344 — поражаемая опора специального дня
+// — не строится, и потому сцена закрепляет СВОЙСТВО, а не воспроизводит
+// отказ. Она красна для формы, где цель отмены снова понесёт день, и для
+// любой будущей правки, делающей опору договорного дня поражаемой.
+
+// 1. Оговорка отводит ПРИМЕНИМОСТЬ порядка «день уплаты премии».
+test "urn:query:ogpo-12-1-primenimost-dnya-platezha-otvedena" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-121-a0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:p1"), DigitalResourceExchange) {
+            origin case_input;
+        }
+        assert "ogpo-121-a1": premium_paid_on(entity_ref("urn:kz:ogpo:contract:p1"), @2026-09-01) {
+            origin case_input;
+        }
+        assert "ogpo-121-a2": contract_stipulates_conclusion_day(entity_ref("urn:kz:ogpo:contract:p1"), @2026-09-05) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_payment_day_is_conclusion_day(entity_ref("urn:kz:ogpo:contract:p1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2. Без оговорки порядок применяется: умолчание выведено на том же входе,
+//    что и прежнее общее правило.
+test "urn:query:ogpo-12-1-primenimost-dnya-platezha-stoit" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-121-b0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:p2"), DigitalResourceExchange) {
+            origin case_input;
+        }
+        assert "ogpo-121-b1": premium_paid_on(entity_ref("urn:kz:ogpo:contract:p2"), @2026-09-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_payment_day_is_conclusion_day(entity_ref("urn:kz:ogpo:contract:p2")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// 3. Рассрочка юридического лица — ВТОРОЙ порядок и второй дефитер: оговорка
+//    отводит применимость дня первого взноса, а днём заключения становится
+//    договорный день.
+test "urn:query:ogpo-12-1-primenimost-dnya-vznosa-otvedena" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-121-c0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:p3"), DigitalResourceExchange) {
+            origin case_input;
+        }
+        assert "ogpo-121-c1": insured_kind_of(entity_ref("urn:kz:ogpo:contract:p3"), LegalEntity) {
+            origin case_input;
+        }
+        assert "ogpo-121-c2": first_premium_instalment_paid_on(entity_ref("urn:kz:ogpo:contract:p3"), @2026-09-01) {
+            origin case_input;
+        }
+        assert "ogpo-121-c3": contract_stipulates_conclusion_day(entity_ref("urn:kz:ogpo:contract:p3"), @2026-09-05) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(first_instalment_day_is_conclusion_day(entity_ref("urn:kz:ogpo:contract:p3")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 4. САМОЕ ОПАСНОЕ ДЕЛО: договорный день РАВЕН дню уплаты премии. Вывод
+//    специальной нормы (`ConcludedOnStipulatedDay`) не гаснет — цель отмены
+//    беззначна и к дню отношения не имеет.
+test "urn:query:ogpo-12-1-sovpadenie-dney-ne-snimaet-dogovornyy-den" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-121-d0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:p4"), DigitalResourceExchange) {
+            origin case_input;
+        }
+        assert "ogpo-121-d1": premium_paid_on(entity_ref("urn:kz:ogpo:contract:p4"), @2026-09-01) {
+            origin case_input;
+        }
+        assert "ogpo-121-d2": contract_stipulates_conclusion_day(entity_ref("urn:kz:ogpo:contract:p4"), @2026-09-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_concluded_on(entity_ref("urn:kz:ogpo:contract:p4"), @2026-09-01));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

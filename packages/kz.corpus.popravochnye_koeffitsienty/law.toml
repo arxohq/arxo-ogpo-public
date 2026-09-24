@@ -1,0 +1,41 @@
+# Манифест §10 пакета поправочных коэффициентов к коэффициентам по территории
+# регистрации транспортного средства (пункт 3-1 статьи 19 Закона РК № 446-II).
+[package]
+name = "kz.corpus.popravochnye_koeffitsienty"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:kz:corpus:clir:popravochnye-koeffitsienty"
+
+[features]
+semanticLayer = "L1"
+
+# ИМПОРТ ИДЁТ В ОДНУ СТОРОНУ: подзаконный пакет читает закон, а не наоборот.
+# Размеры утверждены ПО ТЕРРИТОРИЯМ ЗАКОНА — те же двадцать строк, что у
+# пункта 3 статьи 19, — и второй перечень территорий был бы копией закона в
+# подзаконном акте. Поэтому пакет импортирует `kz.corpus.ogpovts`, пользуется
+# его перечислением `RegistrationTerritory` и производит объявленный там
+# `territory_adjustment_coefficient`. Обратное направление замкнуло бы кольцо.
+[dependencies]
+"kz.corpus.ogpovts" = "0.1.0"
+"vocab.geo" = "0.1.0"
+"kz.corpus.bonus_malus" = "0.2.0"
+
+[metadata]
+act = "kz-popravochnye-koeffitsienty"
+title = "Поправочные коэффициенты к коэффициентам по территории регистрации транспортного средства (постановления Правления АРРФР № 46, № 82 и № 72)"
+primarySource = "PK_METODIKA"
+jurisdiction = "KZ"
+instrument = "resolution"
+sourceFidelity = "pinned_unofficial_copy"
+issuer = "Агентство Республики Казахстан по регулированию и развитию финансового рынка"
+legalStatus = "in_force"
+# Каждая из сорока величин сверена с закреплёнными байтами независимым
+# чтением `tools/tables.py --check`, а не глазами.
+verifiedAgainstSource = true
+
+[[tests]]
+family = "kz.corpus.popravochnye_koeffitsienty#razmery"
+regression = false
+suites = ["tests/pk-razmery-i-gody.lawtest"]
+world = ["kz.corpus.popravochnye_koeffitsienty", "kz.corpus.ogpovts",
+         "vocab.geo", "kz.corpus.bonus_malus"]

@@ -1,0 +1,189 @@
+// ПОРОЖДЕНО tools/gen_regions.py из regions.json — руками не правится
+// (инвариант 2 CLAUDE.md). Коды — ISO 3166-2:KZ; опорные точки —
+// картографические (WGS84, градусы, lat/lon), не правовой факт.
+
+language "law.core" version "0.2";
+package vocab.geo version "0.1.0";
+namespace "urn:law:vocab:geo";
+
+pub const ABAI: Region = entity_ref("urn:law:vocab:geo:kz:region:abai") {
+    label ru official "Абайская область";
+    label kk official "Абай облысы";
+    label en official "Abai Region";
+};
+
+pub const AKMOLA: Region = entity_ref("urn:law:vocab:geo:kz:region:akmola") {
+    label ru official "Акмолинская область";
+    label kk official "Ақмола облысы";
+    label en official "Akmola Region";
+};
+
+pub const AKTOBE: Region = entity_ref("urn:law:vocab:geo:kz:region:aktobe") {
+    label ru official "Актюбинская область";
+    label kk official "Ақтөбе облысы";
+    label en official "Aktobe Region";
+};
+
+pub const ALMATY: Region = entity_ref("urn:law:vocab:geo:kz:region:almaty") {
+    label ru official "Алматинская область";
+    label kk official "Алматы облысы";
+    label en official "Almaty Region";
+};
+
+pub const ATYRAU: Region = entity_ref("urn:law:vocab:geo:kz:region:atyrau") {
+    label ru official "Атырауская область";
+    label kk official "Атырау облысы";
+    label en official "Atyrau Region";
+};
+
+pub const WEST_KAZAKHSTAN: Region = entity_ref("urn:law:vocab:geo:kz:region:west-kazakhstan") {
+    label ru official "Западно-Казахстанская область";
+    label kk official "Батыс Қазақстан облысы";
+    label en official "West Kazakhstan Region";
+};
+
+pub const ZHAMBYL: Region = entity_ref("urn:law:vocab:geo:kz:region:zhambyl") {
+    label ru official "Жамбылская область";
+    label kk official "Жамбыл облысы";
+    label en official "Zhambyl Region";
+};
+
+pub const ZHETISU: Region = entity_ref("urn:law:vocab:geo:kz:region:zhetisu") {
+    label ru official "Жетысуская область";
+    label kk official "Жетісу облысы";
+    label en official "Zhetisu Region";
+};
+
+pub const KARAGANDA: Region = entity_ref("urn:law:vocab:geo:kz:region:karaganda") {
+    label ru official "Карагандинская область";
+    label kk official "Қарағанды облысы";
+    label en official "Karaganda Region";
+};
+
+pub const KOSTANAY: Region = entity_ref("urn:law:vocab:geo:kz:region:kostanay") {
+    label ru official "Костанайская область";
+    label kk official "Қостанай облысы";
+    label en official "Kostanay Region";
+};
+
+pub const KYZYLORDA: Region = entity_ref("urn:law:vocab:geo:kz:region:kyzylorda") {
+    label ru official "Кызылординская область";
+    label kk official "Қызылорда облысы";
+    label en official "Kyzylorda Region";
+};
+
+pub const MANGYSTAU: Region = entity_ref("urn:law:vocab:geo:kz:region:mangystau") {
+    label ru official "Мангистауская область";
+    label kk official "Маңғыстау облысы";
+    label en official "Mangystau Region";
+};
+
+pub const PAVLODAR: Region = entity_ref("urn:law:vocab:geo:kz:region:pavlodar") {
+    label ru official "Павлодарская область";
+    label kk official "Павлодар облысы";
+    label en official "Pavlodar Region";
+};
+
+pub const NORTH_KAZAKHSTAN: Region = entity_ref("urn:law:vocab:geo:kz:region:north-kazakhstan") {
+    label ru official "Северо-Казахстанская область";
+    label kk official "Солтүстік Қазақстан облысы";
+    label en official "North Kazakhstan Region";
+};
+
+pub const TURKISTAN: Region = entity_ref("urn:law:vocab:geo:kz:region:turkistan") {
+    label ru official "Туркестанская область";
+    label kk official "Түркістан облысы";
+    label en official "Turkistan Region";
+};
+
+pub const ULYTAU: Region = entity_ref("urn:law:vocab:geo:kz:region:ulytau") {
+    label ru official "Улытауская область";
+    label kk official "Ұлытау облысы";
+    label en official "Ulytau Region";
+};
+
+pub const EAST_KAZAKHSTAN: Region = entity_ref("urn:law:vocab:geo:kz:region:east-kazakhstan") {
+    label ru official "Восточно-Казахстанская область";
+    label kk official "Шығыс Қазақстан облысы";
+    label en official "East Kazakhstan Region";
+};
+
+pub const ASTANA: Region = entity_ref("urn:law:vocab:geo:kz:region:astana") {
+    label ru official "город Астана";
+    label kk official "Астана қаласы";
+    label en official "Astana";
+};
+
+pub const ALMATY_CITY: Region = entity_ref("urn:law:vocab:geo:kz:region:almaty-city") {
+    label ru official "город Алматы";
+    label kk official "Алматы қаласы";
+    label en official "Almaty";
+};
+
+pub const SHYMKENT: Region = entity_ref("urn:law:vocab:geo:kz:region:shymkent") {
+    label ru official "город Шымкент";
+    label kk official "Шымкент қаласы";
+    label en official "Shymkent";
+};
+
+// --- Атрибуты регионов: код и опорная точка ---------------------------------
+
+assert region_code(ABAI, "KZ-10");
+assert region_anchor(ABAI, 48.90, 80.00);
+
+assert region_code(AKMOLA, "KZ-11");
+assert region_anchor(AKMOLA, 51.90, 69.60);
+
+assert region_code(AKTOBE, "KZ-15");
+assert region_anchor(AKTOBE, 48.70, 58.00);
+
+assert region_code(ALMATY, "KZ-19");
+assert region_anchor(ALMATY, 44.60, 77.30);
+
+assert region_code(ATYRAU, "KZ-23");
+assert region_anchor(ATYRAU, 47.30, 52.10);
+
+assert region_code(WEST_KAZAKHSTAN, "KZ-27");
+assert region_anchor(WEST_KAZAKHSTAN, 50.10, 50.60);
+
+assert region_code(ZHAMBYL, "KZ-31");
+assert region_anchor(ZHAMBYL, 44.00, 72.00);
+
+assert region_code(ZHETISU, "KZ-33");
+assert region_anchor(ZHETISU, 45.40, 79.40);
+
+assert region_code(KARAGANDA, "KZ-35");
+assert region_anchor(KARAGANDA, 49.30, 73.60);
+
+assert region_code(KOSTANAY, "KZ-39");
+assert region_anchor(KOSTANAY, 52.50, 63.60);
+
+assert region_code(KYZYLORDA, "KZ-43");
+assert region_anchor(KYZYLORDA, 45.20, 63.50);
+
+assert region_code(MANGYSTAU, "KZ-47");
+assert region_anchor(MANGYSTAU, 44.20, 53.50);
+
+assert region_code(PAVLODAR, "KZ-55");
+assert region_anchor(PAVLODAR, 52.20, 76.60);
+
+assert region_code(NORTH_KAZAKHSTAN, "KZ-59");
+assert region_anchor(NORTH_KAZAKHSTAN, 54.50, 68.90);
+
+assert region_code(TURKISTAN, "KZ-61");
+assert region_anchor(TURKISTAN, 43.30, 68.30);
+
+assert region_code(ULYTAU, "KZ-62");
+assert region_anchor(ULYTAU, 47.60, 67.70);
+
+assert region_code(EAST_KAZAKHSTAN, "KZ-63");
+assert region_anchor(EAST_KAZAKHSTAN, 49.40, 83.50);
+
+assert region_code(ASTANA, "KZ-71");
+assert region_anchor(ASTANA, 51.17, 71.45);
+
+assert region_code(ALMATY_CITY, "KZ-75");
+assert region_anchor(ALMATY_CITY, 43.24, 76.93);
+
+assert region_code(SHYMKENT, "KZ-79");
+assert region_anchor(SHYMKENT, 42.32, 69.59);

@@ -1,0 +1,30 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 150. Не допускается корректировка в четвёртом квартале текущего финансового года государственных инвестиционных проектов, предусматривающих снижение пока
+test "CATALOG-NOFOURTHQUARTERCORRECTION" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": fourth_quarter_correction(entity_ref("urn:kz:catalog:nofourthquartercorrection:v0"), entity_ref("urn:kz:catalog:nofourthquartercorrection:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(CorrectProjectInFourthQuarter, ACTIVE);
+}
+
+// Статья 150. Не допускается уменьшение сумм утверждённых (уточнённых) параметров местных государственных инвестиционных проектов, если такое уменьшение предполаг
+test "CATALOG-NOREDUCTIONRAISINGADVANCESHARE" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": advance_over_thirty_percent(entity_ref("urn:kz:catalog:noreductionraisingadvanceshare:v0")) { origin case_input; }
+        assert "cat-1": parameter_reduction_sought(entity_ref("urn:kz:catalog:noreductionraisingadvanceshare:v0"), entity_ref("urn:kz:catalog:noreductionraisingadvanceshare:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(ReduceProjectParameters, ACTIVE);
+}

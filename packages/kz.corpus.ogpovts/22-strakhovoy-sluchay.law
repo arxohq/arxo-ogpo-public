@@ -1,0 +1,759 @@
+// ОГПО ВТС, статья 22 — определение страхового случая и размера вреда.
+//
+// НАРЯД F3. Модуль закрывает разрыв, измеренный нарядом E4: мост
+// «ПДД → ОГПО ВТС» упирался не в отсутствие `pub` у соседа, а в отсутствие
+// у самого пакета нормы пункта 1 статьи 22. Пока страхового случая нет,
+// говорить «полис отвечает за это происшествие» праву нечем: статья 24 знает
+// пределы и размеры выплаты, но не знает, наступил ли случай.
+//
+// Второй разрыв, который смыкается здесь же (вопрос Q-13-06): размер вреда,
+// причинённого ИМУЩЕСТВУ, определяется не этим законом, а нормативным актом
+// уполномоченного органа — прямая отсылка части второй пункта 3 статьи 22.
+// Этот акт в корпусе есть (`kz.corpus.vred_ts`, Правила определения размера
+// вреда, причинённого транспортному средству), и его вывод здесь ЧИТАЕТСЯ,
+// а не переписывается.
+
+
+import kz.corpus.vred_ts version "0.1.0";
+
+// --- Пункт 1: факты, из которых складывается страховой случай ---------------
+
+pub relation contract_covers_vehicle(contract: InsuranceContract, vehicle: Vehicle)
+    kind empirical {
+    label ru-KZ official "транспортное средство указано в договоре обязательного страхования ответственности владельцев транспортных средств";
+}
+
+pub relation contract_insured_person(contract: InsuranceContract, owner: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "лицо является застрахованным по названному договору обязательного страхования";
+}
+
+pub relation accident_arose_from_vehicle_operation(accident: TrafficAccident,
+        owner: VehicleOwner, vehicle: Vehicle) kind empirical {
+    label ru-KZ official "транспортное происшествие произошло в результате эксплуатации застрахованным названного транспортного средства";
+}
+
+pub relation victim_recognized(accident: TrafficAccident, victim: Victim)
+    kind empirical {
+    label ru-KZ official "лицо признано потерпевшим в названном транспортном происшествии";
+}
+
+// «Вред причинён» — не отдельный факт дела, а СЛЕДСТВИЕ уже поданных величин:
+// пункт 1 называет три вида вреда (жизни, здоровью, имуществу), и каждый из
+// них у статьи 24 уже имеет своё отношение. Второй, «обобщающий» факт дела
+// позволил бы объявить страховой случай при нулевом вреде.
+relation harm_caused_to_victim(accident: TrafficAccident, victim: Victim)
+    kind institutional {
+    label ru-KZ official "названному потерпевшему причинён вред жизни, здоровью либо имуществу";
+}
+
+@source(LAW_446_ART22) {
+    rule HarmToLifeOrHealthIsHarm(
+        accident: TrafficAccident,
+        victim: Victim,
+        outcome: HarmToLifeOrHealthOutcome,
+    ) strict {
+        label ru-KZ official "Статья 22 пункт 1. Вред, причинённый жизни или здоровью потерпевшего, есть вред для целей страхового случая";
+        when harm_to_life_or_health(accident, victim, outcome);
+        then harm_caused_to_victim(accident, victim);
+    }
+
+    rule HarmToPropertyIsHarm(accident: TrafficAccident, victim: Victim, amount: Money) strict {
+        label ru-KZ official "Статья 22 пункт 1. Вред, причинённый имуществу потерпевшего, есть вред для целей страхового случая";
+        when property_harm_amount(accident, victim, amount);
+        then harm_caused_to_victim(accident, victim);
+    }
+}
+
+pub relation insured_civil_liability_arose(accident: TrafficAccident,
+        owner: VehicleOwner, victim: Victim) kind institutional {
+    label ru-KZ official "гражданско-правовая ответственность застрахованного по возмещению вреда, причинённого потерпевшему, наступила";
+}
+
+pub relation insured_event(contract: InsuranceContract, accident: TrafficAccident)
+    kind institutional {
+    label ru-KZ official "транспортное происшествие признаётся страховым случаем по названному договору обязательного страхования";
+}
+
+@source(LAW_446_ART22) {
+    rule InsuredCivilLiabilityArises(
+        accident: TrafficAccident,
+        owner: VehicleOwner,
+        victim: Victim,
+        vehicle: Vehicle,
+    ) strict {
+        label ru-KZ official "Статья 22 пункт 1. Ответственность застрахованного наступает по возмещению вреда, причинённого признанному потерпевшим лицу в результате эксплуатации застрахованным транспортного средства";
+        when accident_arose_from_vehicle_operation(accident, owner, vehicle);
+        when victim_recognized(accident, victim);
+        when harm_caused_to_victim(accident, victim);
+        then insured_civil_liability_arose(accident, owner, victim);
+    }
+
+    // ДОГОВОР ЗДЕСЬ НЕ ЛИШНИЙ. Пункт 1 признаёт страховым случаем не любое
+    // наступление ответственности, а наступление её у ЗАСТРАХОВАННОГО в
+    // результате эксплуатации ТОГО транспортного средства, которое УКАЗАНО В
+    // ДОГОВОРЕ. Оба совпадения проверяются, иначе полис отвечал бы за чужую
+    // машину того же владельца.
+    rule TrafficAccidentIsInsuredEvent(
+        contract: InsuranceContract,
+        accident: TrafficAccident,
+        owner: VehicleOwner,
+        victim: Victim,
+        vehicle: Vehicle,
+    ) strict {
+        label ru-KZ official "Статья 22 пункт 1. Страховым случаем признаётся факт наступления гражданско-правовой ответственности застрахованного в результате эксплуатации транспортного средства, указанного в договоре обязательного страхования";
+        when contract_insured_person(contract, owner);
+        when contract_covers_vehicle(contract, vehicle);
+        when accident_arose_from_vehicle_operation(accident, owner, vehicle);
+        when insured_civil_liability_arose(accident, owner, victim);
+        then insured_event(contract, accident);
+    }
+}
+
+// --- Пункт 3: размер вреда имуществу определяют Правила ---------------------
+//
+// Часть вторая пункта 3 отсылает к нормативному правовому акту
+// уполномоченного органа. `kz.corpus.vred_ts` и есть этот акт; его расчёт
+// связывается с происшествием и потерпевшим ФАКТОМ дела — «расчёт ведётся по
+// этому происшествию для этого потерпевшего». Утверждение о таком тождестве
+// правом не выводится: расчёт и происшествие — сущности разных актов.
+
+relation damage_assessment_for_victim(assessment: kz.corpus.vred_ts::RaschetVreda,
+        accident: TrafficAccident, victim: Victim) kind empirical {
+    label ru-KZ official "названный расчёт размера вреда, причинённого транспортному средству, произведён по этому транспортному происшествию в отношении этого потерпевшего";
+}
+
+@source(LAW_446_ART22)
+rule PropertyHarmAmountFromDamageRules(
+    assessment: kz.corpus.vred_ts::RaschetVreda,
+    accident: TrafficAccident,
+    victim: Victim,
+    amount: Money,
+) strict {
+    label ru-KZ official "Статья 22 пункт 3. Размер вреда, причинённого имуществу, определяется по нормативному правовому акту уполномоченного органа, и определённая им величина есть размер вреда для целей настоящего Закона";
+    when damage_assessment_for_victim(assessment, accident, victim);
+    when kz.corpus.vred_ts::strakhovaya_vyplata_pri_gibeli(assessment, amount);
+    then property_harm_amount(accident, victim, amount);
+}
+
+// --- Пункт 4: страховщик выплачивает определённый размер --------------------
+//
+// Голова СВОЯ, а не `insurance_payment_amount` статьи 24: та отвечает
+// «сколько причиталось бы», эта — «сколько подлежит выплате по НАСТУПИВШЕМУ
+// страховому случаю». Без пункта 1 первая величина считалась бы и там, где
+// полис не отвечает вовсе.
+
+pub relation insurance_payout_due(contract: InsuranceContract,
+        accident: TrafficAccident, victim: Victim, amount: Money)
+    kind institutional {
+    label ru-KZ official "страховая выплата, подлежащая осуществлению страховщиком потерпевшему по наступившему страховому случаю";
+}
+
+@source(LAW_446_ART22, quote = "Страховщик осуществляет страховую выплату в размере вреда, определенном в соответствии с настоящей статьей.")
+rule InsurerPaysDeterminedHarmAmount(
+    contract: InsuranceContract,
+    accident: TrafficAccident,
+    victim: Victim,
+    amount: Money,
+) strict {
+    label ru-KZ official "Статья 22 пункт 4. Страховщик осуществляет страховую выплату в размере вреда, определённом в соответствии с настоящей статьёй";
+    when insured_event(contract, accident);
+    when insurance_payment_amount(accident, victim, amount);
+    then insurance_payout_due(contract, accident, victim, amount);
+}
+
+// --- Статья 22-2 пункт 1: условия упрощённого порядка -----------------------
+//
+// НАРЯД F3, вопрос Q-13-05. Правила упрощённого порядка
+// (`kz.corpus.uproshchennoe_uregulirovanie`) читают условие «происшествие
+// отвечает требованиям пункта 1 статьи 22-2 Закона» ФАКТОМ ДЕЛА и записали
+// эту границу вслух. Условия принадлежат ЗАКОНУ, и здесь они наконец
+// выражены: пять требований подпунктов 1)–5) плюс общее условие отсутствия
+// потерпевших, которым причинён вред жизни и (или) здоровью.
+//
+// ВСЕ ШЕСТЬ — КОНЪЮНКТЫ ОДНОГО ПРАВИЛА, потому что пункт 1 требует их
+// «одновременно». Разнести их по правилам значило бы допустить упрощённый
+// порядок при выполнении любого одного.
+
+relation no_life_or_health_victims(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "потерпевших, которым при совершении транспортного происшествия причинён вред жизни и (или) здоровью, нет";
+}
+relation two_insured_vehicles_interacted(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "транспортное происшествие произошло в результате взаимодействия (столкновения) двух транспортных средств, гражданско-правовая ответственность владельцев которых была застрахована по настоящему Закону";
+}
+relation harm_only_to_those_two_vehicles(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "вред причинён только тем двум транспортным средствам, которые названы подпунктом 1) пункта 1 статьи 22-2";
+}
+relation no_disagreement_recorded_in_declaration(accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "обстоятельства причинения вреда, характер и перечень видимых повреждений и вина одного из участников разногласий не вызывают и зафиксированы в декларации";
+}
+relation participants_agree_on_payout_within_limit(accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "участники согласны на размер страховой выплаты в пределах размера страховой суммы по каждому отдельному страховому случаю, установленного нормативным правовым актом уполномоченного органа";
+}
+relation declaration_filed_through_information_systems(accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "оформление документов и сведений осуществляется участниками составлением декларации с использованием информационной системы страховой компании и информационной системы организации по формированию и ведению базы данных";
+}
+
+pub relation simplified_settlement_conditions_met(accident: TrafficAccident)
+    kind institutional {
+    label ru-KZ official "транспортное происшествие отвечает требованиям пункта 1 статьи 22-2: участники вправе осуществить упрощённое оформление составлением декларации";
+}
+
+@source(LAW_446_ART22_2, quote = "В случае отсутствия потерпевших, которым причинен вред жизни и (или) здоровью при совершении транспортного происшествия, его участники вправе осуществить упрощенное оформление транспортного происшествия путем составления декларации об упрощенном порядке урегулирования страхового случая (далее – декларация) на согласованных ими условиях при соблюдении одновременно следующих требований:")
+rule SimplifiedSettlementConditionsMet(accident: TrafficAccident) strict {
+    label ru-KZ official "Статья 22-2 пункт 1. В случае отсутствия потерпевших, которым причинён вред жизни и (или) здоровью, участники транспортного происшествия вправе осуществить упрощённое оформление составлением декларации при соблюдении одновременно требований подпунктов 1)–5)";
+    when no_life_or_health_victims(accident);
+    when two_insured_vehicles_interacted(accident);
+    when harm_only_to_those_two_vehicles(accident);
+    when no_disagreement_recorded_in_declaration(accident);
+    when participants_agree_on_payout_within_limit(accident);
+    when declaration_filed_through_information_systems(accident);
+    then simplified_settlement_conditions_met(accident);
+}
+
+// ============================================================================
+// ДОФОРМАЛИЗАЦИЯ СТАТЬИ 22 (наряд «страховой случай», 10.09.2026)
+// ============================================================================
+//
+// Первая очередь модуля брала из статьи 22 пункт 1, часть вторую пункта 3 и
+// пункт 4. Здесь берётся ОСТАЛЬНОЕ: пункт 2, части первая и третья — пятая
+// пункта 3, весь пункт 3-1 и пункт 5.
+//
+// ЗАЧЕМ ЭТО СМЫКАЕТ ДВЕ ЗАПИСАННЫЕ ГРАНИЦЫ СОСЕДА. `kz.corpus.vred_ts`
+// (README.ru.md, таблица «Не делает») объявил своими границами ровно два
+// места, и оба они — эта статья:
+//
+//   «срок осмотра и составления акта не считается — часть первая пункта 3
+//    отдаёт его пункту 3 статьи 22 Закона»
+//        → здесь: `inspection_scheduling_due_day` (три рабочих дня на
+//          согласование) и `inspection_due_day` (пять рабочих дней на сам
+//          осмотр), обе от дня подачи заявления, плюс пятидневный срок
+//          определения размера вреда со дня осмотра и составления акта;
+//
+//   «размер выплаты при непредоставлении отчёта не считается — пункт 3-1
+//    статьи 22 Закона; вычисляется само ПРАВО на такую выплату»
+//        → здесь: правило `PropertyHarmNotDeterminedPerDamageRules` читает у
+//          соседа `pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona`, а
+//          последствие — право воспользоваться услугами оценщика, возмещение
+//          затрат на них и принятие результата оценщика — выводится ЗДЕСЬ,
+//          потому что оно записано в Законе, а не в Правилах.
+//
+// ПОЧЕМУ ЦЕПЬ ПУНКТА 3-1 ПОРАЖАЕМАЯ. Предикат соседа выводится поражаемым
+// правилом (`PravoNaVyplatuPriNepredostavleniiOtcheta`, дефитер пункта 3-1
+// Правил снимает сроки при упрощённом оформлении). Строгое правило, читающее
+// голый вывод поражаемого, отвергается обоими движками — LDC-E4103
+// LATE_STATUS_PRODUCER §111. Поэтому поражаемы и мост, и оба местных
+// продюсера «размер не определён в срок», и все три последствия пункта 3-1.
+//
+// ГРАНИЦА, КОТОРУЮ ЭТОТ МОДУЛЬ НЕ ПЕРЕХОДИТ. Величина
+// `assessor_result_accepted_for_payment` НЕ подставляется в
+// `property_harm_amount` статьи 24. Подстановка сделала бы у этого отношения
+// поражаемого продюсера, и тогда строгие правила статьи 24
+// (`PropertyLiabilityLimit`, `PropertyPaymentIsHarmCapped`), читающие его,
+// отверглись бы тем же LDC-E4103. Перевод всей цепи предела и выплаты в
+// поражаемый слой — решение об архитектуре пакета, а не о статье 22, и оно
+// вынесено вопросом владельцу.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ С ПРИЧИНОЙ:
+//
+//   пункт 3 часть вторая — «Требования к специализированному программному
+//              обеспечению и порядок определения размера вреда ...
+//              устанавливаются нормативным правовым актом уполномоченного
+//              органа». Делегирование; сам акт в корпусе есть и читается
+//              (`PropertyHarmAmountFromDamageRules`, первая очередь модуля),
+//              а требования к СПО содержания в Законе не имеют.
+//
+//   пункт 6 — «влекут ответственность, установленную законами Республики
+//              Казахстан». Чистая отсылка: ответственности этот Закон не
+//              устанавливает, состав и санкция стоят в других законах.
+//              Умышленное создание страхового случая как основание регресса
+//              и отказа взято статьями 28 и 29 (`RecourseGround`,
+//              `RefusalGround`), но это ДРУГОЕ последствие, а не это.
+
+// --- Пункт 2: размер вреда жизни и здоровью — по документам организаций -----
+
+relation harm_documents_issued(accident: TrafficAccident, victim: Victim) kind empirical {
+    label ru-KZ official "документы, выданные соответствующими организациями, о вреде, причинённом жизни и здоровью потерпевшего, представлены";
+}
+
+relation life_or_health_harm_determined(accident: TrafficAccident, victim: Victim)
+    kind institutional {
+    label ru-KZ official "размер вреда, причинённого жизни и здоровью потерпевшего, определён в соответствии с настоящим Законом на основании документов, выданных соответствующими организациями";
+}
+
+// ВЕЛИЧИНЫ ЗДЕСЬ НЕТ, И ЭТО НЕ ПРОБЕЛ. Пункт 2 называет ДВА условия
+// определения — «в соответствии с настоящим Законом» и «на основании
+// документов, выданных соответствующими организациями», — а саму величину
+// даёт статья 24 (`insurance_payment_amount`). Правило поэтому выводит
+// определённость, а не число: без документов размер вреда жизни и здоровью
+// этим Законом не определён вовсе.
+@source(LAW_446_ART22, quote = "Размер вреда, причиненного жизни и здоровью потерпевшего, определяется в соответствии с настоящим Законом на основании документов, выданных соответствующими организациями.")
+rule LifeOrHealthHarmDeterminedOnDocuments(
+    accident: TrafficAccident,
+    victim: Victim,
+    outcome: HarmToLifeOrHealthOutcome,
+) strict {
+    label ru-KZ official "Статья 22 пункт 2. Размер вреда, причинённого жизни и здоровью потерпевшего, определяется в соответствии с настоящим Законом на основании документов, выданных соответствующими организациями";
+    when harm_to_life_or_health(accident, victim, outcome);
+    when harm_documents_issued(accident, victim);
+    then life_or_health_harm_determined(accident, victim);
+}
+
+// --- Пункт 3 часть первая: кто и чем определяет размер вреда имуществу ------
+//
+// «Страховщиком ЛИБО привлечённым им оценщиком» — дизъюнкция текста, и она
+// расщеплена на два правила с общей головой (§206). Лицензионное СПО
+// требуется в обеих ветвях и потому стоит конъюнктом каждого правила, а не
+// третьим основанием.
+
+entity Assessor {
+    label ru-KZ official "оценщик, привлечённый страховщиком на основании договора об оказании услуг";
+}
+
+relation licensed_software_applied(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "при определении размера вреда, причинённого имуществу, применено лицензионное специализированное программное обеспечение";
+}
+relation determination_conducted_by_insurer(accident: TrafficAccident, insurer: Insurer)
+    kind empirical {
+    label ru-KZ official "определение размера вреда, причинённого имуществу, осуществляет страховщик";
+}
+relation assessor_engaged_by_insurer(accident: TrafficAccident, insurer: Insurer,
+        assessor: Assessor) kind empirical {
+    label ru-KZ official "оценщик привлечён страховщиком на основании договора об оказании услуг";
+}
+relation determination_conducted_by_assessor(accident: TrafficAccident, assessor: Assessor)
+    kind empirical {
+    label ru-KZ official "определение размера вреда, причинённого имуществу, осуществляет привлечённый оценщик";
+}
+
+relation property_harm_determination_lawful(accident: TrafficAccident) kind institutional {
+    label ru-KZ official "определение размера вреда, причинённого имуществу, осуществляется лицом и средствами, названными частью первой пункта 3 статьи 22";
+}
+
+@source(LAW_446_ART22) {
+    rule PropertyHarmDeterminedByInsurer(accident: TrafficAccident, insurer: Insurer) strict {
+        label ru-KZ official "Статья 22 пункт 3. Определение размера вреда, причинённого имуществу, осуществляется с применением лицензионного специализированного программного обеспечения страховщиком";
+        when licensed_software_applied(accident);
+        when determination_conducted_by_insurer(accident, insurer);
+        then property_harm_determination_lawful(accident);
+    }
+
+    rule PropertyHarmDeterminedByEngagedAssessor(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        assessor: Assessor,
+    ) strict {
+        label ru-KZ official "Статья 22 пункт 3. Определение размера вреда, причинённого имуществу, осуществляется с применением лицензионного специализированного программного обеспечения привлечённым страховщиком оценщиком на основании договора об оказании услуг";
+        when licensed_software_applied(accident);
+        when assessor_engaged_by_insurer(accident, insurer, assessor);
+        when determination_conducted_by_assessor(accident, assessor);
+        then property_harm_determination_lawful(accident);
+    }
+}
+
+// --- Пункт 3 часть третья: три и пять рабочих дней со дня заявления ---------
+//
+// СРОКИ ИСЧИСЛЯЮТСЯ В РАБОЧИХ ДНЯХ — единица взята из текста («в течение трёх
+// рабочих дней», «в течение пяти рабочих дней»), и дневная единица §86 читает
+// снимок официального календаря §85, поэтому дело обязано его назвать.
+//
+// ЗАЯВИТЕЛЬ НАЗВАН `Beneficiary`, И ЭТО ПРОЧТЕНИЕ ПАКЕТА, А НЕ СОКРАЩЕНИЕ.
+// Текст говорит «страхователь (застрахованный, выгодоприобретатель)», то есть
+// перечисляет три роли через скобку как одну сторону. Пункт 4 статьи 25 сам
+// объединяет их в выгодоприобретателя («Выгодоприобретателем является
+// потерпевший ..., а также страхователь (застрахованный) или иное лицо ...»),
+// и этот тип у пакета уже есть.
+
+relation harm_assessment_applicant(accident: TrafficAccident, applicant: Beneficiary)
+    kind empirical {
+    label ru-KZ official "страхователь (застрахованный, выгодоприобретатель), подавший заявление об определении размера причинённого вреда";
+}
+relation harm_assessment_application_filed_on(accident: TrafficAccident, day: Date)
+    kind empirical {
+    key(accident);
+    label ru-KZ official "день подачи заявления об определении размера причинённого вреда";
+}
+
+relation inspection_scheduling_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок согласования даты, времени и места проведения осмотра поврежденного имущества (статья 22 пункт 3 часть третья)";
+}
+@source(LAW_446_ART22)
+assert inspection_scheduling_term(3 business_day);
+
+relation inspection_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок проведения осмотра поврежденного имущества со дня подачи заявления (статья 22 пункт 3 часть третья)";
+}
+@source(LAW_446_ART22)
+assert inspection_term(5 business_day);
+
+relation inspection_scheduling_due_day(accident: TrafficAccident, day: Date)
+    kind institutional {
+    label ru-KZ official "день истечения трёхдневного срока согласования даты, времени и места осмотра поврежденного имущества";
+}
+relation inspection_due_day(accident: TrafficAccident, day: Date) kind institutional {
+    label ru-KZ official "день истечения пятидневного срока проведения осмотра поврежденного имущества";
+}
+
+relation inspection_time_and_place_agreed(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "дата, время и место проведения осмотра поврежденного имущества согласованы";
+}
+relation property_inspection_conducted(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "осмотр поврежденного имущества произведён";
+}
+
+@source(LAW_446_ART22) {
+    rule InspectionSchedulingDueDay(accident: TrafficAccident, filed: Date, term: Quantity)
+        strict {
+        label ru-KZ official "Статья 22 пункт 3. Срок согласования даты, времени и места проведения осмотра поврежденного имущества истекает на третий рабочий день со дня подачи заявления об определении размера причинённого вреда";
+        when harm_assessment_application_filed_on(accident, filed);
+        when inspection_scheduling_term(term);
+        then inspection_scheduling_due_day(accident, add_business_days(filed, term));
+    }
+
+    rule InspectionDueDay(accident: TrafficAccident, filed: Date, term: Quantity) strict {
+        label ru-KZ official "Статья 22 пункт 3. Осмотр поврежденного имущества должен быть произведён в течение пяти рабочих дней со дня подачи заявления об определении размера причинённого вреда";
+        when harm_assessment_application_filed_on(accident, filed);
+        when inspection_term(term);
+        then inspection_due_day(accident, add_business_days(filed, term));
+    }
+
+    // «Страховщик И страхователь ... согласовывают» — носителей ДВА, и они
+    // разного типа. Одно правило с дизъюнкцией здесь стёрло бы, кто именно
+    // отвечает за несогласование, поэтому правила два (§206), как у пункта 11
+    // Правил определения размера вреда с омбудсманом и страховщиком.
+    // DECISION-0209 этап 7 (пилот Р8): правило записано экземпляром каркаса
+    // `matter_deadline_duty` профиля 0.2; узлы — `InsurerMustAgreeInspectionAppointment/duty` и `InsurerMustAgreeInspectionAppointment/duty/norm`.
+    expand matter_deadline_duty InsurerMustAgreeInspectionAppointment {
+        label ru-KZ official "Статья 22 пункт 3. Страховщик согласовывает дату, время и место проведения осмотра поврежденного имущества в течение трёх рабочих дней со дня подачи заявления об определении размера причинённого вреда";
+        bind matter = accident: TrafficAccident;
+        bind bearer = insurer: Insurer;
+        bind beneficiary = applicant: Beneficiary;
+        bind start = filed: Date;
+        bind due = due: Date;
+        bearer_of = accident_insurer;
+        beneficiary_of = harm_assessment_applicant;
+        started = harm_assessment_application_filed_on;
+        due_on = inspection_scheduling_due_day;
+        conditions = [];
+        result = inspection_time_and_place_agreed;
+    }
+
+    // DECISION-0209 этап 7 (пилот Р8): правило записано экземпляром каркаса
+    // `matter_deadline_duty` профиля 0.2; узлы — `ApplicantMustAgreeInspectionAppointment/duty` и `ApplicantMustAgreeInspectionAppointment/duty/norm`.
+    expand matter_deadline_duty ApplicantMustAgreeInspectionAppointment {
+        label ru-KZ official "Статья 22 пункт 3. Страхователь (застрахованный, выгодоприобретатель) согласовывает дату, время и место проведения осмотра поврежденного имущества в течение трёх рабочих дней со дня подачи заявления об определении размера причинённого вреда";
+        bind matter = accident: TrafficAccident;
+        bind bearer = applicant: Beneficiary;
+        bind beneficiary = insurer: Insurer;
+        bind start = filed: Date;
+        bind due = due: Date;
+        bearer_of = harm_assessment_applicant;
+        beneficiary_of = accident_insurer;
+        started = harm_assessment_application_filed_on;
+        due_on = inspection_scheduling_due_day;
+        conditions = [];
+        result = inspection_time_and_place_agreed;
+    }
+
+    // Носитель обязанности провести осмотр — СТРАХОВЩИК. Текст безличен
+    // («осмотр ... должен быть произведён»), но осмотр по части первой пункта 3
+    // ведёт страховщик либо привлечённый им оценщик, а последствие
+    // непроведения по вине заявителя названо частью четвёртой отдельно.
+    // DECISION-0209 этап 7 (пилот Р8): правило записано экземпляром каркаса
+    // `matter_deadline_duty` профиля 0.2; узлы — `InsurerMustConductInspectionWithinTerm/duty` и `InsurerMustConductInspectionWithinTerm/duty/norm`.
+    expand matter_deadline_duty InsurerMustConductInspectionWithinTerm {
+        label ru-KZ official "Статья 22 пункт 3. Осмотр поврежденного имущества должен быть произведён в течение пяти рабочих дней со дня подачи заявления об определении размера причинённого вреда";
+        bind matter = accident: TrafficAccident;
+        bind bearer = insurer: Insurer;
+        bind beneficiary = applicant: Beneficiary;
+        bind start = filed: Date;
+        bind due = due: Date;
+        bearer_of = accident_insurer;
+        beneficiary_of = harm_assessment_applicant;
+        started = harm_assessment_application_filed_on;
+        due_on = inspection_due_day;
+        conditions = [];
+        result = property_inspection_conducted;
+    }
+}
+
+// --- Пункт 3 часть четвёртая: повторное обращение с заявлением --------------
+//
+// Два основания текста — «по вине страхователя (застрахованного,
+// выгодоприобретателя)» и «по независящим от воли сторон обстоятельствам» —
+// расщеплены на два правила (§206): в деле они различимы, и от того, какое
+// установлено, зависит оценка поведения сторон.
+//
+// ОКНО ОТКРЫТО, и это свойство текста: срока повторного обращения пункт 3 не
+// называет вовсе. Следствие честное и названное: такая обязанность бывает
+// исполненной, но нарушенной по сроку — никогда.
+
+relation inspection_failed_through_applicant_fault(accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "осмотр поврежденного имущества не был произведён по вине страхователя (застрахованного, выгодоприобретателя)";
+}
+relation inspection_failed_by_circumstances_beyond_control(accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "осмотр поврежденного имущества не был произведён по независящим от воли сторон обстоятельствам";
+}
+relation repeat_harm_assessment_application_filed(accident: TrafficAccident)
+    kind empirical {
+    label ru-KZ official "страхователь (застрахованный, выгодоприобретатель) повторно обратился к страховщику с заявлением об определении размера причинённого вреда";
+}
+
+@source(LAW_446_ART22) {
+    rule ApplicantMustReapplyAfterOwnFault(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        applicant: Beneficiary,
+    ) strict {
+        label ru-KZ official "Статья 22 пункт 3. В случае, если осмотр поврежденного имущества не был произведён по вине страхователя (застрахованного, выгодоприобретателя), он повторно обращается к страховщику с заявлением об определении размера причинённого вреда";
+        when accident_insurer(accident, insurer);
+        when harm_assessment_applicant(accident, applicant);
+        when inspection_failed_through_applicant_fault(accident);
+        then duty PovtornoObratitsyaSZayavleniem {
+            bearer applicant;
+            beneficiary insurer;
+            achieve repeat_harm_assessment_application_filed(accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+
+    rule ApplicantMustReapplyAfterCircumstancesBeyondControl(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        applicant: Beneficiary,
+    ) strict {
+        label ru-KZ official "Статья 22 пункт 3. В случае, если осмотр поврежденного имущества не был произведён по независящим от воли сторон обстоятельствам, страхователь (застрахованный, выгодоприобретатель) повторно обращается к страховщику с заявлением об определении размера причинённого вреда";
+        when accident_insurer(accident, insurer);
+        when harm_assessment_applicant(accident, applicant);
+        when inspection_failed_by_circumstances_beyond_control(accident);
+        then duty PovtornoObratitsyaSZayavleniemPriObstoyatelstvakh {
+            bearer applicant;
+            beneficiary insurer;
+            achieve repeat_harm_assessment_application_filed(accident)
+                during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// --- Пункт 3 часть пятая: пять рабочих дней со дня осмотра и акта -----------
+
+relation inspection_act_drawn_up_on(accident: TrafficAccident, day: Date) kind empirical {
+    key(accident);
+    label ru-KZ official "день осмотра и составления акта осмотра поврежденного имущества";
+}
+
+relation property_harm_determination_term(value: Quantity) kind institutional {
+    label ru-KZ official "срок определения страховщиком размера вреда, причинённого имуществу, со дня осмотра и составления акта осмотра (статья 22 пункт 3 часть пятая)";
+}
+@source(LAW_446_ART22)
+assert property_harm_determination_term(5 business_day);
+
+relation property_harm_determination_due_day(accident: TrafficAccident, day: Date)
+    kind institutional {
+    label ru-KZ official "день истечения пятидневного срока определения страховщиком размера вреда, причинённого имуществу";
+}
+relation property_harm_determined(accident: TrafficAccident) kind empirical {
+    label ru-KZ official "страховщик определил размер вреда, причинённого имуществу";
+}
+
+@source(LAW_446_ART22) {
+    rule PropertyHarmDeterminationDueDay(
+        accident: TrafficAccident,
+        inspected: Date,
+        term: Quantity,
+    ) strict {
+        label ru-KZ official "Статья 22 пункт 3. Определение размера вреда, причинённого имуществу, осуществляется страховщиком в срок не позднее пяти рабочих дней со дня осмотра и составления акта осмотра поврежденного имущества";
+        when inspection_act_drawn_up_on(accident, inspected);
+        when property_harm_determination_term(term);
+        then property_harm_determination_due_day(accident, add_business_days(inspected, term));
+    }
+
+    // DECISION-0209 этап 7 (пилот Р8): правило записано экземпляром каркаса
+    // `matter_deadline_duty` профиля 0.2; узлы — `InsurerMustDeterminePropertyHarmWithinTerm/duty` и `InsurerMustDeterminePropertyHarmWithinTerm/duty/norm`.
+    expand matter_deadline_duty InsurerMustDeterminePropertyHarmWithinTerm {
+        label ru-KZ official "Статья 22 пункт 3. Страховщик обязан определить размер вреда, причинённого имуществу, не позднее пяти рабочих дней со дня осмотра и составления акта осмотра поврежденного имущества";
+        bind matter = accident: TrafficAccident;
+        bind bearer = insurer: Insurer;
+        bind beneficiary = applicant: Beneficiary;
+        bind start = inspected: Date;
+        bind due = due: Date;
+        bearer_of = accident_insurer;
+        beneficiary_of = harm_assessment_applicant;
+        started = inspection_act_drawn_up_on;
+        due_on = property_harm_determination_due_day;
+        conditions = [];
+        result = property_harm_determined;
+    }
+}
+
+// --- Пункт 3-1: размер не определён в срок ----------------------------------
+//
+// ДВА ПРОДЮСЕРА ОДНОЙ ГОЛОВЫ, И ОБА НУЖНЫ. Первый — местный: срок пункта 3
+// части пятой истёк, а размер не определён. Второй — МОСТ к акту
+// уполномоченного органа: `kz.corpus.vred_ts` считает тот же пятидневный срок
+// от дня осмотра и выводит `pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona`,
+// прямо назвав этот пункт головой правила. Дело, ведущее расчёт по Правилам,
+// подаёт вход соседу, а не дублирует его здесь.
+//
+// ОБА ПОРАЖАЕМЫЕ. Вывод соседа поражаем (дефитер пункта 3-1 Правил снимает
+// сроки при упрощённом оформлении), строгое правило читать его не может
+// (LDC-E4103 §111), и весь слой последствий пункта 3-1 объявлен поражаемым,
+// чтобы исключение доходило до правового последствия, а не гасло на полпути.
+//
+// «Не определён» ПОДАЁТСЯ ДЕЛОМ ОТРИЦАТЕЛЬНЫМ УТВЕРЖДЕНИЕМ. Отсутствие факта
+// не есть его отрицание (§113), и `not property_harm_determined` без
+// отрицательного продюсера не сработало бы никогда.
+
+relation harm_determination_review_day(accident: TrafficAccident, day: Date) kind empirical {
+    key(accident);
+    label ru-KZ official "день, на который проверяется соблюдение срока определения размера вреда, причинённого имуществу";
+}
+
+relation property_harm_not_determined_in_term(accident: TrafficAccident) kind institutional {
+    label ru-KZ official "страховщиком в срок, установленный частью пятой пункта 3 статьи 22, не определён размер причинённого вреда";
+}
+
+@source(LAW_446_ART22) {
+    rule PropertyHarmNotDeterminedInTerm(
+        accident: TrafficAccident,
+        day: Date,
+        due: Date,
+    ) defeasible {
+        label ru-KZ official "Статья 22 пункт 3-1. Размер причинённого вреда не определён в срок, если он не определён вовсе, а день проверки уже позже последнего дня пятидневного срока части пятой пункта 3";
+        when not property_harm_determined(accident);
+        when property_harm_determination_due_day(accident, due);
+        when harm_determination_review_day(accident, day);
+        when day > due;
+        then property_harm_not_determined_in_term(accident);
+    }
+
+    rule PropertyHarmNotDeterminedPerDamageRules(
+        assessment: kz.corpus.vred_ts::RaschetVreda,
+        accident: TrafficAccident,
+        victim: Victim,
+        p: kz.corpus.vred_ts::Poterpevshiy,
+    ) defeasible {
+        label ru-KZ official "Статья 22 пункт 3-1. Размер причинённого вреда не определён в срок, если по нормативному правовому акту уполномоченного органа у потерпевшего возникло право на выплату по пункту 3-1 настоящей статьи";
+        when damage_assessment_for_victim(assessment, accident, victim);
+        when kz.corpus.vred_ts::poterpevshiy_po_raschetu(assessment, p);
+        when kz.corpus.vred_ts::pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona(p, assessment);
+        then property_harm_not_determined_in_term(accident);
+    }
+}
+
+// --- Пункт 3-1 часть первая: услуги оценщика и возмещение затрат ------------
+
+relation assessor_services_used(accident: TrafficAccident, applicant: Beneficiary)
+    kind empirical {
+    label ru-KZ official "страхователь (застрахованный) либо потерпевший (выгодоприобретатель) или их представители воспользовались услугами оценщика и начали восстановление (утилизацию) имущества";
+}
+relation assessor_services_cost(accident: TrafficAccident, applicant: Beneficiary,
+        amount: Money) kind empirical {
+    key(accident, applicant);
+    label ru-KZ official "затраты на услуги оценщика, понесённые страхователем (застрахованным) либо потерпевшим (выгодоприобретателем) или их представителями";
+}
+relation assessor_services_cost_reimbursed(accident: TrafficAccident,
+        applicant: Beneficiary) kind empirical {
+    label ru-KZ official "страховщик возместил затраты на услуги оценщика";
+}
+
+@source(LAW_446_ART22) {
+    rule ApplicantMayUseAssessorServices(
+        accident: TrafficAccident,
+        applicant: Beneficiary,
+    ) defeasible {
+        label ru-KZ official "Статья 22 пункт 3-1. Если страховщиком в срок, установленный частью пятой пункта 3 настоящей статьи, не будет определён размер причинённого вреда, то страхователь (застрахованный) либо потерпевший (выгодоприобретатель) или их представители могут воспользоваться услугами оценщика и начать восстановление (утилизацию) имущества";
+        when property_harm_not_determined_in_term(accident);
+        when harm_assessment_applicant(accident, applicant);
+        then liberty VospolzovatsyaUslugamiOtsenshchika {
+            holder applicant;
+            action assessor_services_used(accident, applicant);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // «ВНЕ ЗАВИСИМОСТИ ОТ СТРАХОВОЙ ВЫПЛАТЫ» — не риторика, а состав нормы:
+    // обязанность возместить затраты не читает ни `insured_event`, ни
+    // `insurance_payout_due`. Поставить их посылками значило бы связать
+    // возмещение с выплатой ровно вопреки тексту.
+    rule InsurerMustReimburseAssessorServicesCost(
+        accident: TrafficAccident,
+        insurer: Insurer,
+        applicant: Beneficiary,
+        amount: Money,
+    ) defeasible {
+        label ru-KZ official "Статья 22 пункт 3-1. Затраты на услуги оценщика, понесённые страхователем (застрахованным) либо потерпевшим (выгодоприобретателем) или их представителями, подлежат возмещению страховщиком вне зависимости от страховой выплаты";
+        when property_harm_not_determined_in_term(accident);
+        when accident_insurer(accident, insurer);
+        when assessor_services_cost(accident, applicant, amount);
+        then duty VozmestitZatratyNaUslugiOtsenshchika {
+            bearer insurer;
+            beneficiary applicant;
+            achieve assessor_services_cost_reimbursed(accident, applicant)
+                during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// --- Пункт 3-1 части вторая и третья: результат оценщика принимается --------
+//
+// Часть вторая отсылает определение размера вреда, произведённое оценщиком, к
+// тому же нормативному правовому акту уполномоченного органа, что и часть
+// вторая пункта 3, — то есть к `kz.corpus.vred_ts`. Часть третья говорит, что
+// его результат ПРИНИМАЕТСЯ страховщиком для осуществления страховой выплаты.
+// Оба положения выражены одним правилом: величина читается у соседа
+// (`itogovaya_stoimost_v_tenge` — итоговая величина отчёта о размере вреда), а
+// голова называет её принятой для выплаты.
+
+relation assessor_result_accepted_for_payment(accident: TrafficAccident, victim: Victim,
+        amount: Money) kind institutional {
+    label ru-KZ official "результат определения размера вреда, причинённого транспортному средству, произведённого оценщиком, принят страховщиком для осуществления страховой выплаты потерпевшему (выгодоприобретателю) или его представителю";
+}
+
+@source(LAW_446_ART22, quote = "Результат определения размера вреда, причиненного транспортному средству, произведенного оценщиком, в случае, предусмотренном частью первой настоящего пункта, принимается страховщиком для осуществления страховой выплаты потерпевшему (выгодоприобретателю) или его представителю.")
+rule AssessorResultAcceptedForPayment(
+    assessment: kz.corpus.vred_ts::RaschetVreda,
+    report: kz.corpus.vred_ts::Otchet,
+    accident: TrafficAccident,
+    victim: Victim,
+    amount: Money,
+) defeasible {
+    label ru-KZ official "Статья 22 пункт 3-1. Результат определения размера вреда, причинённого транспортному средству, произведённого оценщиком в соответствии с нормативным правовым актом уполномоченного органа, принимается страховщиком для осуществления страховой выплаты потерпевшему (выгодоприобретателю) или его представителю";
+    when property_harm_not_determined_in_term(accident);
+    when damage_assessment_for_victim(assessment, accident, victim);
+    when kz.corpus.vred_ts::otchet_po_raschetu(report, assessment);
+    when kz.corpus.vred_ts::itogovaya_stoimost_v_tenge(report, amount);
+    then assessor_result_accepted_for_payment(accident, victim, amount);
+}
+
+// --- Пункт 5: запрет удерживать собственные расходы -------------------------
+//
+// `prohibition` §130: закон говорит «не вправе». По §124.3 (E-0179)
+// установленное удержание даёт VIOLATED; отсутствие сведений об удержании
+// само по себе не доказывает соблюдение запрета.
+
+relation own_assessment_costs_withheld(demand: PaymentClaim) kind empirical {
+    label ru-KZ official "страховщик удержал со страховой выплаты собственные расходы, связанные с определением размера вреда";
+}
+
+@source(LAW_446_ART22, quote = "Страховщик не вправе удерживать со страховой выплаты, причитающейся выгодоприобретателю, собственные расходы, связанные с определением размера вреда.")
+rule InsurerMayNotWithholdOwnAssessmentCosts(
+    demand: PaymentClaim,
+    accident: TrafficAccident,
+    holder: Beneficiary,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 22 пункт 5. Страховщик не вправе удерживать со страховой выплаты, причитающейся выгодоприобретателю, собственные расходы, связанные с определением размера вреда";
+    when payment_claim_of(demand, accident, holder, insurer);
+    then prohibition UderzhatSobstvennyeRaskhodyNaOpredelenieVreda {
+        bearer insurer;
+        beneficiary holder;
+        action own_assessment_costs_withheld(demand);
+        window [@2026-07-23, infinity);
+    };
+}

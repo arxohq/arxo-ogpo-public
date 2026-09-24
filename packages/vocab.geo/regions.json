@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "vocab.geo.regions/0.1",
+  "country": "KZ",
+  "codes": "ISO 3166-2:KZ (редакция 2022 года: 17 областей и три города республиканского значения)",
+  "anchors": "опорные точки для подписи на карте, выбраны вручную, WGS84, два знака после запятой; не центроиды и не правовой факт",
+  "regions": [
+    {"name": "ABAI", "code": "KZ-10", "ru": "Абайская область", "kk": "Абай облысы", "en": "Abai Region", "lat": "48.90", "lon": "80.00"},
+    {"name": "AKMOLA", "code": "KZ-11", "ru": "Акмолинская область", "kk": "Ақмола облысы", "en": "Akmola Region", "lat": "51.90", "lon": "69.60"},
+    {"name": "AKTOBE", "code": "KZ-15", "ru": "Актюбинская область", "kk": "Ақтөбе облысы", "en": "Aktobe Region", "lat": "48.70", "lon": "58.00"},
+    {"name": "ALMATY", "code": "KZ-19", "ru": "Алматинская область", "kk": "Алматы облысы", "en": "Almaty Region", "lat": "44.60", "lon": "77.30"},
+    {"name": "ATYRAU", "code": "KZ-23", "ru": "Атырауская область", "kk": "Атырау облысы", "en": "Atyrau Region", "lat": "47.30", "lon": "52.10"},
+    {"name": "WEST_KAZAKHSTAN", "code": "KZ-27", "ru": "Западно-Казахстанская область", "kk": "Батыс Қазақстан облысы", "en": "West Kazakhstan Region", "lat": "50.10", "lon": "50.60"},
+    {"name": "ZHAMBYL", "code": "KZ-31", "ru": "Жамбылская область", "kk": "Жамбыл облысы", "en": "Zhambyl Region", "lat": "44.00", "lon": "72.00"},
+    {"name": "ZHETISU", "code": "KZ-33", "ru": "Жетысуская область", "kk": "Жетісу облысы", "en": "Zhetisu Region", "lat": "45.40", "lon": "79.40"},
+    {"name": "KARAGANDA", "code": "KZ-35", "ru": "Карагандинская область", "kk": "Қарағанды облысы", "en": "Karaganda Region", "lat": "49.30", "lon": "73.60"},
+    {"name": "KOSTANAY", "code": "KZ-39", "ru": "Костанайская область", "kk": "Қостанай облысы", "en": "Kostanay Region", "lat": "52.50", "lon": "63.60"},
+    {"name": "KYZYLORDA", "code": "KZ-43", "ru": "Кызылординская область", "kk": "Қызылорда облысы", "en": "Kyzylorda Region", "lat": "45.20", "lon": "63.50"},
+    {"name": "MANGYSTAU", "code": "KZ-47", "ru": "Мангистауская область", "kk": "Маңғыстау облысы", "en": "Mangystau Region", "lat": "44.20", "lon": "53.50"},
+    {"name": "PAVLODAR", "code": "KZ-55", "ru": "Павлодарская область", "kk": "Павлодар облысы", "en": "Pavlodar Region", "lat": "52.20", "lon": "76.60"},
+    {"name": "NORTH_KAZAKHSTAN", "code": "KZ-59", "ru": "Северо-Казахстанская область", "kk": "Солтүстік Қазақстан облысы", "en": "North Kazakhstan Region", "lat": "54.50", "lon": "68.90"},
+    {"name": "TURKISTAN", "code": "KZ-61", "ru": "Туркестанская область", "kk": "Түркістан облысы", "en": "Turkistan Region", "lat": "43.30", "lon": "68.30"},
+    {"name": "ULYTAU", "code": "KZ-62", "ru": "Улытауская область", "kk": "Ұлытау облысы", "en": "Ulytau Region", "lat": "47.60", "lon": "67.70"},
+    {"name": "EAST_KAZAKHSTAN", "code": "KZ-63", "ru": "Восточно-Казахстанская область", "kk": "Шығыс Қазақстан облысы", "en": "East Kazakhstan Region", "lat": "49.40", "lon": "83.50"},
+    {"name": "ASTANA", "code": "KZ-71", "ru": "город Астана", "kk": "Астана қаласы", "en": "Astana", "lat": "51.17", "lon": "71.45"},
+    {"name": "ALMATY_CITY", "code": "KZ-75", "ru": "город Алматы", "kk": "Алматы қаласы", "en": "Almaty", "lat": "43.24", "lon": "76.93"},
+    {"name": "SHYMKENT", "code": "KZ-79", "ru": "город Шымкент", "kk": "Шымкент қаласы", "en": "Shymkent", "lat": "42.32", "lon": "69.59"}
+  ]
+}

@@ -1,0 +1,49 @@
+# Экземпляр шаблона `deontic-window` — ДАННЫЕ, не код.
+# Контракт: corpus/templates/deontic-window/TEMPLATE.ru.md
+# Правится руками; правила в .law порождаются из этого файла между маркерами генерации.
+
+target = "29-1-spory-i-otvetstvennost.law"
+
+[[rule]]
+name      = "InsurerMustReplyToDisputeApplication"
+strength  = "strict"
+anchored_by_block = true
+label     = { lang = "ru-KZ", status = "official", text = "Статья 29-1 пункт 2. Страховщик при получении от страхователя (потерпевшего, выгодоприобретателя) заявления в течение пяти рабочих дней рассматривает и предоставляет письменный ответ с указанием дальнейшего порядка урегулирования спора" }
+params    = ["dispute: InsuranceDispute", "contract: InsuranceContract", "claimant: Beneficiary", "insurer: Insurer", "received: Date", "due: Date"]
+premises  = ["dispute_from_contract(dispute, contract, claimant)", "dispute_insurer(dispute, insurer)", "written_application_sent_to_insurer(dispute)", "dispute_application_received_by_insurer_on(dispute, received)", "dispute_reply_due_day(dispute, due)"]
+layout    = { indent = 4, params = "multiline", wrapped = false }
+
+[rule.norm]
+modality      = "duty"
+name          = "RassmotretZayavlenieIOtvetitVSrok"
+bearer        = "insurer"
+beneficiary   = "claimant"
+goal          = "achieve"
+condition     = "dispute_written_reply_provided(dispute)"
+start         = "received"
+start_event   = "dispute_application_received_by_insurer_on(dispute, received)"
+end           = "due"
+end_event     = "dispute_reply_due_day(dispute, due)"
+end_inclusive = true
+
+[[rule]]
+name      = "InsurerMustSubmitDisputeDocuments"
+strength  = "strict"
+anchored_by_block = true
+label     = { lang = "ru-KZ", status = "official", text = "Статья 29-1 пункт 3. В случае обращения страхователя (потерпевшего, выгодоприобретателя) к страховому омбудсману страховщик обязан по запросу страхователя, потерпевшего (выгодоприобретателя), страхового омбудсмана представить документы, относящиеся к рассмотрению и разрешению спора, в течение трёх рабочих дней с даты получения запроса" }
+params    = ["dispute: InsuranceDispute", "contract: InsuranceContract", "claimant: Beneficiary", "insurer: Insurer", "ombudsman: InsuranceOmbudsman", "received: Date", "due: Date"]
+premises  = ["dispute_from_contract(dispute, contract, claimant)", "dispute_insurer(dispute, insurer)", "written_application_sent_to_ombudsman(dispute)", "ombudsman_of_dispute(dispute, ombudsman)", "dispute_documents_request_received_on(dispute, received)", "dispute_documents_due_day(dispute, due)"]
+layout    = { indent = 4, params = "multiline", wrapped = false }
+
+[rule.norm]
+modality      = "duty"
+name          = "PredstavitDokumentyPoSporu"
+bearer        = "insurer"
+beneficiary   = "claimant"
+goal          = "achieve"
+condition     = "dispute_documents_submitted(dispute)"
+start         = "received"
+start_event   = "dispute_documents_request_received_on(dispute, received)"
+end           = "due"
+end_event     = "dispute_documents_due_day(dispute, due)"
+end_inclusive = true

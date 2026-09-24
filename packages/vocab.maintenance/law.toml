@@ -1,0 +1,13 @@
+[package]
+name = "vocab.maintenance"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:law:vocab:maintenance"
+
+[features]
+semanticLayer = "L1"
+
+[[tests]]
+family = "vocab_maintenance"
+suites = ["tests/maintenance.lawtest"]
+world = ["vocab.maintenance"]

@@ -1,0 +1,211 @@
+{
+  "$comment": "Каталог вопросов пакета (DECISION-0190, law.package-questions/0.1). Карточка — параметризованный шаблон запроса §172, а не ответ. Свидетельства — сценарии tests/, в том числе порождённые (tests/catalog): каждый выполняет посылки правила и спрашивает вывод.",
+  "format": "law.package-questions/0.1",
+  "package": "kz.corpus.bonus_malus",
+  "tasks": [
+    {
+      "id": "bm-annex-table",
+      "title": "Приложение к Правилам",
+      "source_units": [
+        "BM_ANNEX_TABLE"
+      ]
+    },
+    {
+      "id": "bm2022-annex-table",
+      "title": "Приложение",
+      "source_units": [
+        "BM2022_ANNEX_TABLE"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "koeffitsient-bonus-malus",
+      "task": "bm-annex-table",
+      "question": "Установлено ли по делу: коэффициент по системе «бонус-малус», применяемый к базовой страховой премии (пункт 10 статьи 19 Закона)?",
+      "kind": "truth",
+      "predicate": "koeffitsient_bonus_malus",
+      "parameters": [
+        {
+          "name": "dogovor",
+          "type": "Dogovor",
+          "role": "bound"
+        },
+        {
+          "name": "koeffitsient",
+          "type": "Decimal",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(koeffitsient_bonus_malus(<dogovor>, <koeffitsient>));",
+      "tests": [
+        "urn:query:bm-p10-isklyuchenie-klass-m1",
+        "urn:query:bm-p10-uproshchennyy-poryadok",
+        "urn:query:bm-p11-isklyuchenie-gibel",
+        "urn:query:bm-p11-na-tenge-vyshe",
+        "urn:query:bm-p11-rovno-200-mrp",
+        "urn:query:bm-p12-vne-territorii",
+        "urn:query:bm-p13-dva-narusheniya",
+        "urn:query:bm-p13-tri-narusheniya",
+        "urn:query:bm-p14-opyanenie",
+        "urn:query:bm-p15-odnovremenno",
+        "urn:query:bm-p16-sobstvennaya-otsenka",
+        "urn:query:bm-p3-269-dney",
+        "urn:query:bm-p3-chetyre-sluchaya",
+        "urn:query:bm-p3-dva-sluchaya",
+        "urn:query:bm-p3-klass-13-ne-rastet",
+        "urn:query:bm-p3-lishenie-prava",
+        "urn:query:bm-p3-odin-sluchay",
+        "urn:query:bm-p3-rovno-270",
+        "urn:query:bm-p3-sem-sluchaev",
+        "urn:query:bm-p3-tri-sluchaya",
+        "urn:query:bm-p4-p8-yurlitso-vpervye",
+        "urn:query:bm-p4-vpervye",
+        "urn:query:bm-p5-vpervye-moto",
+        "urn:query:bm-p6-vremennyy-vezd",
+        "urn:query:bm-p7-gibel",
+        "urn:query:bm-p7-isklyuchenie-vremennyy-vezd",
+        "urn:query:bm-p8-yurlitso",
+        "urn:query:bm-p9-yurlitso-taksi",
+        "urn:query:bm-red-2024-klass3-odin",
+        "urn:query:bm-red-2024-klass3-tri",
+        "urn:query:bm-red-2024-klass3-tri-ne-m1",
+        "urn:query:bm-red-2024-klass4-dva",
+        "urn:query:bm-red-2024-vpervye",
+        "urn:query:bm-red-2024-yurlitso",
+        "urn:query:bm-red-2026-klass3-tri"
+      ],
+      "source_units": [
+        "BM_ANNEX_TABLE"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "granica-01",
+      "task": "bm2022-annex-table",
+      "question": "Покрывает ли пакет весь акт — значит ли отсутствие карточки, что право молчит?",
+      "reason_kind": "not_formalized",
+      "limitation": "Правила заведены у 21 закреплённых фрагментов из 39: остальные закреплены байтами публикации, но исполняемых норм не несут. Отсутствие карточки означает «в модели нормы нет», а не «право молчит».",
+      "source_units": [
+        "BM2022_ANNEX_TABLE"
+      ]
+    },
+    {
+      "id": "granica-02",
+      "task": "bm2022-annex-table",
+      "question": "Видны ли обязанности, запреты и правомочия пакета в positions?",
+      "reason_kind": "not_formalized",
+      "limitation": "Деонтических позиций (§§122–140) пакет не объявляет: требования выражены институциональными предикатами, и запрос positions по ним не отвечает.",
+      "source_units": [
+        "BM2022_ANNEX_TABLE"
+      ]
+    }
+  ],
+  "internal": [
+    {
+      "predicate": "dogovor_zaklyuchaetsya_vpervye",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KlassVpervye, KlassVpervyeMototransport, MnozhitelVpervye…); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "khod_po_prilozheniyu",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (PrisvoenieNizhePredela, PrisvoenieVPredelakh, PrisvoenieVyshePredela); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "klass_na_meste",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (PrisvoenieVPredelakh); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "klass_po_priznaku_strakhovatelya",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (PrisvoeniePriPervomZaklyuchenii, PrisvoenieVremennogoVezda, PrisvoenieYurlitsa); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "klass_po_tablitse",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (MestoPrisvoeniya, PrisvoeniePoPrilozheniyu2022); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "koeffitsient_klassa",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KoeffitsientBezPovysheniya, KoeffitsientPoPrilozheniyu2022, KoeffitsientPoSobstvennoyOtsenke…); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "mesto_prisvoeniya",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (PrisvoenieNizhePredela, PrisvoenieVPredelakh, PrisvoenieVyshePredela); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "perekhod_klassa",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KlassPoTablitsePriPovyshenii, KlassPoTablitsePriPovyshenii2022, KlassPoTablitsePriSnizhenii…); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "poryadok_klassa",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KlassNaMesteIzPoryadka, MestoPrisvoeniya, Punkt10Primenyaetsya…); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "povyshayushchiy_mnozhitel",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KoeffitsientBezPovysheniya, KoeffitsientSPovysheniem, PovyshayushchiyMnozhitelZayavlen); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "povyshayushchiy_mnozhitel_zayavlen",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KoeffitsientBezPovysheniya); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "povyshenie_klassa_dopustimo",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KlassPoTablitsePriPovyshenii, KlassPoTablitsePriPovyshenii2022); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "primenyaemyy_mrp",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (Punkt11Primenyaetsya); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "prisvoennyy_klass",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KoeffitsientBezPovysheniya, KoeffitsientPoPrilozheniyu2022, KoeffitsientPoSobstvennoyOtsenke…); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "punkt_10_primenyaetsya",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (SdvigPunkta10Est, SdvigPunkta10Net); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "punkt_11_primenyaetsya",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (SdvigPunkta11Est, SdvigPunkta11Net); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "punkt_12_primenyaetsya",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (SdvigPunkta12Est, SdvigPunkta12Net); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "punkt_13_primenyaetsya",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (SdvigPunkta13Est, SdvigPunkta13Net); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "sdvig_punkta_10",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (SummaSdvigov); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "sdvig_punkta_11",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (SummaSdvigov); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "sdvig_punkta_12",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (SummaSdvigov); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "sdvig_punkta_13",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (SummaSdvigov); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "sluchaev_po_vine",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KlassBezPovysheniya, KlassBezPovysheniya2022, KlassBezPovysheniyaPriLishenii…); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "sobstvennaya_otsenka_zayavlena",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KoeffitsientBezPovysheniya, KoeffitsientSPovysheniem); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "stolbets_perekhoda",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (KlassPoTablitsePriSnizhenii, KlassPoTablitsePriSnizhenii2022); самостоятельным вопросом к пакету он не является."
+    },
+    {
+      "predicate": "summa_sdvigov",
+      "reason": "Промежуточное звено: предикат выводится правилом пакета и читается телами других правил (MestoPrisvoeniya); самостоятельным вопросом к пакету он не является."
+    }
+  ]
+}

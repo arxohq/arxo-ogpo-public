@@ -1,0 +1,87 @@
+// Destruction of the vehicle and the payment on it: clause 9.
+//
+// PURPOSE. When a vehicle is deemed destroyed, and in what
+// amount the insurer makes the payment on its destruction.
+//
+// SOURCE PROVISIONS: clause 9.
+
+//
+// TWO GROUNDS FOR DESTRUCTION — TWO RULES (§206). "Technically impossible OR
+// economically inexpedient" is not recorded as a disjunction in the body: `or` is
+// not executed identically by both engines, and the proof would lose the very ground.
+//
+// THE 80% THRESHOLD IS COMPUTED, NOT NAMED IN PROSE: a comparison of `Money > Money *
+// Decimal` (§49 — multiplying money by a dimensionless scalar). The text's strict "exceed"
+// gives `>`: expenses equal to exactly eighty percent of the market
+// value do not amount to inexpediency, and this boundary is pinned by a pair of
+// scenarios on either side.
+//
+// THE TWO PAYMENT ALTERNATIVES ARE ALSO TWO RULES. The text gives a choice: the victim
+// transfers the remains into the insurer's ownership (in which case the payment equals the market
+// value) or the payment is reduced by the value of the parts, units,
+// assemblies and materials fit for sale. The second ground requires an
+// ESTABLISHED negative fact about the transfer of the remains (§113): the case being silent
+// about the transfer is not a refusal of it.
+
+pub relation vosstanovlenie_tekhnicheski_nevozmozhno(v: TransportnoeSredstvo) kind empirical { label ru official "Восстановление транспортного средства технически невозможно"; }
+pub relation ozhidaemye_raskhody_na_vosstanovlenie(v: TransportnoeSredstvo, amount: Money) kind empirical { label ru official "Ожидаемые расходы на восстановление транспортного средства"; }
+pub relation rynochnaya_stoimost_na_datu_otcheta(v: TransportnoeSredstvo, amount: Money) kind empirical { label ru official "Рыночная стоимость поврежденного транспортного средства на дату формирования отчёта о размере вреда"; }
+pub relation vosstanovlenie_ekonomicheski_netselesoobrazno(v: TransportnoeSredstvo) kind institutional { label ru official "Восстановление транспортного средства экономически нецелесообразно"; }
+pub relation ts_schitaetsya_unichtozhennym(v: TransportnoeSredstvo) kind institutional { label ru official "Транспортное средство считается уничтоженным"; }
+pub relation ostatki_peredany_v_sobstvennost_strakhovshchika(r: RaschetVreda) kind empirical { label ru official "Остатки поврежденного транспортного средства переданы в собственность страховщика"; }
+pub relation stoimost_godnykh_k_realizatsii_ostatkov(v: TransportnoeSredstvo, amount: Money) kind empirical { label ru official "Стоимость годных к реализации деталей, узлов, агрегатов и материалов"; }
+pub relation strakhovaya_vyplata_pri_gibeli(r: RaschetVreda, amount: Money) kind institutional { label ru official "Размер страховой выплаты при гибели транспортного средства"; }
+
+@source(VRED_TS_PT_9) {
+    rule EkonomicheskayaNetselesoobraznost(
+        v: TransportnoeSredstvo,
+        costs, market: Money,
+    ) strict {
+        label ru official "Пункт 9. Восстановление экономически нецелесообразно, если ожидаемые расходы превышают восемьдесят процентов рыночной стоимости на дату формирования отчёта";
+        when ozhidaemye_raskhody_na_vosstanovlenie(v: v, amount: costs);
+        when rynochnaya_stoimost_na_datu_otcheta(v: v, amount: market);
+        let porog_gibeli: Money = market * 0.8;
+        when costs > porog_gibeli;
+        then vosstanovlenie_ekonomicheski_netselesoobrazno(v);
+    }
+
+    rule UnichtozhenoPoTekhnicheskoyNevozmozhnosti(v: TransportnoeSredstvo) strict {
+        label ru official "Пункт 9. Транспортное средство считается уничтоженным, если его восстановление технически невозможно";
+        when vosstanovlenie_tekhnicheski_nevozmozhno(v);
+        then ts_schitaetsya_unichtozhennym(v);
+    }
+
+    rule UnichtozhenoPoEkonomicheskoyNetselesoobraznosti(v: TransportnoeSredstvo) strict {
+        label ru official "Пункт 9. Транспортное средство считается уничтоженным, если его восстановление экономически нецелесообразно";
+        when vosstanovlenie_ekonomicheski_netselesoobrazno(v);
+        then ts_schitaetsya_unichtozhennym(v);
+    }
+
+    rule VyplataPriPeredacheOstatkov(
+        r: RaschetVreda,
+        v: TransportnoeSredstvo,
+        market: Money,
+    ) strict {
+        label ru official "Пункт 9. При гибели транспортного средства с передачей остатков в собственность страховщика выплата равна рыночной стоимости на дату составления отчёта";
+        when raschet_po_ts(r: r, v: v);
+        when ts_schitaetsya_unichtozhennym(v);
+        when rynochnaya_stoimost_na_datu_otcheta(v: v, amount: market);
+        when ostatki_peredany_v_sobstvennost_strakhovshchika(r);
+        then strakhovaya_vyplata_pri_gibeli(r: r, amount: market);
+    }
+
+    rule VyplataZaMinusomGodnykhOstatkov(
+        r: RaschetVreda,
+        v: TransportnoeSredstvo,
+        market, salvage: Money,
+    ) strict {
+        label ru official "Пункт 9. При гибели транспортного средства без передачи остатков выплата равна рыночной стоимости за минусом стоимости годных к реализации деталей, узлов, агрегатов и материалов";
+        when raschet_po_ts(r: r, v: v);
+        when ts_schitaetsya_unichtozhennym(v);
+        when rynochnaya_stoimost_na_datu_otcheta(v: v, amount: market);
+        when stoimost_godnykh_k_realizatsii_ostatkov(v: v, amount: salvage);
+        when not ostatki_peredany_v_sobstvennost_strakhovshchika(r);
+        let vyplata: Money = market - salvage;
+        then strakhovaya_vyplata_pri_gibeli(r: r, amount: vyplata);
+    }
+}

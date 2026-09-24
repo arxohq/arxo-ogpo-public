@@ -1,0 +1,401 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 13 — действие договора: круг потерпевших, вступление в силу, срок,
+// иной срок и территория.
+//
+// РАСЧЁТ РУКАМИ. Договор вступает в силу 1 января 2026 года; двенадцать
+// месяцев ОТ ЭТОГО ДНЯ по календарному шагу §84.2 дают 1 января 2027 года,
+// а расстояние между этими днями — 365 суток (2026 год не високосный).
+// Именно эти два числа и спрашиваются: первое — днём окончания срока, второе
+// — сроком договора в днях, тем самым `N`, которым делит премию статья 15.
+//
+// ПАРА НАИМЕНЬШЕГО СРОКА. Пункт 4 подпункт 3) допускает договор на срок,
+// предшествующий государственной регистрации, «но не менее чем на пять
+// календарных дней». Договор с 1 по 4 января — четыре дня по счёту закона,
+// три по расстоянию между днями — короче наименьшего; договор с 1 по 6 января
+// ему равен. Пара стоит ровно на этой черте.
+
+context profile KZ_OGPO_DEADLINES {
+    deadline_policy KZ_OGPO_CALENDAR_MONTH_DEADLINES;
+}
+
+// ВТОРАЯ ПОЛИТИКА §86 — НЕ ДУБЛЬ, А НЕОБХОДИМОСТЬ, ИЗМЕРЕННАЯ 10.09.2026.
+// Календарный месяц ТРЕБУЕТ `month_end` (иначе «31 февраля» решалось бы
+// умолчанием), а календарный день его ОТВЕРГАЕТ: поле относится только к
+// месяцам и годам. Политика же одна на дело. Поэтому наименьший срок в шесть
+// месяцев (подпункт 1) и наименьший срок в пять календарных дней (подпункты
+// 3 и 4) считаются под РАЗНЫМИ политиками, и совместить их в одном деле
+// нельзя — граница §86, названная в шапке модуля и в отчёте наряда.
+context profile KZ_OGPO_DAY_DEADLINES {
+    deadline_policy KZ_OGPO_CALENDAR_DAY_DEADLINES;
+}
+
+test "urn:query:ogpo-term-end-twelve-months" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-a0": contract_in_question(entity_ref("urn:kz:ogpo:contract:t1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-a1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:t1"), @2026-01-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_term_end_day(entity_ref("urn:kz:ogpo:contract:t1"), @2027-01-01));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-term-days-365" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-b0": contract_in_question(entity_ref("urn:kz:ogpo:contract:t2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-b1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:t2"), @2026-01-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_term_days(entity_ref("urn:kz:ogpo:contract:t2"), 365));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пункт 4: названо основание иного срока — общее правило двенадцати месяцев
+// не применяется, срок берётся из договора.
+test "urn:query:ogpo-term-end-stipulated" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-c0": contract_in_question(entity_ref("urn:kz:ogpo:contract:t3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-c1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:t3"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-c2": other_term_ground(entity_ref("urn:kz:ogpo:contract:t3"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-c3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:t3"), @2026-04-11) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_term_days(entity_ref("urn:kz:ogpo:contract:t3"), 100));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Основание иного срока подтверждается обстоятельствами дела: подпункт 4)
+// пункта 4 говорит о временном въезде — том же основании, что подпункт 2)
+// пункта 1 статьи 5.
+test "urn:query:ogpo-other-term-ground-available" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-d0": contract_in_question(entity_ref("urn:kz:ogpo:contract:t4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-d1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:t4"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-d2": other_term_ground(entity_ref("urn:kz:ogpo:contract:t4"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-d3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:t4"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-d4": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:t4"), entity_ref("urn:kz:ogpo:vehicle:v7")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-d5": compulsory_insurance_ground(entity_ref("urn:kz:ogpo:vehicle:v7"), TemporaryEntry) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(other_term_ground_available(entity_ref("urn:kz:ogpo:contract:t4"), TemporaryEntryToKz));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-term-below-minimum" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-e0": contract_in_question(entity_ref("urn:kz:ogpo:contract:t5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-e1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:t5"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-e2": other_term_ground(entity_ref("urn:kz:ogpo:contract:t5"), PriorToStateRegistration) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-e3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:t5"), @2026-01-04) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_term_below_statutory_minimum(entity_ref("urn:kz:ogpo:contract:t5"), PriorToStateRegistration));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-term-at-minimum" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-f0": contract_in_question(entity_ref("urn:kz:ogpo:contract:t6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-f1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:t6"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-f2": other_term_ground(entity_ref("urn:kz:ogpo:contract:t6"), PriorToStateRegistration) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-f3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:t6"), @2026-01-06) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_term_below_statutory_minimum(entity_ref("urn:kz:ogpo:contract:t6"), PriorToStateRegistration));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пункт 1: договор действует в отношении признанного потерпевшего. Страховой
+// случай выводится статьёй 22 этого же пакета — пятью фактами дела.
+test "urn:query:ogpo-contract-applies-to-victim" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-g0": contract_insured_person(entity_ref("urn:kz:ogpo:contract:t7"), entity_ref("urn:kz:ogpo:owner:o1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-g1": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:t7"), entity_ref("urn:kz:ogpo:vehicle:v8")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-g2": accident_arose_from_vehicle_operation(entity_ref("urn:kz:ogpo:accident:x1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:vehicle:v8")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-g3": victim_recognized(entity_ref("urn:kz:ogpo:accident:x1"), entity_ref("urn:kz:ogpo:victim:p1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-g4": property_harm_amount(entity_ref("urn:kz:ogpo:accident:x1"), entity_ref("urn:kz:ogpo:victim:p1"), 500000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_applies_to_victim(entity_ref("urn:kz:ogpo:contract:t7"), entity_ref("urn:kz:ogpo:victim:p1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пара к предыдущему: тот же потерпевший — работник страхователя, на которого
+// возложена обязанность страховать работников от несчастных случаев. Подпункт
+// 3) пункта 1 выводит его из-под действия договора.
+test "urn:query:ogpo-employee-victim-excluded" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-h0": contract_insured_person(entity_ref("urn:kz:ogpo:contract:t8"), entity_ref("urn:kz:ogpo:owner:o1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-h1": contract_covers_vehicle(entity_ref("urn:kz:ogpo:contract:t8"), entity_ref("urn:kz:ogpo:vehicle:v9")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-h2": accident_arose_from_vehicle_operation(entity_ref("urn:kz:ogpo:accident:x2"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:vehicle:v9")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-h3": victim_recognized(entity_ref("urn:kz:ogpo:accident:x2"), entity_ref("urn:kz:ogpo:victim:p2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-h4": property_harm_amount(entity_ref("urn:kz:ogpo:accident:x2"), entity_ref("urn:kz:ogpo:victim:p2"), 500000 KZT) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-h5": victim_is_employee_of_insured(entity_ref("urn:kz:ogpo:contract:t8"), entity_ref("urn:kz:ogpo:victim:p2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-h6": insured_must_insure_employees(entity_ref("urn:kz:ogpo:contract:t8")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_applies_to_victim(entity_ref("urn:kz:ogpo:contract:t8"), entity_ref("urn:kz:ogpo:victim:p2")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пункт 6: территория и её оговорка — вторая пара «правило и дефитер».
+test "urn:query:ogpo-territory-limited-to-kz" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-i0": contract_in_question(entity_ref("urn:kz:ogpo:contract:t9")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-i1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:t9"), @2026-01-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_territory_limited_to_kz(entity_ref("urn:kz:ogpo:contract:t9")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-territory-extended-by-treaty" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-j0": contract_in_question(entity_ref("urn:kz:ogpo:contract:t10")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-j1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:t10"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-j2": international_treaty_extends_territory(entity_ref("urn:kz:ogpo:contract:t10")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_territory_limited_to_kz(entity_ref("urn:kz:ogpo:contract:t10")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пункт 3 абзац второй подпункт 1): договор должен быть заключён на момент
+// пересечения Государственной границы. Окно позиции — сам этот день.
+test "urn:query:ogpo-duty-at-border-crossing" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-t13-k0": vehicle_of(entity_ref("urn:kz:ogpo:vehicle:v10"), entity_ref("urn:kz:ogpo:owner:o6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-k1": international_movement_status(entity_ref("urn:kz:ogpo:vehicle:v10"), InInternationalMovement) {
+            origin case_input;
+        }
+
+        assert "ogpo-t13-k2": border_crossing_day(entity_ref("urn:kz:ogpo:vehicle:v10"), @2026-09-15) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(ZaklyuchitDogovorNaMomentPeresecheniyaGranicy, ACTIVE);
+}

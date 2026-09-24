@@ -1,0 +1,219 @@
+# Манифест §10 — маркер корня пакета (DECISION-0033). Нормативны заголовки §22
+# в самих .law; манифест обязан с ними совпадать (LDC-E1109, lawc check).
+[package]
+name = "kz.corpus.ogpovts"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:kz:corpus:clir:ogpo-vts"
+
+# `law.decision/0.1` — сетки коэффициентов статьи 19 и шкала удержания статьи
+# 15: конечные матрицы «условие → величина», каждая строка со своим якорем.
+#
+# `law.params/0.1` НЕ включён, и это следствие текста, а не экономия. У ОСМС
+# ставки — расписание по датам (`effective`), потому что закон менял их
+# поправками и портал отдаёт все окна; здесь величины стоят прямо в статье 19
+# закреплённой редакции, и оси времени у них нет. Ось времени у пакета одна —
+# сама редакция (`in_force` в sources.law). Появится редакция с другими
+# коэффициентами — появится вторая редакция, а не второе окно параметра.
+# Зависимости §10/§23: оба импорта пакета объявлены — бюджетный закон (МРП
+# статьи 19) и Правила определения размера вреда, которые читает статья 22.
+[dependencies]
+"kz.corpus.budget" = "0.1.0"
+"kz.corpus.vred_ts" = "0.1.0"
+# Коэффициент «бонус-малус» пункта 10 статьи 19 — с 13.09.2026 ВЫВОДИТСЯ, а не
+# входит фактом дела: порядок его расчёта определён постановлением Правления
+# НБ РК № 140, и владельцем этой нормы стал `kz.corpus.bonus_malus`.
+"kz.corpus.bonus_malus" = "0.2.0"
+# Общий словарь регионов (DECISION-0139): двадцать территорий пункта 3
+# статьи 19 названы им для соседей — `pub enum` членов не экспортирует.
+"vocab.geo" = "0.1.0"
+# Общий словарь транспортных средств (DECISION-0139): `entity Vehicle` пакета
+# заменён алиасом словарного типа, а срез видов пункта 6 статьи 19 связан с
+# видами словаря отношением `vehicle_type_kind` (package.law).
+"vocab.vehicle" = "0.1.0"
+
+# Каркасы профиля развёртки 0.2 (DECISION-0209, пилот Р8): девять
+# обязанностей со сроком делом глав 16, 22, 26, 28 записаны экземплярами
+# `expand`; пин — секция `expansions` law.lock (`gen_kz_clir.py --relock-expansions`).
+[expansions]
+matter_deadline_duty = { name = "law.expansions.matter_deadline_duty", version = "0.1.0", path = "expansions/matter_deadline_duty" }
+claim_deadline_duty = { name = "law.expansions.claim_deadline_duty", version = "0.1.0", path = "expansions/claim_deadline_duty" }
+
+[features]
+enabled = ["law.decision/0.1"]
+semanticLayer = "L1"
+
+# Каталожная метадата (DECISION-0051; docs/PACKAGE-METADATA.ru.md). НЕ семантика:
+# в CLIR не понижается, в semantic hash §209 не входит. Выводимые поля
+# (`jurisdiction` ← jurisdiction источника, `instrument` ← kind,
+# `sourceFidelity` ← materialization_status, `primarySource` ← source)
+# сверяются с декларациями `sources.law` воротами check_package_metadata.py.
+[metadata]
+act = "kz-ogpo-vts"
+title = "Закон РК «Об обязательном страховании ГПО владельцев транспортных средств» (446-II)"
+primarySource = "LAW_446"
+jurisdiction = "KZ"
+instrument = "law"
+sourceFidelity = "pinned_unofficial_copy"
+# Невыводимые поля не сверяет никто — потому причина выбора записана.
+#
+# `legalStatus = "in_force"`: закон действует. Основание — не умолчание, а
+# сам закреплённый текст: портал отдаёт консолидированную редакцию, в которой
+# три поправки 2026 года (256-VIII, 259-VIII, 352-VIII) объявлены ВВОДИМЫМИ В
+# ДЕЙСТВИЕ в будущем. Отменённый закон не поправляют вперёд.
+legalStatus = "in_force"
+# `issuer = "Парламент Республики Казахстан"`: акт принят в форме закона
+# (`kind law`, номер «446-II» — нумерация созывов Парламента) и подписан
+# Президентом; подпись стоит в закреплённых байтах последней строкой.
+issuer = "Парламент Республики Казахстан"
+
+# Рукописные сценарии пакета: исполняются общим раннером,
+# в учёт покрытия регрессии не входят.
+[[tests]]
+family = "kz.corpus.ogpovts#authored"
+regression = false
+suites = ["tests/ogpo-reduction-barred.lawtest", "tests/ogpo-reduction-needs-standard-contract.lawtest", "tests/ogpo-reduction-pensioner.lawtest", "tests/ogpo-20-otmena-primenimosti-polnoy-premii.lawtest",
+          "tests/catalog/general.lawtest"]
+world = ["kz.corpus.ogpovts", "vocab.vehicle"]
+
+[[tests]]
+family = "kz.corpus.ogpovts#granitsy"
+regression = false
+suites = [
+    "tests/ogpo-art3-object-of-insurance.lawtest",
+    "tests/ogpo-art7-p1-prohibition-active.lawtest",
+    "tests/ogpo-art7-p1-prohibition-defeated.lawtest",
+    "tests/ogpo-art7-p2-control-duty.lawtest",
+    "tests/ogpo-art8-p1-existing-insurer-active.lawtest",
+    "tests/ogpo-art8-p1-newly-created-insurer-active.lawtest",
+    "tests/ogpo-art8-p2-competition-violation-prohibited.lawtest",
+    "tests/ogpo-art8-p3-foreign-insurer-liberty.lawtest",
+    "tests/ogpo-art9-p1-issue-accident-documents.lawtest",
+    "tests/ogpo-art9-p2-provide-accident-information.lawtest",
+    "tests/ogpo-art9-p3-inform-insurer-when-reporting-impossible.lawtest",
+    "tests/ogpo-art9-p5-forward-beneficiary-information.lawtest",
+    "tests/ogpo-art9-p6-report-temporarily-entered-vehicle.lawtest",
+]
+world = ["kz.corpus.ogpovts", "vocab.vehicle"]
+
+# Позиции статей 16—18, 20-1 и 21: права и обязанности сторон и уплата премии.
+# Мир несёт снимок официального календаря §85 через `concat`, а не `world`:
+# пакет зависимости от него НЕ объявляет (`[dependencies]` — бюджет и Правила
+# определения размера вреда), а связывание §23 требует объявленного импорта.
+# Ресурс самого набора у пакета уже закреплён — `law.lock`, `resources`,
+# `../../../clir/kz-official-2026.calendar.json`.
+[[tests]]
+family = "kz.corpus.ogpovts#pozitsii"
+regression = false
+suites = [
+  "tests/ogpo-16-17-regress-i-omdusman.lawtest",
+  "tests/ogpo-16-17-zaklyuchenie-dogovora.lawtest",
+  "tests/ogpo-16-obyazannosti-voditelya.lawtest",
+  "tests/ogpo-16-prava-strakhovatelya.lawtest",
+  "tests/ogpo-16-uvedomlenie-o-proisshestvii.lawtest",
+  "tests/ogpo-17-dlyashchiesya-obyazannosti.lawtest",
+  "tests/ogpo-17-sroki-strakhovshchika.lawtest",
+  "tests/ogpo-18-prava-poterpevshego.lawtest",
+  "tests/ogpo-20-1-dopolnitelnye-uslugi.lawtest",
+  "tests/ogpo-21-uplata-premii.lawtest",
+  "tests/ogpo-26-granitsa-redaktsii.lawtest",
+  "tests/ogpo-26-ispolnenie-iz-dnya-vyplaty.lawtest",
+  "tests/ogpo-26-1-otmena-primenimosti-obshchego-sroka.lawtest",
+]
+world = ["kz.corpus.ogpovts", "kz.corpus.bonus_malus", "vocab.vehicle"]
+concat = ["kz.corpus.clir.official_calendar"]
+
+# Наряд «страховой случай»: статьи 22 (остаток), 22-1, 22-2 (остаток),
+# 25 (остаток), 29-1. Мир шире, чем у семейства `#authored`: сценарии считают
+# дневные сроки §86 (снимок официального календаря §85), читают МРП
+# (`kz.corpus.budget`) и вывод нормативного правового акта уполномоченного
+# органа о непредоставлении отчёта (`kz.corpus.vred_ts`, пункт 3-1 статьи 22).
+[[tests]]
+family = "kz.corpus.ogpovts#sluchay"
+regression = false
+suites = ["tests/ogpo-st22-1-skhema-proisshestviya.lawtest", "tests/ogpo-st22-2-uproshchennyy-poryadok.lawtest", "tests/ogpo-st22-opredelenie-vreda.lawtest", "tests/ogpo-st22-osmotr-sroki.lawtest", "tests/ogpo-st22-punkt-3-1-otsenshchik.lawtest", "tests/ogpo-st25-usloviya-vyplaty.lawtest", "tests/ogpo-st29-1-spory.lawtest"]
+world = ["kz.corpus.ogpovts", "kz.corpus.budget", "kz.corpus.vred_ts", "kz.corpus.clir.official_calendar", "vocab.vehicle"]
+
+# Агрегаты по множеству (несколько застрахованных, потерпевших,
+# причинителей, история выплат) и оставшиеся пункты статьи 19.
+#
+# `kz.corpus.budget_code` УБРАН ИЗ МИРА 13.09.2026, и это исправление, а не
+# сужение покрытия. Предикат МРП носит пространство имён бюджетного кодекса,
+# но нормативный факт `kz.corpus.budget_code::mrp(2026, 4325 KZT)` объявлен
+# внутри пакета `kz.corpus.budget` — снимок бюджетного кодекса семейству не
+# нужен ни для одной посылки. Зато он тянул за собой ресурс `calendar-dataset`
+# узла `budget-code#calendar-snapshot`, чей `datasetHash` в снимке
+# `kz-budget-code.lawir.json` остался прежним (`a17b851a…`) после того, как
+# сосед пересобрал общий набор календаря (`d04f4876…`, коммит c1fe765214,
+# многолетний календарь). Из-за этого все семнадцать сцен семейства были
+# КРАСНЫ в рабочем дереве: «набор календаря … не даёт закреплённый datasetHash
+# (§85)». Снимок бюджетного кодекса — чужой замороженный пакет, и чинить
+# расхождение пересборкой ЕГО снимка отсюда нельзя; убранный лишний участник
+# мира чинит семейство, ничего чужого не трогая. Полный долг — двенадцать
+# локов корпуса, остальные девяносто шесть уже на новых байтах.
+[[tests]]
+family = "kz.corpus.ogpovts#agregaty"
+regression = false
+suites = ["tests/ogpo-premium-short-term.lawtest", "tests/ogpo-premium-multi-unit.lawtest", "tests/ogpo-property-multi-victim.lawtest", "tests/ogpo-payment-recalculation.lawtest", "tests/ogpo-several-tortfeasors.lawtest", "tests/ogpo-19-vid-ts-slovarya.lawtest"]
+world = ["kz.corpus.ogpovts", "kz.corpus.budget", "kz.corpus.bonus_malus", "vocab.geo", "vocab.vehicle"]
+# `kz.corpus.popravochnye_koeffitsienty` приходит через `concat`, а не `world`,
+# и это следствие направления импорта. Пакет размеров ИМПОРТИРУЕТ закон (его
+# двадцать территорий), а закон его — нет; связывание §23 требует, чтобы
+# участник мира был объявленным импортом другого участника, и обратного
+# ребра здесь нет по построению. Тот же приём уже применён к снимку
+# официального календаря §85 у семейств `#pozitsii` и `#dogovor-sroki`.
+concat = ["kz.corpus.popravochnye_koeffitsienty"]
+
+# Пункт 4 статьи 19, условие «в областях» (DECISION-0336). Мир без пакета
+# размеров: поправочный коэффициент п. 3-1 подан фактом дела, проверяется одна норма.
+[[tests]]
+family = "kz.corpus.ogpovts#territoriya-p4"
+regression = false
+suites = ["tests/ogpo-19-p4-v-oblastyakh.lawtest"]
+world = ["kz.corpus.ogpovts", "kz.corpus.budget", "kz.corpus.bonus_malus", "vocab.geo", "vocab.vehicle"]
+
+# Чужие калькуляторы годовой премии (calk.kz, calculators.kz), 14.09.2026.
+# Сценарии ПОРОЖДЕНЫ `tools/foreign_premium.py --emit` из
+# `tools/foreign-premium-cases.json`: ожидание — независимая модель по
+# закреплённым текстам, чужой ответ — прогон их закреплённого кода;
+# квалификация расхождений — `tests/foreign/REPORT.md`. Мир тот же, что у
+# `#agregaty`: поправочный коэффициент выводит пакет размеров через `concat`.
+[[tests]]
+family = "kz.corpus.ogpovts#chuzhie-kalkulyatory"
+regression = false
+suites = ["tests/ogpo-chuzhoy-almaty-car-30-5-k3.lawtest", "tests/ogpo-chuzhoy-astana-car-24-1-old-k3.lawtest", "tests/ogpo-chuzhoy-almaty-oblast-village-car-40-10-k13.lawtest", "tests/ogpo-chuzhoy-zhambyl-truck-45-20-k5.lawtest", "tests/ogpo-chuzhoy-kyzylorda-bus16-35-8-kM.lawtest", "tests/ogpo-chuzhoy-shymkent-bus-over16-50-25-old-k3.lawtest", "tests/ogpo-chuzhoy-atyrau-moto-22-3-k3.lawtest", "tests/ogpo-chuzhoy-vko-trailer-60-30-old-k13.lawtest", "tests/ogpo-chuzhoy-karaganda-village-tram-40-10-k0.lawtest", "tests/ogpo-chuzhoy-kostanay-car-25-2-k3.lawtest", "tests/ogpo-chuzhoy-pavlodar-car-30-5-first.lawtest", "tests/ogpo-chuzhoy-akmola-taxi-legal-entity.lawtest", "tests/ogpo-chuzhoy-ulytau-car-19-0-new-k3.lawtest", "tests/ogpo-chuzhoy-mangystau-village-bus16-33-12-k8.lawtest", "tests/ogpo-chuzhoy-zko-truck-23-1-old-kM2.lawtest", "tests/ogpo-chuzhoy-sko-car-45-3-k10.lawtest", "tests/ogpo-chuzhoy-turkestan-village-car-28-1-old-k2.lawtest", "tests/ogpo-chuzhoy-abay-light-truck-38-15-old-k4.lawtest"]
+world = ["kz.corpus.ogpovts", "kz.corpus.budget", "kz.corpus.bonus_malus", "vocab.geo", "vocab.vehicle"]
+concat = ["kz.corpus.popravochnye_koeffitsienty"]
+
+# Наряд «Договор» (статьи 10, 11, 12, 12-1, 13, 14, 15): сценарии §267 к
+# модулям `10-12-dogovor-i-ego-vidy.law`, `12-1-elektronnoe-zaklyuchenie.law` и
+# `13-15-deystvie-i-prekrashchenie.law`.
+[[tests]]
+family = "kz.corpus.ogpovts#dogovor"
+regression = false
+suites = [
+    "tests/ogpo-dogovor-predmet.lawtest",
+    "tests/ogpo-dogovor-zaklyuchenie.lawtest",
+    "tests/ogpo-polis-rekvizity.lawtest",
+    "tests/ogpo-vidy-dogovora.lawtest",
+    "tests/ogpo-elektronnyy-obmen.lawtest",
+    "tests/ogpo-srok-deystviya.lawtest",
+    "tests/ogpo-prekrashchenie.lawtest",
+    "tests/ogpo-dosrochnoe-prekrashchenie.lawtest",
+    "tests/ogpo-shkala-uderzhaniya.lawtest",
+    "tests/ogpo-dogovor-ostalnye-normy.lawtest",
+    # DECISION-0344 §4 в статьях 12-1 и 15: отводится беззначная применимость
+    # порядка, а не вывод с днём либо суммой (DECISION-0352 §2).
+    "tests/ogpo-12-1-otmena-primenimosti-dnya-platezha.lawtest",
+    "tests/ogpo-15-otmena-primenimosti-shkaly.lawtest",
+]
+world = ["kz.corpus.ogpovts", "vocab.vehicle"]
+
+# Сроки статей 13 и 14 в рабочих днях: снимок официального календаря §85
+# приходит через `concat`, как у семейства `#pozitsii`.
+[[tests]]
+family = "kz.corpus.ogpovts#dogovor-sroki"
+regression = false
+suites = ["tests/ogpo-vyplata-i-baza-dannykh.lawtest"]
+world = ["kz.corpus.ogpovts", "vocab.vehicle"]
+concat = ["kz.corpus.clir.official_calendar"]

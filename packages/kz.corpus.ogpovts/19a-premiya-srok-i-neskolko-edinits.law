@@ -1,0 +1,423 @@
+// СТАТЬЯ 19 ПУНКТЫ 14, 14-1, 15 И 16. ПРЕМИЯ ПО ДОГОВОРУ КОРОЧЕ ГОДА И
+// ПРЕМИЯ ПО ДОГОВОРУ С НЕСКОЛЬКИМИ ЕДИНИЦАМИ.
+//
+// Модуль снимает четыре пункта, которые `19-premium.law` держал очередью:
+// три из них требуют АГРЕГАТА по множеству (наибольшая из премий), а
+// четвёртый — прочтения о високосном годе.
+//
+// ПРИНЯТОЕ ПРОЧТЕНИЕ ПУНКТА 14 («N — 365 дней (в високосный год 366 дней)»).
+// Текст не говорит, КАКОЙ год проверяется на високосность: год заключения
+// договора, год его действия либо год, на который приходится бо́льшая часть
+// срока. Прочтение принято такое:
+//
+//     N есть число календарных дней в ГОДОВОМ ПЕРИОДЕ, который начинается
+//     днём начала срока действия договора, то есть в том самом году, за
+//     который взималась бы ГСП.
+//
+// Основание прочтения — сама формула: СП = ГСП × n/N есть доля годовой
+// премии, а годовая премия покрывает год, начинающийся днём начала действия
+// договора. Мерить долю года, которого договор не касается, значило бы
+// считать по чужому знаменателю. Технически N выводится термом
+// `days_between(start, add_calendar_period(start, 1 calendar_year))` и потому
+// равен 366 ровно тогда, когда 29 февраля попадает в этот годовой период.
+//
+// ДЕЛУ НУЖНА ПОЛИТИКА §86. `add_calendar_period` есть календарный шаг, и
+// без `deadline_policy` в контексте дела документ отвечает MISSING_POLICY.
+// Сценарии модуля подают профиль
+// `{ start_count same_day; include_end true; roll no_roll;
+//    month_end last_day_of_month; }`; рабочий календарь §85 при этом НЕ
+// нужен — год шагается календарным семейством, а не считающимися днями.
+//
+// Прочтение закреплено парой сценариев на договорах, различающихся только
+// днём начала: OGPO-P14-1 (год без 29 февраля, N = 365) и OGPO-P14-2 (год с
+// 29 февраля, N = 366). Вопрос владельцу записан в отчёте наряда: два других
+// прочтения дают на одном и том же деле другой ответ.
+//
+// ОКРУГЛЕНИЯ ЗДЕСЬ НЕТ, И ЭТО ГРАНИЦА, А НЕ ЗАБЫВЧИВОСТЬ. Пункт 14 называет
+// формулу и умалчивает о том, как поступать с неточным частным. Деление
+// денег в языке (§50) требует ЯВНОЙ политики округления — терм `div_round`, —
+// а выбрать её за закон значило бы утверждать величину, которой в законе
+// нет. Поэтому деление здесь оператором `/`: на делах, где частное точно,
+// пакет отвечает, а на остальных отказывает `INEXACT_DIVISION`. Отказ есть
+// правильный ответ пакета: режим округления страховой премии по этому закону
+// не определён.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ СРЕЗА (решение формализатора, 10.09.2026):
+//
+//   пункт 14-1 — СТРОКА таблицы коэффициентов временного въезда. Сами
+//              одиннадцать коэффициентов и умножение на них выведены; а вот
+//              отнесение срока пребывания к строке таблицы фактом дела
+//              оставлено НАМЕРЕННО: таблица смешивает дни («до 15 дней
+//              включительно», «от 16 дней до 1 месяца») и месяцы («2 месяца»,
+//              «3 месяца» …), а сколько дней закон считает месяцем — не
+//              говорит ни здесь, ни в статье 1. Между «1 месяцем» и
+//              «2 месяцами» текст оставляет разрыв того же рода, что разрыв
+//              «стаж ровно два года» в пункте 7.
+//
+//   пункт 16, слова «и подлежит уплате страхователем» — ДЕОНТИЧЕСКАЯ сторона
+//              премии. Обязанность страхователя уплатить страховую премию
+//              установлена не статьёй 19, а статьями 17 и 18 (порядок и сроки
+//              уплаты), в срез они не входят, и связи «договор → страхователь»
+//              в пакете нет ни одной. Здесь поэтому выводится ВЕЛИЧИНА, а
+//              позиция §127 не выдумывается: носителя ей взять неоткуда.
+//
+//   пункты 15 и 16 — СОСТАВ договора (какое ТС указано в полисе, кто
+//              застрахован) есть предмет статей 12 и 11, а не 19-й. Здесь
+//              состав входит минимальными фактами дела `policy_vehicle` и
+//              `contract_insured_person`; при сведении с модулем статей 11–12 их
+//              надлежит вывести из предикатов того модуля, а не держать
+//              двумя словарями.
+
+
+// ============================================================================
+// Пункт 14 часть первая. Договор на срок менее двенадцати месяцев
+// ============================================================================
+
+relation contract_starts_on(contract: InsuranceContract, day: Date) kind empirical {
+    key(contract);
+    label ru-KZ official "день начала срока действия договора обязательного страхования ответственности владельцев транспортных средств";
+}
+
+
+// «На срок менее двенадцати месяцев» ВЫЧИСЛЯЕТСЯ, а не приходит признаком
+// дела: двенадцать месяцев от дня начала действия договора — это ровно тот
+// годовой период, длину которого формула пункта 14 называет буквой N.
+// Поэтому «срок менее двенадцати месяцев» есть n < N, и порог живёт
+// сравнением, а не прозой метки.
+relation short_term_contract(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "договор обязательного страхования ответственности владельцев транспортных средств заключается на срок менее года, отсчитываемого со дня начала его действия";
+}
+
+// Год формулы. Единица календарная, поэтому шаг — `add_calendar_period`
+// (E-0026/E-0029), а измерение — `days_between`: 366 получается ровно на тех
+// годовых периодах, внутрь которых попадает 29 февраля.
+relation premium_formula_days_in_year(contract: InsuranceContract, days: Integer)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "величина N формулы статьи 19 пункта 14: 365 дней, в високосный год 366 дней";
+}
+
+@source(LAW_446_ART19, quote = "N - 365 дней (в високосный год 366 дней).")
+rule PremiumFormulaDaysInYear(contract: InsuranceContract, start: Date) strict {
+    label ru-KZ official "Статья 19 пункт 14. N — 365 дней (в високосный год 366 дней): число календарных дней года, начинающегося днём начала срока действия договора";
+    when contract_starts_on(contract, start);
+    then premium_formula_days_in_year(contract,
+                                      days_between(start, add_calendar_period(start, 1 calendar_year)));
+}
+
+@source(LAW_446_ART19)
+rule ShortTermContractIsShorterThanTheYear(
+    contract: InsuranceContract,
+    term_days: Integer,
+    year_days: Integer,
+) strict {
+    label ru-KZ official "Статья 19 пункт 14. Договор заключён на срок менее двенадцати месяцев, если срок его заключения в днях меньше числа дней года, начинающегося днём начала его действия";
+    when contract_term_days(contract, term_days);
+    when premium_formula_days_in_year(contract, year_days);
+    when term_days < year_days;
+    then short_term_contract(contract);
+}
+
+// «за исключением случаев временного въезда на территорию Республики
+// Казахстан» выражено ПОЛОЖИТЕЛЬНО двумя правилами по двум оставшимся
+// основаниям пункта 3 и пункта 4 (§206): перечисление `TerritoryBasis`
+// конечно, дело называет ровно одно основание, и отрицание не нужно.
+relation contract_outside_temporary_entry(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "договор заключается не в связи с временным въездом транспортного средства на территорию Республики Казахстан";
+}
+
+@source(LAW_446_ART19) {
+    rule OutsideTemporaryEntryInCity(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 19 пункт 14. Договор по транспортному средству, зарегистрированному в столице, городе республиканского либо областного значения, заключается не в связи с временным въездом";
+        when territory_basis(contract, CityOfOblastSignificance);
+        then contract_outside_temporary_entry(contract);
+    }
+
+    rule OutsideTemporaryEntryInOtherSettlement(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 19 пункт 14. Договор по транспортному средству, зарегистрированному в ином городе или населённом пункте области, заключается не в связи с временным въездом";
+        when territory_basis(contract, OtherSettlement);
+        then contract_outside_temporary_entry(contract);
+    }
+}
+
+relation short_term_insurance_premium(contract: InsuranceContract, amount: Money)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "размер страховой премии по договору обязательного страхования ответственности владельцев транспортных средств, заключаемому на срок менее двенадцати месяцев";
+}
+
+// СП = ГСП * n/N. Записано как (ГСП × n) / N: величина та же, а деньги не
+// покидают вид `Money` (§58 — `Money * Integer` и `Money / Decimal`).
+// Множитель `1.0` переводит целое N в `Decimal`, как того требует строка
+// делимых §58.
+@source(LAW_446_ART19, quote = "При заключении договора обязательного страхования ответственности владельцев транспортных средств на срок менее двенадцати месяцев, за исключением случаев временного въезда на территорию Республики Казахстан, размеры страховых премий на единицу транспортного средства рассчитываются по следующей формуле:")
+rule ShortTermPremiumByDays(
+    contract: InsuranceContract,
+    annual: Money,
+    term_days: Integer,
+    year_days: Integer,
+) strict {
+    label ru-KZ official "Статья 19 пункт 14. При заключении договора на срок менее двенадцати месяцев, за исключением случаев временного въезда на территорию Республики Казахстан, размеры страховых премий на единицу транспортного средства рассчитываются по формуле СП = ГСП * n/N";
+    when short_term_contract(contract);
+    when contract_outside_temporary_entry(contract);
+    when annual_premium_calculated(contract, annual);
+    when contract_term_days(contract, term_days);
+    when premium_formula_days_in_year(contract, year_days);
+    then short_term_insurance_premium(contract, (annual * term_days) / (year_days * 1.0));
+}
+
+// ============================================================================
+// Пункт 14 часть вторая и пункт 14-1. Временный въезд
+// ============================================================================
+
+enum TemporaryEntryTermBand {
+    label ru-KZ official "срок страхования при обязательном страховании ответственности владельцев транспортных средств, зарегистрированных в иностранных государствах и временно используемых на территории Республики Казахстан (статья 19 пункт 14-1)";
+    UpToFifteenDays;
+    SixteenDaysToOneMonth;
+    TwoMonths;
+    ThreeMonths;
+    FourMonths;
+    FiveMonths;
+    SixMonths;
+    SevenMonths;
+    EightMonths;
+    NineMonths;
+    TenMonthsOrMore;
+}
+
+relation temporary_entry_term_band(contract: InsuranceContract, band: TemporaryEntryTermBand)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "срок страхования по договору при временном въезде отнесён к указанной строке таблицы статьи 19 пункта 14-1";
+}
+
+relation temporary_entry_coefficient_scale(band: TemporaryEntryTermBand, coefficient: Decimal)
+    kind institutional {
+    key(band);
+    label ru-KZ official "поправочный коэффициент в зависимости от срока пребывания на территории Республики Казахстан (статья 19 пункт 14-1)";
+}
+
+@source(LAW_446_ART19) {
+    assert temporary_entry_coefficient_scale(UpToFifteenDays, 0.2);
+    assert temporary_entry_coefficient_scale(SixteenDaysToOneMonth, 0.3);
+    assert temporary_entry_coefficient_scale(TwoMonths, 0.4);
+    assert temporary_entry_coefficient_scale(ThreeMonths, 0.5);
+    assert temporary_entry_coefficient_scale(FourMonths, 0.6);
+    assert temporary_entry_coefficient_scale(FiveMonths, 0.65);
+    assert temporary_entry_coefficient_scale(SixMonths, 0.7);
+    assert temporary_entry_coefficient_scale(SevenMonths, 0.8);
+    assert temporary_entry_coefficient_scale(EightMonths, 0.9);
+    assert temporary_entry_coefficient_scale(NineMonths, 0.95);
+    assert temporary_entry_coefficient_scale(TenMonthsOrMore, 1.0);
+}
+
+@source(LAW_446_ART19, quote = "В случае временного въезда на территорию Республики Казахстан размер страховой премии на единицу транспортного средства рассчитывается по следующей формуле:")
+rule ShortTermPremiumOnTemporaryEntry(
+    contract: InsuranceContract,
+    annual: Money,
+    band: TemporaryEntryTermBand,
+    coefficient: Decimal,
+) strict {
+    label ru-KZ official "Статья 19 пункт 14. В случае временного въезда на территорию Республики Казахстан размер страховой премии на единицу транспортного средства рассчитывается по формуле СП = ГСП*К";
+    when short_term_contract(contract);
+    when territory_basis(contract, TemporaryEntry);
+    when annual_premium_calculated(contract, annual);
+    when temporary_entry_term_band(contract, band);
+    when temporary_entry_coefficient_scale(band, coefficient);
+    then short_term_insurance_premium(contract, annual * coefficient);
+}
+
+// ============================================================================
+// Пункт 15. Премия по комплексному договору
+// ============================================================================
+//
+// Комплексный договор (статья 12) страхует ответственность владельца ДВУХ И
+// БОЛЕЕ единиц транспортных средств, и премия по нему одна — наибольшая из
+// премий, установленных для указанных в полисе транспортных средств.
+//
+// Премия «установленная для транспортного средства» есть та же премия пункта
+// 1: базовая премия, умноженная на пять коэффициентов. Две оси из пяти —
+// тип транспортного средства (пункт 6) и срок эксплуатации (пункт 9) — у
+// разных единиц полиса РАЗНЫЕ, и потому здесь они заведены с ключом по паре
+// «договор, транспортное средство». Остальные три оси принадлежат договору и
+// читаются из `19-premium.law` без повторения.
+
+
+relation policy_vehicle(contract: InsuranceContract, vehicle: Vehicle) kind empirical {
+    label ru-KZ official "транспортное средство указано в страховом полисе";
+}
+
+relation policy_vehicle_type(contract: InsuranceContract, vehicle: Vehicle,
+                             vehicle_type: VehicleType) kind empirical {
+    key(contract, vehicle);
+    label ru-KZ official "указанное в страховом полисе транспортное средство относится к указанному типу";
+}
+
+relation policy_vehicle_operation_term_years(contract: InsuranceContract, vehicle: Vehicle,
+                                             years: Integer) kind empirical {
+    key(contract, vehicle);
+    label ru-KZ official "срок эксплуатации указанного в страховом полисе транспортного средства в полных годах";
+}
+
+// Связка ЕДИНИЦЫ ТЕХНИКИ с расчётом класса по подзаконному акту. Пункт 15
+// считает премию по каждому транспортному средству полиса отдельно, и класс
+// «бонус-малус» у каждого свой: приложение к Правилам № 140 строит переход от
+// ДЕЙСТВУЮЩЕГО класса, а он у разных единиц техники расходится историей.
+relation raschet_bonus_malus_edinitsy(contract: InsuranceContract, vehicle: Vehicle,
+                                      dogovor: kz.corpus.bonus_malus::Dogovor)
+    kind empirical {
+    key(contract, vehicle);
+    label ru-KZ official "расчёт класса по системе «бонус-малус», относящийся к указанному в страховом полисе транспортному средству";
+}
+
+relation policy_vehicle_bonus_malus(contract: InsuranceContract, vehicle: Vehicle,
+                                    coefficient: Decimal) kind institutional {
+    key(contract, vehicle);
+    label ru-KZ official "коэффициент по системе «бонус-малус» для указанного в страховом полисе транспортного средства (статья 19 пункт 10)";
+}
+
+@source(LAW_446_ART19)
+rule PolicyVehicleBonusMalusFromDelegatedAct(
+    contract: InsuranceContract,
+    vehicle: Vehicle,
+    dogovor: kz.corpus.bonus_malus::Dogovor,
+    coefficient: Decimal,
+) strict {
+    label ru-KZ official "Статья 19 пункт 10. Коэффициент по системе «бонус-малус» для указанного в страховом полисе транспортного средства берётся из Правил расчета и применения коэффициента по системе «бонус-малус»";
+    when raschet_bonus_malus_edinitsy(contract, vehicle, dogovor);
+    when kz.corpus.bonus_malus::koeffitsient_bonus_malus(dogovor, coefficient);
+    then policy_vehicle_bonus_malus(contract, vehicle, coefficient);
+}
+
+relation vehicle_premium_amount(contract: InsuranceContract, vehicle: Vehicle, amount: Money)
+    kind institutional {
+    key(contract, vehicle);
+    label ru-KZ official "размер страховой премии, установленный для указанного в страховом полисе транспортного средства";
+}
+
+@source(LAW_446_ART19)
+rule VehiclePremiumAmount(
+    contract: InsuranceContract,
+    vehicle: Vehicle,
+    base: Money,
+    territory: Decimal,
+    vehicle_type: VehicleType,
+    type_scale: Decimal,
+    driver: Decimal,
+    years: Integer,
+    operation_term: Decimal,
+    bonus_malus: Decimal,
+) strict {
+    label ru-KZ official "Статья 19 пункт 15. Размер страховой премии, установленный для указанного в страховом полисе транспортного средства, рассчитывается по пункту 1 настоящей статьи по этому транспортному средству";
+    when policy_vehicle(contract, vehicle);
+    when base_insurance_premium(base);
+    when applicable_territory_coefficient(contract, territory);
+    when policy_vehicle_type(contract, vehicle, vehicle_type);
+    when vehicle_type_scale(vehicle_type, type_scale);
+    when applicable_driver_coefficient(contract, driver);
+    when policy_vehicle_operation_term_years(contract, vehicle, years);
+    when operation_term_scale(years, operation_term);
+    when policy_vehicle_bonus_malus(contract, vehicle, bonus_malus);
+    then vehicle_premium_amount(contract, vehicle,
+                                base * territory * type_scale * driver
+                                     * operation_term * bonus_malus);
+}
+
+relation complex_contract_premium(contract: InsuranceContract, amount: Money)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "размер страховой премии, уплачиваемой за одну единицу транспортного средства по комплексному договору";
+}
+
+// Свидетель непустоты в теле обязателен: правило с агрегатом без него
+// сработало бы на ПУСТОМ множестве и дало EMPTY_AGGREGATE на весь документ.
+@source(LAW_446_ART19, quote = "По комплексному договору страховая премия уплачивается за одну единицу транспортного средства, при этом размер страховой премии определяется равным наибольшей величине из размеров страховых премий, установленных для транспортных средств, указанных в страховом полисе.")
+rule ComplexContractPremiumIsTheGreatest(
+    contract: InsuranceContract,
+    any_vehicle: Vehicle,
+    any_amount: Money,
+) strict {
+    label ru-KZ official "Статья 19 пункт 15. По комплексному договору страховая премия уплачивается за одну единицу транспортного средства, при этом размер страховой премии определяется равным наибольшей величине из размеров страховых премий, установленных для транспортных средств, указанных в страховом полисе";
+    when complex_contract(contract);
+    when vehicle_premium_amount(contract, any_vehicle, any_amount);
+    then complex_contract_premium(contract,
+        (max distinct amount: Money for vehicle: Vehicle
+             where vehicle_premium_amount(contract, vehicle, amount)));
+}
+
+// ============================================================================
+// Пункт 16. Премия по стандартному договору
+// ============================================================================
+//
+// По стандартному договору (статья 11 пункт 1) может быть застрахована
+// ответственность ОДНОГО ИЛИ НЕСКОЛЬКИХ владельцев одного транспортного
+// средства. Меняется здесь не единица техники, а ЛИЦО, и потому расходится
+// ровно одна ось — возраст и стаж вождения (пункт 7).
+
+
+relation insured_person_age_years(contract: InsuranceContract, person: VehicleOwner,
+                                  years: Integer) kind empirical {
+    key(contract, person);
+    label ru-KZ official "возраст застрахованного по стандартному договору в полных годах";
+}
+
+relation insured_person_driving_experience_years(contract: InsuranceContract,
+                                                 person: VehicleOwner, years: Integer)
+    kind empirical {
+    key(contract, person);
+    label ru-KZ official "стаж вождения застрахованного по стандартному договору в полных годах";
+}
+
+relation insured_person_premium_amount(contract: InsuranceContract, person: VehicleOwner,
+                                       amount: Money) kind institutional {
+    key(contract, person);
+    label ru-KZ official "размер страховой премии, рассчитанный по застрахованному по стандартному договору";
+}
+
+@source(LAW_446_ART19)
+rule InsuredPersonPremiumAmount(
+    contract: InsuranceContract,
+    person: VehicleOwner,
+    base: Money,
+    territory: Decimal,
+    vehicle_type: Decimal,
+    age_years: Integer,
+    experience_years: Integer,
+    driver: Decimal,
+    operation_term: Decimal,
+    bonus_malus: Decimal,
+) strict {
+    label ru-KZ official "Статья 19 пункт 16. По стандартному договору страховая премия рассчитывается по каждому застрахованному по пункту 1 настоящей статьи";
+    when contract_insured_person(contract, person);
+    when base_insurance_premium(base);
+    when applicable_territory_coefficient(contract, territory);
+    when applicable_vehicle_type_coefficient(contract, vehicle_type);
+    when insured_person_age_years(contract, person, age_years);
+    when insured_person_driving_experience_years(contract, person, experience_years);
+    when age_experience_scale(age_years, experience_years, driver);
+    when applicable_operation_term_coefficient(contract, operation_term);
+    when bonus_malus_coefficient(contract, bonus_malus);
+    then insured_person_premium_amount(contract, person,
+                                       base * territory * vehicle_type * driver
+                                            * operation_term * bonus_malus);
+}
+
+relation standard_contract_premium(contract: InsuranceContract, amount: Money)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "размер страховой премии по стандартному договору";
+}
+
+@source(LAW_446_ART19, quote = "По стандартному договору страховая премия рассчитывается по каждому застрахованному и подлежит уплате страхователем в размере, равном наибольшей величине из размеров страховых премий, рассчитанных по каждому застрахованному.")
+rule StandardContractPremiumIsTheGreatest(
+    contract: InsuranceContract,
+    any_person: VehicleOwner,
+    any_amount: Money,
+) strict {
+    label ru-KZ official "Статья 19 пункт 16. По стандартному договору страховая премия определяется в размере, равном наибольшей величине из размеров страховых премий, рассчитанных по каждому застрахованному";
+    when standard_contract(contract);
+    when insured_person_premium_amount(contract, any_person, any_amount);
+    then standard_contract_premium(contract,
+        (max distinct amount: Money for person: VehicleOwner
+             where insured_person_premium_amount(contract, person, amount)));
+}

@@ -1,0 +1,28 @@
+language "law.core" version "0.1";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Cl. 10 sub-cl. 1. Lower edge of the mileage threshold: exactly fifteen
+// thousand kilometres — "does not exceed", the condition is satisfied.
+test "urn:query:vred-t03" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "vred-t03-a0": detal_ts(d: entity_ref("urn:case:vred:detal-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "vred-t03-a1": detal_podlezhit_zamene(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "vred-t03-a2": vladelets_fizicheskoe_litso(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "vred-t03-a3": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "vred-t03-a4": detal_ne_povrezhdalas_i_ne_remontirovalas(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "vred-t03-a5": srednegodovoy_probeg(v: entity_ref("urn:case:vred:ts-1"), distance: 15000 km) { origin case_input; }
+    }
+
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:case:vred:detal-1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

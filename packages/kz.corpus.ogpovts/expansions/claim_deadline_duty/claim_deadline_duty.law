@@ -1,0 +1,38 @@
+language "law.core" version "0.2";
+package law.expansions.claim_deadline_duty version "0.1.0";
+namespace "urn:law:expansions:claim-deadline-duty";
+
+// DECISION-0209 §8 этап 7 (пилот Р8): обязанность достижения над
+// ТРЕБОВАНИЕМ со сроком делом — стороны и контекст одной 4-арной посылкой
+// требования, условия над требованием, даты — двумя посылками. Форма
+// глав 16, 26, 28 ОГПО ВТС (`payment_claim_of(demand, accident, holder, insurer)`).
+expansion claim_deadline_duty {
+    params {
+        bearer: binder;
+        beneficiary: binder;
+        matter: binder;
+        context: binder;
+        start: binder;
+        due: binder;
+        claim: relation(matter, context, beneficiary, bearer);
+        started: relation(matter, start);
+        due_on: relation(matter, due);
+        conditions: list<relation(matter)> min 0;
+        result: relation(matter);
+    }
+    exports { duty = self/duty; }
+
+    emit rule self/duty strict {
+        for matter; for context; for beneficiary; for bearer; for start; for due;
+        when claim(matter, context, beneficiary, bearer);
+        for each c in conditions { when c(matter); }
+        when started(matter, start);
+        when due_on(matter, due);
+        then duty self/duty/norm {
+            bearer bearer;
+            beneficiary beneficiary;
+            achieve result(matter) during between start and due inclusive;
+        }
+        scope from self; effective from self; labels from self; source from self;
+    }
+}

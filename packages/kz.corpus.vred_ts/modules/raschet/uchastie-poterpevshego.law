@@ -1,0 +1,52 @@
+// Duties of the victim from the day the application is filed: fifth part of clause 2.
+//
+// PURPOSE. Preserving the damaged property and providing the insurer with the
+// ability to carry out the calculation.
+//
+// SOURCE PROVISIONS: clause 2, fifth part.
+//
+// MODEL BOUNDARY. Both windows are open from the day the application is filed: clause 2
+// names the start and does not name the end, and ascribing one would amount to inventing a
+// norm. The §124.2 maintenance duty is breached by a counterexample, not by a
+// deadline.
+
+// --- Clause 2. Duties of the victim from the day the application is filed --------------
+relation zayavlenie_predstavleno_v_den(r: RaschetVreda, day: Date) kind empirical { label ru official "Заявление об определении размера вреда представлено в этот день"; }
+relation imushchestvo_izmeneno_posle_proisshestviya(r: RaschetVreda) kind empirical { label ru official "Состояние поврежденного имущества изменено по сравнению с тем, в каком оно находилось после транспортного происшествия"; }
+relation vozmozhnost_rascheta_predostavlena(r: RaschetVreda) kind empirical { label ru official "Страховщику предоставлена возможность произвести расчёт размера вреда"; }
+
+@source(VRED_TS_PT_2) {
+    rule SokhranenieImushchestva(
+        r: RaschetVreda,
+        s: Strakhovshchik,
+        p: Poterpevshiy,
+        day: Date,
+    ) strict {
+        label ru official "Пункт 2. Со дня представления заявления потерпевший сохраняет поврежденное имущество в том состоянии, в каком оно находилось после транспортного происшествия";
+        when strakhovshchik_po_raschetu(r: r, s: s);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        when zayavlenie_predstavleno_v_den(r: r, day: day);
+        then duty SokhranitImushchestvo {
+            bearer p;
+            beneficiary s;
+            maintain not imushchestvo_izmeneno_posle_proisshestviya(r) during [day, infinity);
+        };
+    }
+
+    rule PredostavlenieVozmozhnostiRascheta(
+        r: RaschetVreda,
+        s: Strakhovshchik,
+        p: Poterpevshiy,
+        day: Date,
+    ) strict {
+        label ru official "Пункт 2. Со дня представления заявления потерпевший предоставляет страховщику возможность произвести расчёт размера вреда";
+        when strakhovshchik_po_raschetu(r: r, s: s);
+        when poterpevshiy_po_raschetu(r: r, p: p);
+        when zayavlenie_predstavleno_v_den(r: r, day: day);
+        then duty PredostavitVozmozhnostRascheta {
+            bearer p;
+            beneficiary s;
+            achieve vozmozhnost_rascheta_predostavlena(r) during [day, infinity);
+        };
+    }
+}

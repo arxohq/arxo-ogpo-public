@@ -1,0 +1,391 @@
+# Rules for Determining the Amount of Damage Caused to a Vehicle
+
+Independent implementation of the COMPUTATIONAL part of the Rules (Resolution
+of the Board of the National Bank of the Republic of Kazakhstan of 28.01.2016
+No. 14) in Catala 1.2. The model is derived from the pinned source text
+(`../sources/vred-ts/ru.txt`), not translated from the Law DSL; the
+comparison with `lawc`/`lawref` is `compare.py` next to it.
+
+Agreed semantics (see `README.md`): no output — `Absent`; an established
+negative output — `Present content false`; money amounts — whole tenge
+(Catala stores money to a hundredth's precision, the Law DSL exactly; for
+whole tenge, an 80% product is representable exactly in both); dates —
+calendar dates, business days — from the external official-calendar snapshot
+(weekends are Saturday and Sunday, holidays and shifted days off — the
+snapshot's list); the deadline-counting order — Civil Code of the RK art.
+173 and 176: a deadline of N business days expires on the N-th business day
+after the day of the event.
+
+## External data: the official-calendar snapshot
+
+The calendar is not a norm of the Rules but an external fact: the list of
+non-working days and the snapshot's coverage bounds. Outside coverage, a
+deadline is not computed (`Absent`), just as the §85 snapshot in the Law DSL
+fails with the code `CALENDAR_OUT_OF_RANGE`.
+
+```catala
+declaration structure Kalendar:
+  data nachalo content date
+  data konets_isklyuchitelno content date
+  data nerabochie_dni content list of date
+
+declaration v_pokrytii content boolean
+  depends on k content Kalendar, d content date
+  equals d >= k.nachalo and d < k.konets_isklyuchitelno
+
+declaration rabochiy_den content boolean
+  depends on k content Kalendar, d content date
+  equals
+    (not ((Date.day_of_week of d) = Date.Day_of_week.Saturday))
+    and (not ((Date.day_of_week of d) = Date.Day_of_week.Sunday))
+    and (not (k.nerabochie_dni contains d))
+
+# Candidates for the N-th business day: up to forty calendar days after the
+# event. Even across Nauryz (five non-working days in a row plus two
+# weekend days), five business days is covered with margin to spare.
+declaration smeshcheniya content list of integer equals
+  [1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13; 14; 15; 16; 17; 18; 19; 20;
+   21; 22; 23; 24; 25; 26; 27; 28; 29; 30; 31; 32; 33; 34; 35; 36; 37; 38; 39; 40]
+
+# The N-th business day AFTER the event day d (the event day itself is not
+# counted — Civil Code of the RK art. 173). Absent if the event day or the
+# sought day falls outside the snapshot's coverage.
+declaration n_y_rabochiy_den content optional of date
+  depends on k content Kalendar, d content date, n content integer
+  equals
+    if not (v_pokrytii of k, d) then Absent else
+    let rabochie equals
+      list of x among (map each i among smeshcheniya to d + (1 day * i))
+      such that rabochiy_den of k, x
+    in
+    if number of rabochie < n then Absent else
+    let vybor equals
+      combine all x among rabochie in acc initially (0, d) with
+        (if acc.1 < n then (acc.1 + 1, x) else acc)
+    in
+    if v_pokrytii of k, vybor.2 then Present content vybor.2 else Absent
+```
+
+## Clause 9. Destruction of the vehicle
+
+  9. A vehicle is deemed destroyed if its restoration is technically
+  impossible or economically inexpedient. Restoration of a vehicle is deemed
+  economically inexpedient if the expected cost of restoring the vehicle
+  exceeds 80 (eighty) percent of its market value as of the date the damage
+  report is drawn up.
+  In the event of destruction of the vehicle, the insurer makes the
+  insurance payment in the amount of the market value of the damaged
+  vehicle as of the date the damage report is drawn up, whereby the victim
+  (beneficiary) or their representative transfers ownership of the remains
+  of the damaged vehicle to the insurer, or the insurance payment is made
+  minus the value of the parts, assemblies, units, and materials fit for
+  sale.
+
+```catala
+declaration scope Gibel:
+  input tekhnicheski_nevozmozhno content boolean
+  input ozhidaemye_raskhody content optional of money
+  input rynochnaya_stoimost content optional of money
+  # Salvage transfer: Absent — the case is silent; Present false —
+  # established that the salvage was NOT transferred.
+  input ostatki_peredany content optional of boolean
+  input stoimost_godnykh_ostatkov content optional of money
+  output netselesoobrazno content optional of boolean
+  output unichtozheno content optional of boolean
+  output vyplata content optional of money
+
+scope Gibel:
+  # "Exceeds" means strictly more: exactly 80% does not amount to inexpediency.
+  label net_bazovoe definition netselesoobrazno equals Absent
+  exception net_bazovoe definition netselesoobrazno
+    under condition
+      ozhidaemye_raskhody with pattern Present content raskhody
+      and (rynochnaya_stoimost with pattern Present content stoimost
+           and raskhody > stoimost * 80%)
+    consequence equals Present content true
+
+  label unich_bazovoe definition unichtozheno equals Absent
+  exception unich_bazovoe definition unichtozheno
+    under condition
+      tekhnicheski_nevozmozhno or (netselesoobrazno with pattern Present)
+    consequence equals Present content true
+
+  label vyplata_bazovoe definition vyplata equals Absent
+  # First alternative: salvage transferred — the full market value.
+  label vyplata_alternativy exception vyplata_bazovoe definition vyplata
+    under condition
+      (unichtozheno with pattern Present)
+      and (rynochnaya_stoimost with pattern Present)
+      and (ostatki_peredany with pattern Present content peredany and peredany)
+    consequence equals
+      match rynochnaya_stoimost with pattern
+      -- Present content stoimost: Present content stoimost
+      -- Absent: impossible # excluded by the condition above
+  # Second alternative: salvage not transferred (established) — minus the
+  # value of the salvage fit for sale.
+  label vyplata_alternativy exception vyplata_bazovoe definition vyplata
+    under condition
+      (unichtozheno with pattern Present)
+      and (rynochnaya_stoimost with pattern Present)
+      and (stoimost_godnykh_ostatkov with pattern Present)
+      and (ostatki_peredany with pattern Present content peredany and (not peredany))
+    consequence equals
+      match rynochnaya_stoimost with pattern
+      -- Absent: impossible # excluded by the condition above
+      -- Present content stoimost:
+        match stoimost_godnykh_ostatkov with pattern
+        -- Absent: impossible # excluded by the condition above
+        -- Present content ostatki: Present content (stoimost - ostatki)
+```
+
+## Clause 10 and the Annex 3 footnote. Cost of the replaced part
+
+  10. When calculating the amount of damage caused to a vehicle where a part
+  needs replacing, the insurer applies the market value of a new part
+  without accounting for depreciation in the following cases:
+  1) for a vehicle owned by a private individual, subject to all of the
+  following conditions being met at once: the vehicle is not subject to
+  mandatory technical inspection; the vehicle's average annual mileage does
+  not exceed 15 thousand kilometers; the part being replaced was not
+  previously damaged and was not repaired;
+  2) for a vehicle owned by a legal entity, subject to all of the following
+  conditions being met at once: the vehicle is under warranty service; the
+  vehicle's average annual mileage does not exceed 20 thousand kilometers;
+  the part being replaced was not previously damaged and was not repaired.
+  [Annex 3, footnote] *- depreciation does not apply in the cases specified
+  in clause 10 of the Rules.
+
+```catala
+declaration enumeration Vladelets:
+  -- FizicheskoeLitso
+  -- YuridicheskoeLitso
+
+declaration scope StoimostDetali:
+  input vladelets content optional of Vladelets
+  input podlezhit_zamene content boolean
+  input ne_podlezhit_tekhosmotru content boolean
+  input na_garantiynom_obsluzhivanii content boolean
+  input srednegodovoy_probeg_km content optional of integer
+  input ranee_ne_povrezhdalas content boolean
+  input ne_podvergalas_remontu content boolean
+  input stoimost_novoy content optional of money
+  # Depreciated value — an external result (SPO of clause 2, resource of
+  # clause 11): the Rules do not contain depreciation formulas.
+  input stoimost_s_uchetom_iznosa content optional of money
+  internal detal_tselaya content boolean
+  output bez_iznosa content optional of boolean
+  output stoimost content optional of money
+
+scope StoimostDetali:
+  definition detal_tselaya equals ranee_ne_povrezhdalas and ne_podvergalas_remontu
+
+  label bi_bazovoe definition bez_iznosa equals Absent
+  # "Does not exceed" is non-strict: exactly 15,000 (20,000) km satisfies the condition.
+  label bi_sluchai exception bi_bazovoe definition bez_iznosa
+    under condition
+      podlezhit_zamene and detal_tselaya and ne_podlezhit_tekhosmotru
+      and (vladelets with pattern Present content v and v = FizicheskoeLitso)
+      and (srednegodovoy_probeg_km with pattern Present content km and km <= 15000)
+    consequence equals Present content true
+  label bi_sluchai exception bi_bazovoe definition bez_iznosa
+    under condition
+      podlezhit_zamene and detal_tselaya and na_garantiynom_obsluzhivanii
+      and (vladelets with pattern Present content v and v = YuridicheskoeLitso)
+      and (srednegodovoy_probeg_km with pattern Present content km and km <= 20000)
+    consequence equals Present content true
+
+  # Outside the clause 10 cases — the depreciated value (external result);
+  # in the clause 10 cases — the market value of a new part (footnote).
+  label st_bazovoe definition stoimost equals Absent
+  label st_s_iznosom exception st_bazovoe definition stoimost
+    under condition
+      (stoimost_s_uchetom_iznosa with pattern Present) and (not (bez_iznosa with pattern Present))
+    consequence equals stoimost_s_uchetom_iznosa
+  label st_bez_iznosa exception st_bazovoe definition stoimost
+    under condition
+      (bez_iznosa with pattern Present) and (stoimost_novoy with pattern Present)
+    consequence equals stoimost_novoy
+```
+
+## Clause 4-1. Choice of at least two appraisers
+
+  4-1. When determining the amount of damage via an appraiser it engages
+  under a service agreement, the insurer offers the victim or their
+  representative a choice of at least two appraisers.
+
+```catala
+declaration scope VyborOtsenshchikov:
+  input predlozheno content optional of integer
+  output obespechen content optional of boolean
+
+scope VyborOtsenshchikov:
+  label vo_bazovoe definition obespechen equals Absent
+  label vo_sluchai exception vo_bazovoe definition obespechen
+    under condition predlozheno with pattern Present content n and n >= 2
+    consequence equals Present content true
+  label vo_sluchai exception vo_bazovoe definition obespechen
+    under condition predlozheno with pattern Present content n and n < 2
+    consequence equals Present content false
+```
+
+## Clause 7. Admissibility of the inspection
+
+  7. The inspection of the vehicle is carried out provided it is possible:
+  [seven conditions]. When determining the cost of restorative repair of
+  the vehicle, the inspection is carried out where documents are available
+  confirming that the damage was sustained in this traffic accident.
+
+```catala
+declaration scope DopustimostOsmotra:
+  input dostup_besprepyatstvennyy content boolean
+  input identifikatsiya_provodima content boolean
+  input probeg_ustanovim content boolean
+  input komplektnost_ustanovima content boolean
+  input perechen_defektov_ustanovim content boolean
+  input fotosemka_provodima content boolean
+  input priznaki_remontov_ustanovimy content boolean
+  # Absent — the case is silent on the purpose of the calculation; Present
+  # false — established that repair cost is not being determined.
+  input opredelyaetsya_stoimost_remonta content optional of boolean
+  # Absent — the case is silent on the documents; Present false — their absence is established.
+  input dokumenty_o_dtp content optional of boolean
+  output vozmozhen content optional of boolean
+  output dopustim content optional of boolean
+
+scope DopustimostOsmotra:
+  label voz_bazovoe definition vozmozhen equals Absent
+  exception voz_bazovoe definition vozmozhen
+    under condition
+      dostup_besprepyatstvennyy and identifikatsiya_provodima and probeg_ustanovim
+      and komplektnost_ustanovima and perechen_defektov_ustanovim
+      and fotosemka_provodima and priznaki_remontov_ustanovimy
+    consequence equals Present content true
+
+  label dop_bazovoe definition dopustim equals Absent
+  # Repair cost is being determined: admissible given accident documents.
+  label dop_sluchai exception dop_bazovoe definition dopustim
+    under condition
+      (vozmozhen with pattern Present)
+      and (opredelyaetsya_stoimost_remonta with pattern Present content o and o)
+      and (dokumenty_o_dtp with pattern Present content d and d)
+    consequence equals Present content true
+  # Repair cost is not being determined (established): admissible given the
+  # possibility conditions.
+  label dop_sluchai exception dop_bazovoe definition dopustim
+    under condition
+      (vozmozhen with pattern Present)
+      and (opredelyaetsya_stoimost_remonta with pattern Present content o and (not o))
+    consequence equals Present content true
+  # No accident documents while determining repair cost — inadmissible.
+  label dop_sluchai exception dop_bazovoe definition dopustim
+    under condition
+      (opredelyaetsya_stoimost_remonta with pattern Present content o and o)
+      and (dokumenty_o_dtp with pattern Present content d and (not d))
+    consequence equals Present content false
+```
+
+## Clauses 3 and 3-1. Deadlines
+
+  3. [...] Within 3 (three) business days of receiving the damage report,
+  the victim (beneficiary) or their representative marks the received
+  report with a note of agreement or disagreement [...].
+  Within 3 (three) business days of receiving a note of disagreement [...],
+  the insurer provides a correction of the calculation [...] or sends a
+  written response [...].
+  If the insurer fails to provide the damage report to the victim [...]
+  within 5 (five) business days of the insurer carrying out the inspection
+  of the damaged vehicle, the victim [...] receives the insurance payment
+  in the amount determined under clause 3-1 of article 22 of the Law.
+  3-1. The deadlines [...] specified in clause 3 of the Rules do not apply
+  where the accident is processed under simplified procedure [...].
+
+Reading of clause 3-1 (an open question for the owner, see the report): NONE
+of the three clause 3 deadlines apply, including the victim's mark deadline.
+
+```catala
+declaration scope SrokiPunkta3:
+  input kalendar content Kalendar
+  input uproshchennoe_oformlenie content boolean
+  input otchet_poluchen content optional of date
+  input otmetka_nesoglasiya_poluchena content optional of date
+  input osmotr_osushchestvlen content optional of date
+  # Absent — the case is silent; Present false — established that the report was not provided.
+  input otchet_predostavlen content optional of boolean
+  input den_rassmotreniya content optional of date
+  output predel_otmetki content optional of date
+  output predel_otveta content optional of date
+  output predel_otcheta content optional of date
+  output otchet_ne_v_srok content optional of boolean
+  output pravo_na_vyplatu content optional of boolean
+
+scope SrokiPunkta3:
+  label po_bazovoe definition predel_otmetki equals Absent
+  exception po_bazovoe definition predel_otmetki
+    under condition (not uproshchennoe_oformlenie) and (otchet_poluchen with pattern Present)
+    consequence equals
+      match otchet_poluchen with pattern
+      -- Absent: impossible # excluded by the condition above
+      -- Present content d: n_y_rabochiy_den of kalendar, d, 3
+
+  label pov_bazovoe definition predel_otveta equals Absent
+  exception pov_bazovoe definition predel_otveta
+    under condition (not uproshchennoe_oformlenie) and (otmetka_nesoglasiya_poluchena with pattern Present)
+    consequence equals
+      match otmetka_nesoglasiya_poluchena with pattern
+      -- Absent: impossible # excluded by the condition above
+      -- Present content d: n_y_rabochiy_den of kalendar, d, 3
+
+  label pot_bazovoe definition predel_otcheta equals Absent
+  exception pot_bazovoe definition predel_otcheta
+    under condition (not uproshchennoe_oformlenie) and (osmotr_osushchestvlen with pattern Present)
+    consequence equals
+      match osmotr_osushchestvlen with pattern
+      -- Absent: impossible # excluded by the condition above
+      -- Present content d: n_y_rabochiy_den of kalendar, d, 5
+
+  # Not provided on time: the report was received AFTER the last day, or
+  # not provided at all and the review day is already after the last day.
+  label nv_bazovoe definition otchet_ne_v_srok equals Absent
+  label nv_osnovaniya exception nv_bazovoe definition otchet_ne_v_srok
+    under condition
+      (predel_otcheta with pattern Present content due
+       and (otchet_poluchen with pattern Present content got and got > due))
+    consequence equals Present content true
+  label nv_osnovaniya exception nv_bazovoe definition otchet_ne_v_srok
+    under condition
+      (predel_otcheta with pattern Present content due
+       and (otchet_predostavlen with pattern Present content p and (not p))
+       and (den_rassmotreniya with pattern Present content den and den > due)
+       and (not (otchet_poluchen with pattern Present content got and got > due)))
+    consequence equals Present content true
+
+  label pv_bazovoe definition pravo_na_vyplatu equals Absent
+  exception pv_bazovoe definition pravo_na_vyplatu
+    under condition otchet_ne_v_srok with pattern Present
+    consequence equals Present content true
+```
+
+## Annex 3, clause 2. Final amount
+
+  2. The final value amount is expressed in the currency of the Republic of
+  Kazakhstan (tenge) and shown as a figure rounded to the tenge, with the
+  amount spelled out in words in brackets.
+
+The Rules do not name a rounding mode, and none is chosen here: only the
+absence of a fractional part is checked (this property is the same under
+any mode).
+
+```catala
+declaration scope ItogovayaVelichina:
+  input summa content optional of money
+  input rasshifrovana_propisyu content boolean
+  output nadlezhashche content optional of boolean
+
+scope ItogovayaVelichina:
+  label iv_bazovoe definition nadlezhashche equals Absent
+  exception iv_bazovoe definition nadlezhashche
+    under condition
+      rasshifrovana_propisyu
+      and (summa with pattern Present content s and (round of s) = s)
+    consequence equals Present content true
+```

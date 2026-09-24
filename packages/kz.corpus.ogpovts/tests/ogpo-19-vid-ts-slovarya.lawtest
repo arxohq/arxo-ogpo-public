@@ -1,0 +1,26 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Мост словаря транспортных средств: строка «автобусы до 16 мест» пункта 6
+// статьи 19 отнесена к виду `vocab.vehicle::BUS` общего словаря. Проверяется
+// ассерция моста, а не норма: порог шестнадцати мест остаётся срезом закона,
+// вид — константой словаря. Константа названа ПОЛНЫМ именем: голое `BUS` со
+// фактами словаря не стыкуется и диагностики на это нет.
+
+test "urn:query:ogpo-19-vid-ts-slovarya" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+    }
+
+    evaluate truth(vehicle_type_kind(BusUpToSixteenSeats, vocab.vehicle::BUS));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

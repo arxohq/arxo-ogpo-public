@@ -1,0 +1,121 @@
+language "law.core" version "0.2";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Cl. 10: "was not previously damaged AND was not repaired" — two
+// conditions. An intact but repaired part does not satisfy the condition.
+
+// Both conditions are satisfied (via the sub-facts) — no wear.
+test "urn:query:vred-t12-a" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t12a-a0": detal_ts(d: entity_ref("urn:case:vred:detal-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12a-a1": detal_podlezhit_zamene(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12a-a2": vladelets_fizicheskoe_litso(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12a-a3": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12a-a4": detal_ranee_ne_povrezhdalas(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12a-a5": detal_ne_podvergalas_remontu(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12a-a6": srednegodovoy_probeg(v: entity_ref("urn:case:vred:ts-1"), distance: 12000 km) { origin case_input; }
+    }
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:case:vred:detal-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    expect applied(DetalNePovrezhdalasINeRemontirovalas);
+}
+
+// The part was not damaged but was repaired — the condition is not satisfied.
+test "urn:query:vred-t12-b" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t12b-a0": detal_ts(d: entity_ref("urn:case:vred:detal-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12b-a1": detal_podlezhit_zamene(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12b-a2": vladelets_fizicheskoe_litso(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12b-a3": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12b-a4": detal_ranee_ne_povrezhdalas(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12b-a6": srednegodovoy_probeg(v: entity_ref("urn:case:vred:ts-1"), distance: 12000 km) { origin case_input; }
+    }
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:case:vred:detal-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// A legal entity without warranty service — the condition is not satisfied.
+test "urn:query:vred-t12-c" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t12c-a0": detal_ts(d: entity_ref("urn:case:vred:detal-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12c-a1": detal_podlezhit_zamene(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12c-a2": vladelets_yuridicheskoe_litso(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12c-a4": detal_ranee_ne_povrezhdalas(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12c-a5": detal_ne_podvergalas_remontu(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12c-a6": srednegodovoy_probeg(v: entity_ref("urn:case:vred:ts-1"), distance: 12000 km) { origin case_input; }
+    }
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:case:vred:detal-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// A natural person with 18,000 km mileage: the natural person's threshold
+// (15,000) is exceeded, and the legal entity's threshold (20,000) does not apply to a natural person.
+test "urn:query:vred-t12-d" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t12d-a0": detal_ts(d: entity_ref("urn:case:vred:detal-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12d-a1": detal_podlezhit_zamene(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12d-a2": vladelets_fizicheskoe_litso(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12d-a3": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12d-a7": nakhoditsya_na_garantiynom_obsluzhivanii(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12d-a4": detal_ranee_ne_povrezhdalas(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12d-a5": detal_ne_podvergalas_remontu(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12d-a6": srednegodovoy_probeg(v: entity_ref("urn:case:vred:ts-1"), distance: 18000 km) { origin case_input; }
+    }
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:case:vred:detal-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// The part is not subject to replacement — the case under cl. 10 does not arise.
+test "urn:query:vred-t12-e" {
+    given {
+        context {
+            decision_time @2026-09-01T12:00:00+05:00;
+            knowledge_time @2026-09-01T12:00:00+05:00;
+            legal_time @2026-09-01;
+            timezone "Asia/Qyzylorda";
+        }
+        assert "t12e-a0": detal_ts(d: entity_ref("urn:case:vred:detal-1"), v: entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12e-a2": vladelets_fizicheskoe_litso(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12e-a3": ne_podlezhit_obyazatelnomu_tekhosmotru(entity_ref("urn:case:vred:ts-1")) { origin case_input; }
+        assert "t12e-a4": detal_ranee_ne_povrezhdalas(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12e-a5": detal_ne_podvergalas_remontu(entity_ref("urn:case:vred:detal-1")) { origin case_input; }
+        assert "t12e-a6": srednegodovoy_probeg(v: entity_ref("urn:case:vred:ts-1"), distance: 12000 km) { origin case_input; }
+    }
+    evaluate truth(detal_otsenivaetsya_bez_iznosa(entity_ref("urn:case:vred:detal-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

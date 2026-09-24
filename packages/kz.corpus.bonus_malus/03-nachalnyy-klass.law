@@ -1,0 +1,156 @@
+// ПУНКТЫ 4, 5, 6, 8 И 9 — КЛАСС, ПРИСВАИВАЕМЫЙ ПО ПРИЗНАКУ СТРАХОВАТЕЛЯ.
+//
+// Пять пунктов задают класс НЕ по истории, а по тому, кто и при каких
+// обстоятельствах заключает договор: впервые, владелец мототранспорта,
+// временно въехавшее транспортное средство, юридическое лицо, юридическое
+// лицо с таксомоторным или арендным ОКЭД. Каждый пункт несёт собственный
+// перечень исключений, и перечни эти образуют порядок специальности:
+//
+//   пункт 6 (временный въезд)  — исключение в пунктах 4, 5, 7, 8 и 9;
+//   пункт 9 (ОКЭД такси)       — исключение в пункте 8;
+//   пункт 5 (впервые, мото)    — исключение в пункте 4.
+//
+// Порядок выражен ЯВНО — `not_known` по эмпирическим признакам дела, — а не
+// поражаемым слоем §111. Довод: все различающие признаки суть факты дела, а
+// не выводы, и у молчания дела здесь есть ровно одно правильное прочтение —
+// «этот признак не заявлен». Поражаемый слой понадобился бы, если бы признаки
+// выводились правилами; здесь он добавил бы ранг там, где его нет в тексте.
+//
+// ПРОЧТЕНИЕ, ПРИНЯТОЕ 12.09.2026 И ЗАКРЕПЛЁННОЕ СЦЕНАРИЕМ. Пункт 4 называет
+// своими исключениями только пункты 5 и 6, а пункт 8 своими — только 6 и 9.
+// Юридическое лицо, заключающее договор ВПЕРВЫЕ, буквально попадает под оба:
+// пункт 4 дал бы класс 3 с повышением на двадцать процентов, пункт 8 — класс
+// 3 без повышения. Принято, что пункты 8 и 9 вытесняют пункт 4: они описывают
+// САМОГО СТРАХОВАТЕЛЯ и сформулированы безусловно, тогда как перечень
+// исключений пункта 4 перечисляет другие случаи ПЕРВОГО заключения (мото —
+// пункт 5, временный въезд — пункт 6), то есть ведёт счёт внутри своего рода.
+// Развилка вынесена владельцу в README пакета; сценарий `bm-p4-p8-yurlitso`
+// стережёт принятое прочтение так, что смена ответа обязана уронить набор.
+
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// --- Признаки дела ----------------------------------------------------------
+
+pub relation nepreryvnogo_strakhovaniya_270_dney_v_baze_net(dogovor: Dogovor)
+    kind empirical {
+    label ru-KZ official "в базе данных отсутствует информация о наличии ранее непрерывно застрахованной по договору обязательного страхования гражданско-правовой ответственности страхователя (застрахованного) на срок не менее двухсот семидесяти календарных дней (пункты 4 и 5)";
+}
+
+pub relation vladelets_mototransportnogo_sredstva(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "страхователь является владельцем мототранспортного средства (пункт 5)";
+}
+
+pub relation vremennyy_vezd_na_territoriyu_rk(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "договор заключается с владельцем транспортного средства, временно въехавшего (ввезенного) на территорию Республики Казахстан (пункт 6)";
+}
+
+pub relation strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor: Dogovor)
+    kind empirical {
+    label ru-KZ official "договор заключается с юридическим лицом, индивидуальным предпринимателем или крестьянским хозяйством (пункт 8)";
+}
+
+pub relation oked_arendy_lizinga_avtobusov_ili_taksi(dogovor: Dogovor) kind empirical {
+    label ru-KZ official "общий классификатор видов экономической деятельности страхователя соответствует услугам по предоставлению аренды и лизинга легковых автомобилей и легких автотранспортных средств, перевозке автобусами либо деятельности такси (пункт 9)";
+}
+
+// --- Пункты 4 и 5: определение «впервые» ------------------------------------
+
+pub relation dogovor_zaklyuchaetsya_vpervye(dogovor: Dogovor) kind institutional {
+    label ru-KZ official "договор обязательного страхования считается заключенным впервые (пункты 4 и 5)";
+}
+
+@source(BM_POINT_4)
+@source(BM_POINT_5)
+rule DogovorVpervyeKogdaNetNepreryvnykh270Dney(dogovor: Dogovor) strict {
+    label ru-KZ official "Договор обязательного страхования считается заключенным впервые в случае, если в базе данных отсутствует информация о наличии ранее непрерывно застрахованной по договору обязательного страхования гражданско-правовой ответственности страхователя (застрахованного) на срок не менее двухсот семидесяти календарных дней";
+    when nepreryvnogo_strakhovaniya_270_dney_v_baze_net(dogovor);
+    then dogovor_zaklyuchaetsya_vpervye(dogovor);
+}
+
+// --- Класс по признаку страхователя -----------------------------------------
+//
+// `key(dogovor)` держит взаимоисключение пяти пунктов ГРОМКО: дело, в котором
+// перечни исключений разошлись бы, получит KEY_CONFLICT, а не два разных
+// ответа о премии.
+
+pub relation klass_po_priznaku_strakhovatelya(dogovor: Dogovor, klass: Klass)
+    kind institutional {
+    key(dogovor);
+    label ru-KZ official "класс, присваиваемый по признаку страхователя и обстоятельствам заключения договора (пункты 4, 5, 6, 8 и 9)";
+}
+
+// Повышающий коэффициент пунктов 4 и 9 — ОТДЕЛЬНЫЙ множитель, а не другой
+// класс: приложение не знает ни класса «3 с повышением на двадцать
+// процентов», ни класса «3 с повышением на восемьдесят процентов», и
+// записать их классом значило бы сочинить две строки приложения.
+pub relation povyshayushchiy_mnozhitel(dogovor: Dogovor, mnozhitel: Decimal)
+    kind institutional {
+    key(dogovor);
+    label ru-KZ official "повышающий коэффициент, применяемый к размеру коэффициента класса (пункты 4 и 9)";
+}
+
+@source(BM_POINT_6)
+rule KlassVremennogoVezda(dogovor: Dogovor) strict {
+    label ru-KZ official "Пункт 6. При заключении договора обязательного страхования с владельцами транспортных средств, временно въехавших (ввезенных) на территорию Республики Казахстан, присваивается класс 13";
+    when vremennyy_vezd_na_territoriyu_rk(dogovor);
+    then klass_po_priznaku_strakhovatelya(dogovor, Klass13);
+}
+
+@source(BM_POINT_9)
+rule KlassYurlitsaTaksi(dogovor: Dogovor) strict {
+    label ru-KZ official "Пункт 9. При заключении договора обязательного страхования с юридическим лицом, индивидуальным предпринимателем и крестьянским хозяйством, общий классификатор видов экономической деятельности которых соответствует услугам по предоставлению аренды легковых автомобилей и легких автотранспортных средств, лизингу легковых автомобилей и легких автотранспортных средств, перевозке автобусами, а также осуществлению деятельности такси, присваивается класс 3 с применением повышающего коэффициента восьмидесяти процентов, за исключением случаев, предусмотренных пунктом 6 Правил";
+    when strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor);
+    when oked_arendy_lizinga_avtobusov_ili_taksi(dogovor);
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    then klass_po_priznaku_strakhovatelya(dogovor, Klass3);
+}
+
+@source(BM_POINT_9)
+rule MnozhitelYurlitsaTaksi(dogovor: Dogovor) strict {
+    label ru-KZ official "Пункт 9. Класс 3 присваивается с применением повышающего коэффициента восьмидесяти процентов";
+    when strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor);
+    when oked_arendy_lizinga_avtobusov_ili_taksi(dogovor);
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    then povyshayushchiy_mnozhitel(dogovor, 1.80);
+}
+
+@source(BM_POINT_8)
+rule KlassYurlitsa(dogovor: Dogovor) strict {
+    label ru-KZ official "Пункт 8. При заключении договора обязательного страхования с юридическим лицом, индивидуальным предпринимателем и крестьянским хозяйством, за исключением лиц, предусмотренных пунктами 6 и 9 Правил, присваивается класс 3";
+    when strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor);
+    when not_known(oked_arendy_lizinga_avtobusov_ili_taksi(dogovor));
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    then klass_po_priznaku_strakhovatelya(dogovor, Klass3);
+}
+
+@source(BM_POINT_5)
+rule KlassVpervyeMototransport(dogovor: Dogovor) strict {
+    label ru-KZ official "Пункт 5. При заключении договора обязательного страхования впервые с владельцем мототранспортного средства страхователю (застрахованному) присваивается класс 3, за исключением случая, предусмотренного пунктом 6 Правил";
+    when dogovor_zaklyuchaetsya_vpervye(dogovor);
+    when vladelets_mototransportnogo_sredstva(dogovor);
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    when not_known(strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor));
+    then klass_po_priznaku_strakhovatelya(dogovor, Klass3);
+}
+
+@source(BM_POINT_4)
+rule KlassVpervye(dogovor: Dogovor) strict {
+    label ru-KZ official "Пункт 4. При заключении договора обязательного страхования впервые страхователю (застрахованному) присваивается класс 3 с применением повышающего коэффициента двадцать процентов за исключением случаев, предусмотренных пунктами 5 и 6 Правил";
+    when dogovor_zaklyuchaetsya_vpervye(dogovor);
+    when not_known(vladelets_mototransportnogo_sredstva(dogovor));
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    when not_known(strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor));
+    then klass_po_priznaku_strakhovatelya(dogovor, Klass3);
+}
+
+@source(BM_POINT_4)
+rule MnozhitelVpervye(dogovor: Dogovor) strict {
+    label ru-KZ official "Пункт 4. Класс 3 присваивается с применением повышающего коэффициента двадцать процентов";
+    when dogovor_zaklyuchaetsya_vpervye(dogovor);
+    when not_known(vladelets_mototransportnogo_sredstva(dogovor));
+    when not_known(vremennyy_vezd_na_territoriyu_rk(dogovor));
+    when not_known(strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(dogovor));
+    then povyshayushchiy_mnozhitel(dogovor, 1.20);
+}

@@ -1,0 +1,7 @@
+{
+  "format": "law.package-info/0.1",
+  "purpose": "Пакет vocab.vehicle для проверяемого исполнения в составе ОГПО ВТС.",
+  "license": "Модель, словарь и сценарии — Apache-2.0 (см. LICENSE); происхождение закреплённых исходных данных указано в пакете.",
+  "maintainer": "Rifat Dzhumagulov (hi@arxo.io)",
+  "repository": "https://github.com/arxohq/arxo-ogpo-public"
+}

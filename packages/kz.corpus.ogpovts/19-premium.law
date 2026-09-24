@@ -1,0 +1,494 @@
+// СТАТЬЯ 19. РАЗМЕР СТРАХОВОЙ ПРЕМИИ.
+//
+// Пункт 1 задаёт форму расчёта: базовая страховая премия, к которой
+// «применяются коэффициенты, установленные пунктами 3-10 настоящей статьи».
+// Модуль выражает эту форму буквально — произведением, множители которого
+// названы поимённо, каждый со своим якорем.
+//
+// ЧТО ВЗЯТО: пункты 1, 2, 3, 4, 5, 6, 7, 8, 9 — базовая премия и пять осей
+// коэффициентов. Годовая премия выводится end-to-end.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ И ПОЧЕМУ (решение человека, 31.08.2026):
+//
+//   пункт 3-1  поправочные коэффициенты к территориальным. Закон их НЕ
+//              устанавливает: он поручает их расчёт организации по ведению
+//              базы данных и утверждение уполномоченному органу («в порядке,
+//              определенном нормативным правовым актом уполномоченного
+//              органа»). Из закона выводима только их роль множителя, а не
+//              величина, — поэтому величина входит ФАКТОМ ДЕЛА. Числовые
+//              рамки, которые закон всё же ставит (таргетируемая убыточность
+//              от шестидесяти до восьмидесяти процентов; право страховщика
+//              отклонить поправочный коэффициент не более чем на десять
+//              процентов), в срез не взяты: они ограничивают не премию, а
+//              подзаконный расчёт, и без самого расчёта проверять нечего.
+//
+//   пункт 10   система «бонус-малус». ГРАНИЦЕЙ БОЛЬШЕ НЕ ОБЪЯВЛЕН
+//              (13.09.2026). Прежняя причина звучала так: «ни классов, ни
+//              правил перехода между ними, ни приложения с таблицей у ЭТОГО
+//              закона нет; автомат состояний §160 здесь выдуман БЫЛ БЫ, а не
+//              формализован». Про сам ЗАКОН это верно и сейчас — и ровно
+//              поэтому вывод переехал не сюда, а к владельцу нормы:
+//              постановление Правления НБ РК от 30.05.2016 № 140 (рег.
+//              № 13928) формализовано пакетом `kz.corpus.bonus_malus`, и
+//              статья 19 читает готовый коэффициент через границу пакета.
+//              Фактом дела осталась связка договора с расчётом класса.
+//
+//   пункты 14, 14-1, 15 и 16 ВЗЯТЫ 10.09.2026 отдельным модулем
+//              `19a-premiya-srok-i-neskolko-edinits.law`: премия по договору
+//              короче двенадцати месяцев, коэффициенты временного въезда и
+//              наибольшая из премий по комплексному и стандартному договорам.
+//              Очередь снята вместе с прочтением «в високосный год 366 дней»
+//              (принятое прочтение записано в шапке того модуля) и с двумя
+//              агрегатами максимума. Здесь границей эти пункты БОЛЬШЕ НЕ
+//              объявлены.
+
+
+// ============================================================================
+// Факты дела: что о договоре сообщает страхователь
+// ============================================================================
+
+pub relation registration_territory(contract: InsuranceContract, territory: RegistrationTerritory)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "транспортное средство зарегистрировано на указанной территории";
+}
+
+relation territory_basis(contract: InsuranceContract, basis: TerritoryBasis)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "основание территориального коэффициента: город областного значения и выше, иной населённый пункт области либо временный въезд на территорию Республики Казахстан";
+}
+
+relation vehicle_type_of(contract: InsuranceContract, vehicle_type: VehicleType)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "застрахованное транспортное средство относится к указанному типу";
+}
+
+relation insured_kind_of(contract: InsuranceContract, insured_kind: InsuredKind)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "страхователь является физическим либо юридическим лицом";
+}
+
+relation insured_age_years(contract: InsuranceContract, years: Integer)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "возраст страхователя (застрахованного) в полных годах";
+}
+
+relation driving_experience_years(contract: InsuranceContract, years: Integer)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "стаж вождения страхователя (застрахованного) в полных годах";
+}
+
+relation vehicle_operation_term_years(contract: InsuranceContract, years: Integer)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "срок эксплуатации транспортного средства в полных годах";
+}
+
+// ДВА МНОЖИТЕЛЯ, КОТОРЫХ ЗАКОН НЕ УСТАНАВЛИВАЕТ. Оба делегированы
+// уполномоченному органу, и оба объявлены здесь, а не молча пропущены: пункт
+// 1 называет их среди применяемых коэффициентов, и премия без них была бы не
+// «упрощённой», а НЕВЕРНОЙ. Отсутствие любого из них означает, что годовая
+// премия не выводится вовсе, — и это правильный ответ: по одному закону она и
+// не вычисляется. С 13.09.2026 оба ВЫВОДЯТСЯ из пакетов своих делегированных
+// актов, а не входят готовой величиной.
+// ПОПРАВОЧНЫЙ КОЭФФИЦИЕНТ — ВЫВОДИМЫЙ С 13.09.2026, А НЕ ФАКТ ДЕЛА.
+//
+// Величины утверждает уполномоченный орган ежегодно; их владелец —
+// `kz.corpus.popravochnye_koeffitsienty` (постановления Правления АРРФР на
+// 2025 и на 2026 годы плюс Правила расчёта 07.06.2023 № 46). Отношение
+// объявлено ЗДЕСЬ, потому что здешняя норма — пункт 3-1 статьи 19: он и
+// делает величину МНОЖИТЕЛЕМ премии. Производит же её правило того пакета: он
+// читает `registration_territory` этого договора и подставляет размер своего
+// года. Импорт идёт в ОДНУ сторону — подзаконный пакет импортирует закон, —
+// и потому кольца нет; обратное направление замкнуло бы его, ведь размеры
+// перечислены по территориям ЗАКОНА.
+//
+// В мире без пакета размеров коэффициент не выводится, и премия молчит. Это
+// правильный ответ: по одному закону она и не вычисляется.
+pub relation territory_adjustment_coefficient(contract: InsuranceContract, coefficient: Decimal)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "поправочный коэффициент к коэффициенту по территории регистрации, утверждённый уполномоченным органом (статья 19 пункт 3-1)";
+}
+
+// КОЭФФИЦИЕНТ «БОНУС-МАЛУС» — ВЫВОДИМЫЙ С 13.09.2026, А НЕ ФАКТ ДЕЛА.
+//
+// Пункт 10 говорит: «Порядок расчета и применения коэффициента по системе
+// "бонус-малус" определяется нормативным правовым актом уполномоченного
+// органа». Этот акт — постановление Правления НБ РК от 30.05.2016 № 140, и
+// он формализован пакетом `kz.corpus.bonus_malus`: шестнадцать пунктов и
+// приложение из семнадцати классов с коэффициентами и переходами.
+//
+// Фактом дела остаётся то, что фактом дела и является: СВЯЗКА договора закона
+// с расчётом класса по подзаконному акту. Сами же сведения, из которых класс
+// считается (страховые случаи, дни страхования, нарушения, признак
+// страхователя), суть факты ТОГО пакета и подаются ему.
+// `pub` — связку читает `kz.corpus.popravochnye_koeffitsienty`: исключение
+// пункта 12 Правил № 140 сравнивает территорию регистрации ДОГОВОРА с
+// территорией наступления случая, а территория регистрации известна здесь.
+pub relation raschet_bonus_malus_dogovora(contract: InsuranceContract,
+                                      dogovor: kz.corpus.bonus_malus::Dogovor)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "расчёт класса по системе «бонус-малус», относящийся к данному договору обязательного страхования";
+}
+
+relation bonus_malus_coefficient(contract: InsuranceContract, coefficient: Decimal)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "коэффициент по системе «бонус-малус», определённый нормативным правовым актом уполномоченного органа (статья 19 пункт 10)";
+}
+
+@source(LAW_446_ART19, quote = "Порядок расчета и применения коэффициента по системе \"бонус-малус\" определяется нормативным правовым актом уполномоченного органа.")
+rule BonusMalusCoefficientFromDelegatedAct(
+    contract: InsuranceContract,
+    dogovor: kz.corpus.bonus_malus::Dogovor,
+    coefficient: Decimal,
+) strict {
+    label ru-KZ official "Статья 19 пункт 10. Порядок расчета и применения коэффициента по системе «бонус-малус» определяется нормативным правовым актом уполномоченного органа: коэффициент берётся из Правил расчета и применения коэффициента по системе «бонус-малус»";
+    when raschet_bonus_malus_dogovora(contract, dogovor);
+    when kz.corpus.bonus_malus::koeffitsient_bonus_malus(dogovor, coefficient);
+    then bonus_malus_coefficient(contract, coefficient);
+}
+
+// ============================================================================
+// Пункт 2. Базовая страховая премия
+// ============================================================================
+
+relation base_insurance_premium(amount: Money) kind institutional {
+    label ru-KZ official "базовая страховая премия";
+}
+
+@source(LAW_446_ART19, quote = "Базовая страховая премия устанавливается в размере 1,9 месячного расчетного показателя.")
+rule BaseInsurancePremium(mrp: Money) strict {
+    label ru-KZ official "Базовая страховая премия устанавливается в размере 1,9 месячного расчетного показателя";
+    when applicable_mrp(mrp);
+    then base_insurance_premium(mrp * 1.9);
+}
+
+// ============================================================================
+// Пункт 3. Коэффициенты по территории регистрации
+// ============================================================================
+//
+// Двадцать строк таблицы — двадцать нормативных фактов. `key(territory)`
+// делает ряд функциональным: вторая величина той же территории даёт
+// KEY_CONFLICT, а не тихо второй ответ.
+
+// `pub` — таблицу пункта 3 читает исключение пункта 12 Правил «бонус-малус»:
+// оно сравнивает коэффициент территории РЕГИСТРАЦИИ с коэффициентом
+// территории НАСТУПЛЕНИЯ случая, оба «в значениях, предусмотренных пунктом 3
+// статьи 19 Закона». Сравнение делает `kz.corpus.popravochnye_koeffitsienty`:
+// ему видны обе величины — и эта таблица, и размеры поправочных.
+pub relation territory_scale(territory: RegistrationTerritory, coefficient: Decimal)
+    kind institutional {
+    key(territory);
+    label ru-KZ official "размер коэффициента по территории регистрации транспортного средства";
+}
+
+@source(LAW_446_ART19) {
+    assert territory_scale(AlmatyOblast, 1.78);
+
+    assert territory_scale(TurkestanOblast, 1.01);
+
+    assert territory_scale(EastKazakhstanOblast, 1.96);
+
+    assert territory_scale(KostanayOblast, 1.95);
+
+    assert territory_scale(KaragandaOblast, 1.39);
+
+    assert territory_scale(NorthKazakhstanOblast, 1.33);
+
+    assert territory_scale(AkmolaOblast, 1.32);
+
+    assert territory_scale(PavlodarOblast, 1.63);
+
+    assert territory_scale(ZhambylOblast, 1.00);
+
+    assert territory_scale(AktobeOblast, 1.35);
+
+    assert territory_scale(WestKazakhstanOblast, 1.17);
+
+    assert territory_scale(KyzylordaOblast, 1.09);
+
+    assert territory_scale(AtyrauOblast, 2.69);
+
+    assert territory_scale(MangistauOblast, 1.15);
+
+    assert territory_scale(AbayOblast, 1.96);
+
+    assert territory_scale(UlytauOblast, 1.39);
+
+    assert territory_scale(ZhetisuOblast, 1.78);
+
+    assert territory_scale(Almaty, 2.96);
+
+    assert territory_scale(Astana, 2.2);
+
+    assert territory_scale(Shymkent, 1.01);
+}
+
+// --- Пункт 4: «в областях, указанных в пункте 3» (DECISION-0336) -------------
+//
+// Поправка 0,8 дана «для иных городов и населенных пунктов В ОБЛАСТЯХ». Из
+// двадцати строк пункта 3 областей семнадцать; Алматы, Астана и Шымкент —
+// города республиканского значения, и «иного населённого пункта» в них закон
+// не знает. Признак записан ПОЛОЖИТЕЛЬНЫМ предикатом над строкой таблицы, а не
+// отрицанием: отсутствие факта не равно его отрицанию (§62), и правило ниже
+// обязано молчать о такой строке, а не выводить коэффициент.
+
+relation territory_is_oblast(territory: RegistrationTerritory) kind institutional {
+    label ru-KZ official "территория регистрации является областью из числа указанных в пункте 3 статьи 19";
+}
+
+@source(LAW_446_ART19) {
+    assert territory_is_oblast(AlmatyOblast);
+
+    assert territory_is_oblast(TurkestanOblast);
+
+    assert territory_is_oblast(EastKazakhstanOblast);
+
+    assert territory_is_oblast(KostanayOblast);
+
+    assert territory_is_oblast(KaragandaOblast);
+
+    assert territory_is_oblast(NorthKazakhstanOblast);
+
+    assert territory_is_oblast(AkmolaOblast);
+
+    assert territory_is_oblast(PavlodarOblast);
+
+    assert territory_is_oblast(ZhambylOblast);
+
+    assert territory_is_oblast(AktobeOblast);
+
+    assert territory_is_oblast(WestKazakhstanOblast);
+
+    assert territory_is_oblast(KyzylordaOblast);
+
+    assert territory_is_oblast(AtyrauOblast);
+
+    assert territory_is_oblast(MangistauOblast);
+
+    assert territory_is_oblast(AbayOblast);
+
+    assert territory_is_oblast(UlytauOblast);
+
+    assert territory_is_oblast(ZhetisuOblast);
+}
+
+// --- Пункты 3, 3-1, 4 и 5: применяемый территориальный коэффициент ----------
+//
+// Три правила по трём взаимоисключающим основаниям. `key(contract)` держит их
+// взаимоисключение ГРОМКО: дело, назвавшее два основания, получит
+// KEY_CONFLICT, а не два разных ответа о премии.
+//
+// Поправочный коэффициент пункта 3-1 умножается ТОЛЬКО в первых двух
+// правилах, и это не упрощение: пункт 3-1 говорит «к коэффициентам… указанным
+// в пункте 3», а коэффициент временного въезда установлен пунктом 5.
+
+relation applicable_territory_coefficient(contract: InsuranceContract, coefficient: Decimal)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "коэффициент по территории регистрации, применяемый к базовой страховой премии по данному договору";
+}
+
+@source(LAW_446_ART19) {
+    rule TerritoryCoefficientInCity(
+        contract: InsuranceContract,
+        territory: RegistrationTerritory,
+        scale: Decimal,
+        adjustment: Decimal,
+    ) strict {
+        label ru-KZ official "Для столицы, городов республиканского и областного значения применяется коэффициент по территории регистрации с поправочным коэффициентом";
+        when territory_basis(contract, CityOfOblastSignificance);
+        when registration_territory(contract, territory);
+        when territory_scale(territory, scale);
+        when territory_adjustment_coefficient(contract, adjustment);
+        then applicable_territory_coefficient(contract, scale * adjustment);
+    }
+
+    rule TerritoryCoefficientOtherSettlement(
+        contract: InsuranceContract,
+        territory: RegistrationTerritory,
+        scale: Decimal,
+        adjustment: Decimal,
+    ) strict {
+        label ru-KZ official "Для иных городов и населенных пунктов в областях дополнительно используется коэффициент корректировки в размере 0,8";
+        when territory_basis(contract, OtherSettlement);
+        when registration_territory(contract, territory);
+        when territory_is_oblast(territory);
+        when territory_scale(territory, scale);
+        when territory_adjustment_coefficient(contract, adjustment);
+        then applicable_territory_coefficient(contract, scale * 0.8 * adjustment);
+    }
+
+    rule TerritoryCoefficientTemporaryEntry(contract: InsuranceContract) strict {
+        label ru-KZ official "В случае временного въезда транспортного средства на территорию Республики Казахстан применяется коэффициент по территории регистрации в размере 4,4";
+        when territory_basis(contract, TemporaryEntry);
+        then applicable_territory_coefficient(contract, 4.4);
+    }
+}
+
+// ============================================================================
+// Пункт 6. Коэффициенты по типу транспортного средства
+// ============================================================================
+
+relation vehicle_type_scale(vehicle_type: VehicleType, coefficient: Decimal)
+    kind institutional {
+    key(vehicle_type);
+    label ru-KZ official "размер коэффициента по типу транспортного средства";
+}
+
+@source(LAW_446_ART19) {
+    assert vehicle_type_scale(PassengerCar, 2.09);
+
+    assert vehicle_type_scale(BusUpToSixteenSeats, 3.26);
+
+    assert vehicle_type_scale(BusOverSixteenSeats, 3.45);
+
+    assert vehicle_type_scale(FreightVehicle, 3.98);
+
+    assert vehicle_type_scale(TrolleybusOrTram, 2.33);
+
+    assert vehicle_type_scale(MotorVehicle, 1.00);
+
+    assert vehicle_type_scale(Trailer, 1.00);
+}
+
+relation applicable_vehicle_type_coefficient(contract: InsuranceContract, coefficient: Decimal)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "коэффициент по типу транспортного средства, применяемый по данному договору";
+}
+
+@source(LAW_446_ART19, quote = "Коэффициенты по типу транспортного средства устанавливаются в следующем размере:")
+rule VehicleTypeCoefficient(
+    contract: InsuranceContract,
+    vehicle_type: VehicleType,
+    scale: Decimal,
+) strict {
+    label ru-KZ official "Коэффициент по типу транспортного средства применяется по типу застрахованного транспортного средства";
+    when vehicle_type_of(contract, vehicle_type);
+    when vehicle_type_scale(vehicle_type, scale);
+    then applicable_vehicle_type_coefficient(contract, scale);
+}
+
+// ============================================================================
+// Пункты 7 и 8. Коэффициент по возрасту и стажу вождения
+// ============================================================================
+//
+// Сетка пункта 7 — единственная ось статьи с ЧИСЛОВЫМИ входами, и потому
+// единственная (вместе с пунктом 9), заведённая A3-таблицей:
+// `age-experience-coefficient.lawtable.json`, режим `rules`, эмитируемый
+// предикат `age_experience_scale`. Остальные оси — доменные константы, и в
+// ячейку таблицы они по схеме A3 не кладутся (разбор — `package.law`).
+//
+// СТАЖ РОВНО ДВУХ ЛЕТ НЕ ПОКРЫТ НИ ОДНОЙ СТРОКОЙ, и это свойство закона, а не
+// таблицы: пункт 7 говорит «стаж вождения менее 2 лет» и «стаж вождения более
+// 2 лет», не называя середины. Таблица объявлена `total: false` именно
+// поэтому. На таком деле годовая премия не выводится — и сторожат это два
+// парных сценария, OGPO-EXP-2 и OGPO-EXP-3.
+
+relation age_experience_scale(age_years: Integer, experience_years: Integer, coefficient: Decimal)
+    kind institutional {
+    label ru-KZ official "размер коэффициента в зависимости от возраста и стажа вождения";
+}
+
+relation applicable_driver_coefficient(contract: InsuranceContract, coefficient: Decimal)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "коэффициент в зависимости от возраста и стажа вождения, применяемый по данному договору";
+}
+
+@source(LAW_446_ART19) {
+    rule DriverCoefficientNaturalPerson(
+        contract: InsuranceContract,
+        age_years: Integer,
+        experience_years: Integer,
+        scale: Decimal,
+    ) strict {
+        label ru-KZ official "Коэффициенты в зависимости от возраста и стажа вождения устанавливаются для физических лиц";
+        when insured_kind_of(contract, NaturalPerson);
+        when insured_age_years(contract, age_years);
+        when driving_experience_years(contract, experience_years);
+        when age_experience_scale(age_years, experience_years, scale);
+        then applicable_driver_coefficient(contract, scale);
+    }
+
+    rule DriverCoefficientLegalEntity(contract: InsuranceContract) strict {
+        label ru-KZ official "Для юридических лиц коэффициент, предусмотренный пунктом 7 настоящей статьи, устанавливается в размере 1,2";
+        when insured_kind_of(contract, LegalEntity);
+        then applicable_driver_coefficient(contract, 1.2);
+    }
+}
+
+// ============================================================================
+// Пункт 9. Коэффициент по сроку эксплуатации транспортного средства
+// ============================================================================
+//
+// Вторая A3-таблица: `operation-term-coefficient.lawtable.json`, эмитируемый
+// предикат `operation_term_scale`.
+
+relation operation_term_scale(years: Integer, coefficient: Decimal) kind institutional {
+    label ru-KZ official "размер коэффициента в зависимости от срока эксплуатации транспортного средства";
+}
+
+relation applicable_operation_term_coefficient(contract: InsuranceContract, coefficient: Decimal)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "коэффициент в зависимости от срока эксплуатации транспортного средства, применяемый по данному договору";
+}
+
+@source(LAW_446_ART19, quote = "Коэффициенты в зависимости от срока эксплуатации транспортного средства устанавливаются в следующем размере:")
+rule OperationTermCoefficient(contract: InsuranceContract, years: Integer, scale: Decimal) strict {
+    label ru-KZ official "Коэффициенты в зависимости от срока эксплуатации транспортного средства применяются по сроку эксплуатации застрахованного транспортного средства";
+    when vehicle_operation_term_years(contract, years);
+    when operation_term_scale(years, scale);
+    then applicable_operation_term_coefficient(contract, scale);
+}
+
+// ============================================================================
+// Пункт 1. Годовая страховая премия
+// ============================================================================
+//
+// Произведение шести множителей: базовая премия и пять коэффициентов, из
+// которых один (бонус-малус) закон делегирует. Порядок множителей повторяет
+// порядок перечисления пункта 1 — место регистрации, тип транспортного
+// средства, возраст и стаж, срок эксплуатации, бонус-малус.
+//
+// ОКРУГЛЕНИЯ ЗДЕСЬ НЕТ, и его отсутствие сознательно: статья 19 о нём молчит,
+// а `round` — операция, которая меняет ответ. Впишешь «до тенге» — и пакет
+// начнёт утверждать то, чего закон не сказал.
+
+relation annual_premium_calculated(contract: InsuranceContract, amount: Money)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "годовая страховая премия, рассчитанная в соответствии со статьёй 19";
+}
+
+@source(LAW_446_ART19, quote = "Для расчета годовой страховой премии, подлежащей уплате при заключении договора обязательного страхования ответственности владельцев транспортных средств, используется базовая страховая премия, к которой в зависимости от места регистрации транспортного средства, типа транспортного средства, возраста и стажа вождения страхователя (застрахованного), срока эксплуатации транспортного средства и наличия или отсутствия страховых случаев по вине лиц, гражданско-правовая ответственность которых застрахована (система \"бонус-малус\"), применяются коэффициенты, установленные пунктами 3-10 настоящей статьи.")
+rule AnnualPremiumCalculation(
+    contract: InsuranceContract,
+    base: Money,
+    territory: Decimal,
+    vehicle_type: Decimal,
+    driver: Decimal,
+    operation_term: Decimal,
+    bonus_malus: Decimal,
+) strict {
+    label ru-KZ official "Для расчета годовой страховой премии используется базовая страховая премия, к которой применяются коэффициенты, установленные пунктами 3-10 настоящей статьи";
+    when base_insurance_premium(base);
+    when applicable_territory_coefficient(contract, territory);
+    when applicable_vehicle_type_coefficient(contract, vehicle_type);
+    when applicable_driver_coefficient(contract, driver);
+    when applicable_operation_term_coefficient(contract, operation_term);
+    when bonus_malus_coefficient(contract, bonus_malus);
+    then annual_premium_calculated(contract,
+                                   base * territory * vehicle_type * driver
+                                        * operation_term * bonus_malus);
+}

@@ -1,0 +1,746 @@
+// РАЗДЕЛ 1. ОСНОВНЫЕ ПОЛОЖЕНИЯ (главы 1–7, статьи 1–34).
+//
+// Что здесь выражено ПРАВИЛАМИ, а не метками: три запрета ст. 2 п. 3
+// (внесение предложений вне процесса планирования и без согласования),
+// целевое расходование и запрет размещения бюджетных средств на депозитах
+// (ст. 5), запрет новой бюджетной программы под уже достигнутую цель
+// (ст. 14), запрет планирования государственного задания вне критериев
+// (ст. 16), объёмные границы резервов (ст. 19 п. 1, ст. 20 п. 3), запрет
+// доиспользования резерва Правительства (ст. 18 п. 5) и запрет
+// финансирования из резерва на неотложные затраты расходов Специального
+// государственного фонда (ст. 20 п. 7), запрет установления уровня бюджета
+// иными законами (ст. 22 п. 2, ст. 29 п. 2) и запрет финансирования расходов
+// одного уровня из другого (ст. 29 п. 3).
+//
+// ГРАНИЦЫ РАЗДЕЛА, объявленные с причиной:
+//   - ст. 3 (основные понятия) — определения, а не нормы: 70 с лишним
+//     подпунктов словаря; понятия, которые ЧИТАЮТСЯ правилами, объявлены
+//     отношениями здесь и в модулях своих разделов, остальное адресуемо
+//     фрагментом. Норм в статье нет;
+//   - ст. 4 (принципы) — основание целей акта (tests/goals.lawtest), а не
+//     самостоятельные правила: принцип не даёт условия и следствия, он
+//     ОЦЕНИВАЕТ прочие нормы. Каждая цель несёт `basis BC_ART4`;
+//   - ст. 10–13, 15 (единая бюджетная классификация) — состав
+//     классификатора, утверждаемого центральным уполномоченным органом;
+//     нормы в них нет, а перечень кодов — данные другого акта;
+//   - ст. 23–28, 30–34 (перечни поступлений и расходов по уровням) —
+//     закрытые перечни видов, отсылающие к Налоговому кодексу и к
+//     отраслевым законам; выражение их правилами означало бы перенос
+//     ЧУЖИХ норм (граница пакета, LDC-E2101). Общие нормы этих глав
+//     (ст. 22, ст. 29) выражены полностью.
+
+
+// --- Ст. 2 п. 3: три запрета участникам бюджетного процесса -----------------
+// Формулировка кодекса — «запрещается вносить … предложения», то есть §130
+// prohibition с носителем. Три подпункта — ТРИ нормы, а не одна с «либо»:
+// у них разные носители, разные адресаты и разные условия снятия.
+
+relation budget_funds_recipient(b: Body) kind empirical {
+    label ru-KZ official "лицо является администратором бюджетных программ, местным исполнительным органом либо иным получателем бюджетных средств";
+}
+
+relation proposal_by(p: Proposal, b: Body) kind empirical {
+    label ru-KZ official "предложение внесено названным участником бюджетного процесса";
+}
+
+relation proposal_increases_expenditure(p: Proposal) kind empirical {
+    label ru-KZ official "предложение направлено на увеличение расходов бюджета";
+}
+
+relation proposal_outside_planning_process(p: Proposal) kind empirical {
+    label ru-KZ official "предложение вносится вне процесса планирования бюджета";
+}
+
+relation proposal_changes_task_mechanism(p: Proposal) kind empirical {
+    label ru-KZ official "предложение связано с изменением механизмов или инструментов выполнения задач бюджетного законодательства";
+}
+
+relation proposal_agreed_with_budget_policy_body(p: Proposal) kind empirical {
+    label ru-KZ official "предложение согласовано с центральным уполномоченным органом по бюджетной политике и иными названными органами";
+}
+
+// Отрицание §70: «без согласования» есть УСТАНОВЛЕННОЕ отсутствие
+// согласования, а не молчание дела. Открытый мир отрицания из молчания не
+// выводит (`not P` на неутверждённом предикате даёт NEITHER), поэтому оба
+// согласования замкнуты по домену «предложение, поставленное вопросом».
+
+relation proposal_in_question(p: Proposal) kind empirical {
+    label ru-KZ official "предложение поставлено вопросом по настоящему делу";
+}
+
+closure BudgetPolicyAgreementClosure {
+    label ru-KZ official "перечень предложений, согласованных с центральным уполномоченным органом по бюджетной политике, по делу закрыт";
+    predicate proposal_agreed_with_budget_policy_body;
+    domain proposal_in_question;
+    snapshot "urn:kz:corpus:clir:budget-code:snapshot:budget-policy-agreements";
+    complete_as_of @2025-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+closure LocalPlanningAgreementClosure {
+    label ru-KZ official "перечень предложений, согласованных с местным уполномоченным органом по государственному планированию, по делу закрыт";
+    predicate proposal_agreed_with_local_planning_body;
+    domain proposal_in_question;
+    snapshot "urn:kz:corpus:clir:budget-code:snapshot:local-planning-agreements";
+    complete_as_of @2025-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+relation local_sectoral_body(b: Body) kind empirical {
+    label ru-KZ official "орган является местным уполномоченным отраслевым государственным органом";
+}
+
+relation approval_of_central_sectoral_proposal(p: Proposal, b: Body) kind empirical {
+    label ru-KZ official "орган согласовывает предложение центрального отраслевого государственного органа об изменении расходов бюджета";
+}
+
+relation proposal_agreed_with_local_planning_body(p: Proposal) kind empirical {
+    label ru-KZ official "предложение согласовано с местным уполномоченным органом по государственному планированию";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation propose_expenditure_increase(p: Proposal) kind empirical {
+    label ru-KZ unofficial "действие нормы: propose expenditure increase";
+}
+
+@source(BC_ART2) {
+    rule NoExpenditureIncreaseOutsidePlanning(p: Proposal, b: Body) strict {
+        when proposal_by(p, b);
+        when budget_funds_recipient(b);
+        when proposal_increases_expenditure(p);
+        when proposal_outside_planning_process(p);
+        then prohibition ProposeExpenditureIncreaseOutsidePlanning {
+            bearer b;
+            action propose_expenditure_increase(p);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 2 пункт 3 абзац второй. Получателям бюджетных средств запрещается вносить предложения об увеличении расходов бюджета вне процесса планирования бюджета";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation propose_task_mechanism_change(p: Proposal) kind empirical {
+        label ru-KZ unofficial "действие нормы: propose task mechanism change";
+    }
+
+    rule NoTaskMechanismChangeWithoutAgreement(p: Proposal, b: Body) strict {
+        when proposal_by(p, b);
+        when budget_funds_recipient(b);
+        when proposal_in_question(p);
+        when proposal_changes_task_mechanism(p);
+        when not proposal_agreed_with_budget_policy_body(p);
+        then prohibition ProposeTaskMechanismChange {
+            bearer b;
+            action propose_task_mechanism_change(p);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 2 пункт 3 абзац третий. Получателям бюджетных средств запрещается вносить предложения об изменении механизмов выполнения задач бюджетного законодательства без согласования с уполномоченными органами";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation approve_expenditure_change(p: Proposal) kind empirical {
+        label ru-KZ unofficial "действие нормы: approve expenditure change";
+    }
+
+    rule NoLocalApprovalWithoutPlanningBody(p: Proposal, b: Body) strict {
+        when approval_of_central_sectoral_proposal(p, b);
+        when local_sectoral_body(b);
+        when proposal_in_question(p);
+        when not proposal_agreed_with_local_planning_body(p);
+        then prohibition ApproveCentralSectoralProposal {
+            bearer b;
+            action approve_expenditure_change(p);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 2 пункт 3 абзац четвёртый. Местным уполномоченным отраслевым органам запрещается согласовывать предложения центральных отраслевых органов об изменении расходов бюджета без согласования с местным уполномоченным органом по государственному планированию";
+    }
+}
+
+// --- Ст. 5: обязанности и запрет получателей бюджетных средств --------------
+
+relation received_budget_funds(b: Body, p: BudgetProgramme) kind empirical {
+    label ru-KZ official "участник бюджетного процесса получил бюджетные средства по названной бюджетной программе";
+}
+
+relation funds_spent_for_designated_purpose(b: Body, p: BudgetProgramme) kind empirical {
+    label ru-KZ official "бюджетные средства израсходованы по целевому назначению";
+}
+
+relation funds_placed_on_deposit(b: Body) kind empirical {
+    label ru-KZ official "участник бюджетного процесса разместил бюджетные средства на депозите либо в ином финансовом инструменте ради вознаграждения";
+}
+
+@source(BC_ART5) {
+    rule SpendForDesignatedPurposeDuty(b: Body, p: BudgetProgramme) strict {
+        when received_budget_funds(b, p);
+        then duty SpendForDesignatedPurpose {
+            bearer b;
+            beneficiary b;
+            achieve funds_spent_for_designated_purpose(b, p) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 5 пункт 4. Получатели бюджетных средств обязаны расходовать бюджетные средства по целевому назначению";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation place_on_deposit(b: Body) kind empirical {
+        label ru-KZ unofficial "действие нормы: place on deposit";
+    }
+
+    rule NoDepositPlacementOfBudgetFunds(b: Body, p: BudgetProgramme) strict {
+        when received_budget_funds(b, p);
+        then prohibition PlaceBudgetFundsOnDeposit {
+            bearer b;
+            action place_on_deposit(b);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 5 пункт 4. Получателям бюджетных средств запрещается размещать бюджетные средства на депозитах и в иных финансовых инструментах ради получения вознаграждения";
+    }
+}
+
+// --- Ст. 14: запрет дублирующей бюджетной программы -------------------------
+
+relation programme_targets_goal(p: BudgetProgramme, other: BudgetProgramme) kind empirical {
+    label ru-KZ official "новая бюджетная программа направлена на достижение цели, уже закреплённой за другой бюджетной программой";
+}
+
+relation programme_introduced_within_year(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "бюджетная программа вводится в течение текущего финансового года";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation introduce_programme(p: BudgetProgramme) kind empirical {
+    label ru-KZ unofficial "действие нормы: introduce programme";
+}
+
+@source(BC_ART14)
+rule NoDuplicateProgramme(p: BudgetProgramme, other: BudgetProgramme, a: Administrator) strict {
+    when programme_targets_goal(p, other);
+    when programme_introduced_within_year(p);
+    when programme_administrator(p, a);
+    then prohibition IntroduceDuplicateProgramme {
+        bearer a;
+        action introduce_programme(p);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 14. Не допускается введение новой бюджетной программы, направленной на достижение цели, уже закреплённой за другой бюджетной программой";
+}
+
+// --- Ст. 19 п. 1: объём резерва на инициативы Президента --------------------
+// «Не менее полутора и не более трёх процентов от планируемого объёма
+// доходов республиканского бюджета … без учёта поступлений трансфертов».
+//
+// Доля выражена ЦЕЛОЧИСЛЕННЫМ масштабированием обеих сторон, а не делением
+// денег на деньги: 1,5 % ⇔ 200·объём ≥ 3·доходы, 3 % ⇔ 100·объём ≤ 3·доходы.
+// Так порог точен на любой сумме — деление дало бы неточное частное и
+// потребовало бы округления, которого статья не называет.
+
+relation reserve_of(r: Reserve, b: Budget) kind institutional {
+    key(r);
+    label ru-KZ official "резерв образован в составе названного бюджета";
+}
+
+relation reserve_kind(r: Reserve, k: ReserveKind) kind institutional {
+    key(r);
+    label ru-KZ official "резерв относится к названному виду";
+}
+
+relation reserve_amount(r: Reserve, amount: Money) kind empirical {
+    key(r);
+    label ru-KZ official "объём резерва составляет названную сумму";
+}
+
+relation planned_revenue_without_transfers(b: Budget, amount: Money) kind empirical {
+    key(b);
+    label ru-KZ official "планируемый объём доходов бюджета на очередной финансовый год без учёта поступлений трансфертов составляет названную сумму";
+}
+
+relation reserve_size_conforms(r: Reserve) kind institutional {
+    label ru-KZ official "объём резерва находится в границах, установленных настоящим Кодексом";
+}
+
+relation reserve_size_violates_limits(r: Reserve) kind institutional {
+    label ru-KZ official "объём резерва выходит за границы, установленные настоящим Кодексом";
+}
+
+relation reserve_size_assessed(r: Reserve) kind institutional {
+    label ru-KZ official "объём резерва получил оценку по границам настоящего Кодекса";
+}
+
+@source(BC_ART19) {
+    rule PresidentReserveWithinLimits(r: Reserve, b: Budget, amount: Money, revenue: Money) strict {
+        when reserve_kind(r, PresidentInitiatives);
+        when reserve_of(r, b);
+        when reserve_amount(r, amount);
+        when planned_revenue_without_transfers(b, revenue);
+        when amount * 200 >= revenue * 3;
+        when amount * 100 <= revenue * 3;
+        then reserve_size_conforms(r);
+        label ru-KZ official "Статья 19 пункт 1. Резерв на инициативы Президента Республики Казахстан формируется в размере не менее полутора и не более трёх процентов планируемого объёма доходов республиканского бюджета без учёта поступлений трансфертов";
+    }
+
+    rule PresidentReserveBelowFloor(r: Reserve, b: Budget, amount: Money, revenue: Money) strict {
+        when reserve_kind(r, PresidentInitiatives);
+        when reserve_of(r, b);
+        when reserve_amount(r, amount);
+        when planned_revenue_without_transfers(b, revenue);
+        when amount * 200 < revenue * 3;
+        then reserve_size_violates_limits(r);
+        label ru-KZ official "Статья 19 пункт 1. Резерв на инициативы Президента Республики Казахстан объёмом менее полутора процентов планируемых доходов границам Кодекса не отвечает";
+    }
+
+    rule PresidentReserveAboveCap(r: Reserve, b: Budget, amount: Money, revenue: Money) strict {
+        when reserve_kind(r, PresidentInitiatives);
+        when reserve_of(r, b);
+        when reserve_amount(r, amount);
+        when planned_revenue_without_transfers(b, revenue);
+        when amount * 100 > revenue * 3;
+        then reserve_size_violates_limits(r);
+        label ru-KZ official "Статья 19 пункт 1. Резерв на инициативы Президента Республики Казахстан объёмом более трёх процентов планируемых доходов границам Кодекса не отвечает";
+    }
+}
+
+// --- Ст. 20 п. 3: объёмы резерва Правительства и резерва МИО ----------------
+
+@source(BC_ART20) {
+    rule GovernmentReserveWithinCap(r: Reserve, b: Budget, amount: Money, revenue: Money) strict {
+        when reserve_kind(r, Government);
+        when reserve_of(r, b);
+        when reserve_amount(r, amount);
+        when planned_revenue_without_transfers(b, revenue);
+        when amount * 100 <= revenue * 3;
+        then reserve_size_conforms(r);
+        label ru-KZ official "Статья 20 пункт 3 абзац первый. Общий объём резерва Правительства Республики Казахстан формируется в размере до трёх процентов планируемого объёма доходов республиканского бюджета без учёта поступлений трансфертов";
+    }
+
+    rule GovernmentReserveAboveCap(r: Reserve, b: Budget, amount: Money, revenue: Money) strict {
+        when reserve_kind(r, Government);
+        when reserve_of(r, b);
+        when reserve_amount(r, amount);
+        when planned_revenue_without_transfers(b, revenue);
+        when amount * 100 > revenue * 3;
+        then reserve_size_violates_limits(r);
+        label ru-KZ official "Статья 20 пункт 3 абзац первый. Общий объём резерва Правительства Республики Казахстан свыше трёх процентов планируемых доходов границам Кодекса не отвечает";
+    }
+
+    rule LocalReserveAboveFloor(r: Reserve, b: Budget, amount: Money, revenue: Money) strict {
+        when reserve_kind(r, LocalExecutive);
+        when reserve_of(r, b);
+        when reserve_amount(r, amount);
+        when planned_revenue_without_transfers(b, revenue);
+        when amount * 50 >= revenue;
+        then reserve_size_conforms(r);
+        label ru-KZ official "Статья 20 пункт 3 абзац второй. Общий объём резерва местного исполнительного органа устанавливается в объёме не менее двух процентов поступлений соответствующего местного бюджета без учёта трансфертов, займов и бюджетных изъятий";
+    }
+
+    rule LocalReserveBelowFloor(r: Reserve, b: Budget, amount: Money, revenue: Money) strict {
+        when reserve_kind(r, LocalExecutive);
+        when reserve_of(r, b);
+        when reserve_amount(r, amount);
+        when planned_revenue_without_transfers(b, revenue);
+        when amount * 50 < revenue;
+        then reserve_size_violates_limits(r);
+        label ru-KZ official "Статья 20 пункт 3 абзац второй. Резерв местного исполнительного органа объёмом менее двух процентов поступлений местного бюджета границам Кодекса не отвечает";
+    }
+}
+
+// Тотальность оценки: резерв, объём которого известен, получает вердикт по
+// ОБЕИМ ветвям — иначе «право промолчало» неотличимо от «право разрешило».
+// §206: две головы одного смысла — два правила, не дизъюнкция в теле.
+
+@source(BC_ART19) {
+    rule ReserveAssessedByConformance(r: Reserve) strict {
+        when reserve_size_conforms(r);
+        then reserve_size_assessed(r);
+        label ru-KZ official "Статья 19. Резерв, объём которого укладывается в границы Кодекса, считается оценённым по объёму";
+    }
+
+    rule ReserveAssessedByViolation(r: Reserve) strict {
+        when reserve_size_violates_limits(r);
+        then reserve_size_assessed(r);
+        label ru-KZ official "Статья 19. Резерв, объём которого выходит за границы Кодекса, считается оценённым по объёму";
+    }
+}
+
+// --- Ст. 18 п. 5 и ст. 20 п. 7: два запрета по резервам ---------------------
+
+relation reuse_next_year_intended(r: Reserve, b: Body) kind empirical {
+    label ru-KZ official "участник бюджетного процесса намерен доиспользовать средства резерва в следующем финансовом году";
+}
+
+relation urgent_costs_reserve(r: Reserve) kind empirical {
+    label ru-KZ official "резерв является резервом на неотложные затраты";
+}
+
+relation expenditure_funded_by_special_state_fund(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "расход финансируется за счёт Специального государственного фонда";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation reuse_reserve_next_year(r: Reserve) kind empirical {
+    label ru-KZ unofficial "действие нормы: reuse reserve next year";
+}
+
+@source(BC_ART18)
+rule NoGovernmentReserveCarryOver(r: Reserve, b: Body) strict {
+    when reserve_kind(r, Government);
+    when reuse_next_year_intended(r, b);
+    then prohibition CarryOverGovernmentReserve {
+        bearer b;
+        action reuse_reserve_next_year(r);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 18 пункт 5. Не допускается доиспользование средств резерва Правительства Республики Казахстан в следующем финансовом году";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation fund_from_urgent_reserve(p: BudgetProgramme) kind empirical {
+    label ru-KZ unofficial "действие нормы: fund from urgent reserve";
+}
+
+@source(BC_ART20)
+rule NoUrgentReserveForSpecialFundExpenditure(r: Reserve, p: BudgetProgramme, b: Body) strict {
+    when urgent_costs_reserve(r);
+    when expenditure_funded_by_special_state_fund(p);
+    when reuse_next_year_intended(r, b);
+    then prohibition FundSpecialFundExpenditureFromUrgentReserve {
+        bearer b;
+        action fund_from_urgent_reserve(p);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 20 пункт 7 абзац третий. Не допускается финансирование из резерва на неотложные затраты расходов, финансируемых за счёт Специального государственного фонда";
+}
+
+// --- Ст. 22 п. 2 и ст. 29 п. 2: уровень бюджета устанавливает только Кодекс -
+
+relation revenue_level_set_by_other_law(b: Body) kind empirical {
+    label ru-KZ official "орган устанавливает иным законом уровень бюджета, в который зачисляются поступления";
+}
+
+relation expenditure_level_set_by_other_law(b: Body) kind empirical {
+    label ru-KZ official "орган устанавливает иным законом уровень бюджета, за счёт которого финансируются расходы";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation set_revenue_level(b: Body) kind empirical {
+    label ru-KZ unofficial "действие нормы: set revenue level";
+}
+
+@source(BC_ART22)
+rule OnlyCodeSetsRevenueLevel(b: Body) strict {
+    when revenue_level_set_by_other_law(b);
+    then prohibition SetRevenueLevelOutsideCode {
+        bearer b;
+        action set_revenue_level(b);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 22 пункт 2. Не допускается установление в иных законах Республики Казахстан, кроме настоящего Кодекса, уровня бюджета, в который зачисляются поступления";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation set_expenditure_level(b: Body) kind empirical {
+    label ru-KZ unofficial "действие нормы: set expenditure level";
+}
+
+@source(BC_ART29)
+rule OnlyCodeSetsExpenditureLevel(b: Body) strict {
+    when expenditure_level_set_by_other_law(b);
+    then prohibition SetExpenditureLevelOutsideCode {
+        bearer b;
+        action set_expenditure_level(b);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 29 пункт 2. Не допускается установление в иных законах Республики Казахстан, кроме настоящего Кодекса, уровня бюджета, за счёт которого финансируются расходы";
+}
+
+// --- Ст. 29 п. 3: расход финансируется СВОИМ уровнем ------------------------
+// Основание цели «всякий расход финансируется своим уровнем бюджета».
+// Различие уровней выражено сравнением ЗНАЧЕНИЙ перечисления — сущностное
+// неравенство `!=` в теле правила читают обе реализации.
+
+relation expenditure_assigned_to_level(p: BudgetProgramme, level: BudgetLevel) kind institutional {
+    key(p);
+    label ru-KZ official "расход отнесён настоящим Кодексом к названному уровню бюджета";
+}
+
+relation expenditure_funded_from(p: BudgetProgramme, b: Budget) kind empirical {
+    label ru-KZ official "расход фактически финансируется из названного бюджета";
+}
+
+relation cross_level_funding(p: BudgetProgramme, b: Budget) kind institutional {
+    label ru-KZ official "расход финансируется из бюджета не того уровня, к которому он отнесён Кодексом";
+}
+
+@source(BC_ART29) {
+    rule CrossLevelFundingDetected(
+        p: BudgetProgramme,
+        b: Budget,
+        assigned: BudgetLevel,
+        actual: BudgetLevel,
+    ) strict {
+        when expenditure_assigned_to_level(p, assigned);
+        when expenditure_funded_from(p, b);
+        when budget_level(b, actual);
+        when assigned != actual;
+        then cross_level_funding(p, b);
+        label ru-KZ official "Статья 29 пункт 3. Финансирование расхода из бюджета уровня, отличного от уровня, к которому расход отнесён Кодексом, есть межуровневое финансирование";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation fund_expenditure(p: BudgetProgramme) kind empirical {
+        label ru-KZ unofficial "действие нормы: fund expenditure";
+    }
+
+    rule NoCrossLevelFunding(p: BudgetProgramme, b: Budget, a: Administrator) strict {
+        when cross_level_funding(p, b);
+        when programme_administrator(p, a);
+        then prohibition FundExpenditureFromAnotherLevel {
+            bearer a;
+            action fund_expenditure(p);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 29 пункт 3. Не допускается финансирование расходов определённого уровня бюджета из других уровней бюджетов";
+    }
+}
+
+// --- Ст. 2 п. 4: разногласия решает бюджетная комиссия ----------------------
+// Канал суждения §47.3: кодекс НАЗЫВАЕТ того, кто скажет. Без решения
+// комиссии запрос отвечает REQUIRES_JUDGMENT с типизированным запросом, а не
+// NEITHER: «право прямо назвало решающего» и «право молчит» — разные ответы,
+// и различить их может только объявленный канал.
+
+external judgment relation budget_commission_resolved(p: Proposal) {
+    authority BudgetCommission;
+    label ru-KZ official "разногласие разрешено соответствующей бюджетной комиссией";
+}
+
+relation disagreement_between_administrator_and_planning_body(p: Proposal) kind empirical {
+    label ru-KZ official "между администратором бюджетных программ и уполномоченным органом по бюджетному планированию возникло разногласие";
+}
+
+relation disagreement_settled(p: Proposal) kind institutional {
+    label ru-KZ official "разногласие по предложению урегулировано";
+}
+
+@source(BC_ART2)
+rule DisagreementSettledByCommission(p: Proposal) strict {
+    when disagreement_between_administrator_and_planning_body(p);
+    when budget_commission_resolved(p);
+    then disagreement_settled(p);
+    label ru-KZ official "Статья 2 пункт 4. Разногласия между администраторами бюджетных программ и центральным уполномоченным органом по бюджетному планированию рассматриваются соответствующей бюджетной комиссией";
+}
+
+// --- Предметы публикации, названные статьями раздела 1 (второй проход) -----
+// Механизм — в 02-osnovy-byudzhetirovaniya.law: статья называет ПРЕДМЕТ
+// публикации, статья 40 — участника, а следствие («предмет не опубликован —
+// пропуск») выводится там же.
+
+relation state_task_performance_information(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является информацией о выполнении государственного задания";
+}
+
+@source(BC_ART16)
+rule StateTaskInformationIsPublicationSubject(d: ProcessDocument) strict {
+    when state_task_performance_information(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 16 пункт 10. Информация о выполнении государственного задания включается в состав годового отчёта об исполнении республиканского бюджета и подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation reserve_usage_report(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является отчётностью об использовании резервов";
+}
+
+@source(BC_ART21)
+rule ReserveUsageReportIsPublicationSubject(d: ProcessDocument) strict {
+    when reserve_usage_report(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 21 пункт 3. Отчётность об использовании резервов подлежит публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+// --- Ст. 17-1: участие государства в урегулировании системно значимого банка
+// Второй проход. Статья даёт и ПРАВО (Правительство вправе участвовать), и
+// ЗАПРЕТ (отчуждение ниже стоимости приобретения), и ОБЯЗАННОСТЬ
+// (перечисление вырученного в республиканский бюджет). Все три выражены: у
+// них разные носители и разные условия снятия.
+
+entity BankShares {
+    label ru-KZ official "акции системно значимого банка либо стабилизационного банка";
+}
+
+relation systemic_bank_resolution(s: BankShares, b: Body) kind empirical {
+    label ru-KZ official "участник участвует в урегулировании системно значимого банка";
+}
+
+relation acquisition_value(s: BankShares, amount: Money) kind empirical {
+    key(s);
+    label ru-KZ official "стоимость приобретения акций с учётом целевых ориентиров по инфляции составляет названную сумму";
+}
+
+relation disposal_value(s: BankShares, amount: Money) kind empirical {
+    key(s);
+    label ru-KZ official "цена отчуждения акций составляет названную сумму";
+}
+
+relation disposal_below_acquisition(s: BankShares) kind institutional {
+    label ru-KZ official "отчуждение акций производится по стоимости ниже стоимости их приобретения";
+}
+
+relation disposal_proceeds(s: BankShares, amount: Money) kind empirical {
+    key(s);
+    label ru-KZ official "средства, полученные от отчуждения акций, составляют названную сумму";
+}
+
+relation proceeds_transferred_to_budget(s: BankShares) kind empirical {
+    label ru-KZ official "полученные от отчуждения средства перечислены в республиканский бюджет";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation participate_in_resolution(s: BankShares) kind empirical {
+    label ru-KZ unofficial "действие нормы: participate in resolution";
+}
+
+@source(BC_ART17_1) {
+    rule SystemicBankResolutionLiberty(s: BankShares, b: Body) strict {
+        when government_of_kazakhstan(b);
+        when systemic_bank_resolution(s, b);
+        then liberty ParticipateInBankResolution {
+            holder b;
+            action participate_in_resolution(s);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 17-1 пункт 1. Правительство Республики Казахстан вправе участвовать в урегулировании системно значимых банков в соответствии с банковским законодательством Республики Казахстан";
+    }
+
+    rule DisposalBelowAcquisitionDetected(s: BankShares, paid: Money, got: Money) strict {
+        when acquisition_value(s, paid);
+        when disposal_value(s, got);
+        when got < paid;
+        then disposal_below_acquisition(s);
+        label ru-KZ official "Статья 17-1 пункт 2. Отчуждение акций по цене ниже стоимости их приобретения с учётом целевых ориентиров по инфляции есть отчуждение ниже стоимости приобретения";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation dispose_shares(s: BankShares) kind empirical {
+        label ru-KZ unofficial "действие нормы: dispose shares";
+    }
+
+    rule NoDisposalBelowAcquisition(s: BankShares, b: Body) strict {
+        when disposal_below_acquisition(s);
+        when systemic_bank_resolution(s, b);
+        then prohibition DisposeSharesBelowAcquisition {
+            bearer b;
+            action dispose_shares(s);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 17-1 пункт 2. Не допускается отчуждение Правительством Республики Казахстан либо национальным управляющим холдингом акций системно значимого банка по стоимости ниже их приобретения с учётом целевых ориентиров по инфляции";
+    }
+
+    rule ProceedsToRepublicanBudgetDuty(s: BankShares, b: Body, amount: Money) strict {
+        when systemic_bank_resolution(s, b);
+        when disposal_proceeds(s, amount);
+        then duty TransferDisposalProceeds {
+            bearer b;
+            beneficiary b;
+            achieve proceeds_transferred_to_budget(s) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 17-1 пункт 1 подпункт 3). При отчуждении акций системно значимого банка полученные средства подлежат перечислению в республиканский бюджет";
+    }
+}
+
+// --- Ст. 8: аналитические бюджеты утверждению не подлежат ------------------
+// Второй проход. Отрицательное свойство, названное самой статьёй: четыре
+// вида бюджета составляются как АНАЛИТИЧЕСКАЯ информация и утверждению не
+// подлежат — в отличие от бюджетов уровней статьи 7, которые утверждаются
+// законом либо решением маслихата.
+
+relation analytical_budget(b: Budget) kind empirical {
+    label ru-KZ official "бюджет является государственным, консолидированным, бюджетом области либо бюджетом района — видом, составляемым в качестве аналитической информации";
+}
+
+relation not_subject_to_approval(b: Budget) kind institutional {
+    label ru-KZ official "бюджет утверждению не подлежит";
+}
+
+@source(BC_ART8)
+rule AnalyticalBudgetNotApproved(b: Budget) strict {
+    when analytical_budget(b);
+    then not_subject_to_approval(b);
+    label ru-KZ official "Статья 8 пункт 1. Государственный бюджет, консолидированный бюджет, бюджет области и бюджет района составляются как аналитическая информация и утверждению не подлежат";
+}
+
+relation approval_sought(b: Budget, body: Body) kind empirical {
+    label ru-KZ official "участник вносит бюджет на утверждение";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation approve_budget(b: Budget) kind empirical {
+    label ru-KZ unofficial "действие нормы: approve budget";
+}
+
+@source(BC_ART8)
+rule NoApprovalOfAnalyticalBudget(b: Budget, body: Body) strict {
+    when not_subject_to_approval(b);
+    when approval_sought(b, body);
+    then prohibition ApproveAnalyticalBudget {
+        bearer body;
+        action approve_budget(b);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 8 пункт 1. Утверждение бюджета, утверждению не подлежащего, настоящему Кодексу не отвечает";
+}
+
+// --- Ст. 17: шесть критериев пилотного проекта ------------------------------
+// «Должен соответствовать следующим критериям» — конъюнкция шести условий, и
+// невыполнение любого закрывает проект. Одно правило с шестью посылками, а не
+// шесть правил: критерии соединены «и», а не «либо».
+
+relation pilot_solution_unique(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "предлагаемое в реализацию пилотного проекта решение является уникальным (инновационным, высокотехнологичным)";
+}
+
+relation pilot_has_goals(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "пилотный проект имеет конкретные цели и ожидаемые результаты";
+}
+
+relation pilot_time_limited(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "пилотный проект имеет временное ограничение";
+}
+
+relation pilot_complete(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "пилотный проект имеет завершённый характер";
+}
+
+relation pilot_has_effect(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "пилотный проект имеет положительный экономический (социальный) эффект";
+}
+
+relation pilot_realistic(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "пилотный проект реалистичен";
+}
+
+relation pilot_criteria_met(p: BudgetProgramme) kind institutional {
+    label ru-KZ official "пилотный проект отвечает критериям пункта 2 статьи 17 настоящего Кодекса";
+}
+
+@source(BC_ART17)
+rule PilotCriteriaMet(p: BudgetProgramme) strict {
+    when pilot_solution_unique(p);
+    when pilot_has_goals(p);
+    when pilot_time_limited(p);
+    when pilot_complete(p);
+    when pilot_has_effect(p);
+    when pilot_realistic(p);
+    then pilot_criteria_met(p);
+    label ru-KZ official "Статья 17 пункт 2. Пилотный проект в области бюджетных отношений должен соответствовать шести критериям: уникальность решения, конкретные цели и ожидаемые результаты, временное ограничение, завершённый характер, положительный эффект, реалистичность";
+}

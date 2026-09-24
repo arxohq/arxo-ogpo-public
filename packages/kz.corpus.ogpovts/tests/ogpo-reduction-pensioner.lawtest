@@ -1,0 +1,36 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 20 ч. 1: пенсионер при заключении СТАНДАРТНОГО договора получает
+// уменьшение размера страховой премии. Верхняя сторона тройки; нижние —
+// ogpo-reduction-barred (ч. 2 отнимает льготу) и
+// ogpo-reduction-needs-standard-contract (нет стандартного договора).
+//
+// Молчание дела о других владельцах здесь РАБОТАЕТ, и в этом весь смысл
+// замыкания §70: без него `not premium_reduction_barred` осталось бы
+// неустановленным, и льгота не сработала бы ни на одном деле.
+
+test "urn:query:ogpo-reduction-pensioner" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-red-p-a0": standard_contract(entity_ref("urn:kz:ogpo:contract:c1")) {
+            origin case_input;
+        }
+        assert "ogpo-red-p-a1": owner_is_pensioner(entity_ref("urn:kz:ogpo:contract:c1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_reduction_applies(entity_ref("urn:kz:ogpo:contract:c1")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

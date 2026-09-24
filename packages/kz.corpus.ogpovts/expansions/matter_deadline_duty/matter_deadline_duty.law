@@ -1,0 +1,38 @@
+language "law.core" version "0.2";
+package law.expansions.matter_deadline_duty version "0.1.0";
+namespace "urn:law:expansions:matter-deadline-duty";
+
+// DECISION-0209 §8 этап 7 (пилот Р8): обязанность достижения НАД ПРЕДМЕТОМ
+// со сроком делом — стороны названы двумя посылками над предметом, даты
+// начала и срока — двумя посылками над предметом. Форма гл. 22 ОГПО ВТС.
+expansion matter_deadline_duty {
+    params {
+        bearer: binder;
+        beneficiary: binder;
+        matter: binder;
+        start: binder;
+        due: binder;
+        bearer_of: relation(matter, bearer);
+        beneficiary_of: relation(matter, beneficiary);
+        started: relation(matter, start);
+        due_on: relation(matter, due);
+        conditions: list<relation(matter)> min 0;
+        result: relation(matter);
+    }
+    exports { duty = self/duty; }
+
+    emit rule self/duty strict {
+        for matter; for bearer; for beneficiary; for start; for due;
+        when bearer_of(matter, bearer);
+        when beneficiary_of(matter, beneficiary);
+        when started(matter, start);
+        when due_on(matter, due);
+        for each c in conditions { when c(matter); }
+        then duty self/duty/norm {
+            bearer bearer;
+            beneficiary beneficiary;
+            achieve result(matter) during between start and due inclusive;
+        }
+        scope from self; effective from self; labels from self; source from self;
+    }
+}

@@ -1,0 +1,112 @@
+language "law.core" version "0.1";
+package kz.corpus.vred_ts version "0.1.0";
+namespace "urn:kz:corpus:clir:vred-ts";
+
+// Cl. 3 part 2 and part 6: the insurer's duty to provide the report to the
+// victim within five business days of the inspection; under simplified
+// processing (cl. 3-1) — the same duty without a deadline.
+//
+// Policy §86 — case input (general procedure of the Civil Code of the RoK
+// art. 173, 176), the calendar — a pinned 2026 snapshot.
+
+context profile KZ_VRED_TS_DEADLINES {
+    deadline_policy {
+            start_count next_day;
+            include_end true;
+            roll next_working_day;
+        }
+}
+
+// Inspection on September 1, 2026 (Tuesday); the last day of the deadline
+// is September 8. The report was provided — the duty is satisfied.
+test "urn:query:vred-t11-a" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "t11a-a0": strakhovshchik_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), s: entity_ref("urn:case:vred:strakhovshchik-1")) { origin case_input; }
+        assert "t11a-a1": poterpevshiy_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1")) { origin case_input; }
+        assert "t11a-a2": osmotr_osushchestvlen_strakhovshchikom(r: entity_ref("urn:case:vred:raschet-1"), day: @2026-09-01) { origin case_input; }
+        assert "t11a-a3": otchet_predostavlen_poterpevshemu(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredostavitOtchet, SATISFIED);
+    expect not position(PredostavitOtchet, VIOLATED);
+    expect not position(PredostavitOtchet, ACTIVE);
+    expect not position(PredostavitOtchetBezSroka, ACTIVE);
+    expect not position(PredostavitOtchetBezSroka, SATISFIED);
+}
+
+// The report was not provided, the check day is September 30 — the
+// deadline expired on September 8, the duty is violated.
+test "urn:query:vred-t11-b" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "t11b-a0": strakhovshchik_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), s: entity_ref("urn:case:vred:strakhovshchik-1")) { origin case_input; }
+        assert "t11b-a1": poterpevshiy_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1")) { origin case_input; }
+        assert "t11b-a2": osmotr_osushchestvlen_strakhovshchikom(r: entity_ref("urn:case:vred:raschet-1"), day: @2026-09-01) { origin case_input; }
+        assert "t11b-a3": not otchet_predostavlen_poterpevshemu(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredostavitOtchet, VIOLATED);
+    expect not position(PredostavitOtchet, SATISFIED);
+    expect not position(PredostavitOtchet, ACTIVE);
+}
+
+// The report has not yet been provided, the check day is September 4 —
+// the deadline has not expired, the duty is active.
+test "urn:query:vred-t11-c" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-09-04T12:00:00+05:00;
+            knowledge_time @2026-09-04T12:00:00+05:00;
+            legal_time @2026-09-04;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "t11c-a0": strakhovshchik_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), s: entity_ref("urn:case:vred:strakhovshchik-1")) { origin case_input; }
+        assert "t11c-a1": poterpevshiy_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1")) { origin case_input; }
+        assert "t11c-a2": osmotr_osushchestvlen_strakhovshchikom(r: entity_ref("urn:case:vred:raschet-1"), day: @2026-09-01) { origin case_input; }
+        assert "t11c-a3": not otchet_predostavlen_poterpevshemu(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredostavitOtchet, ACTIVE);
+    expect not position(PredostavitOtchet, VIOLATED);
+    expect not position(PredostavitOtchet, SATISFIED);
+}
+
+// Simplified processing: the deadline-bound duty does not exist at all,
+// the open-ended one is active and never becomes violated by deadline even
+// on September 30.
+test "urn:query:vred-t11-d" {
+    given {
+        context extends KZ_VRED_TS_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Qyzylorda";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "t11d-a0": strakhovshchik_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), s: entity_ref("urn:case:vred:strakhovshchik-1")) { origin case_input; }
+        assert "t11d-a1": poterpevshiy_po_raschetu(r: entity_ref("urn:case:vred:raschet-1"), p: entity_ref("urn:case:vred:poterpevshiy-1")) { origin case_input; }
+        assert "t11d-a2": osmotr_osushchestvlen_strakhovshchikom(r: entity_ref("urn:case:vred:raschet-1"), day: @2026-09-01) { origin case_input; }
+        assert "t11d-a3": not otchet_predostavlen_poterpevshemu(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+        assert "t11d-a4": uproshchennoe_oformlenie_proisshestviya(entity_ref("urn:case:vred:raschet-1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredostavitOtchetBezSroka, ACTIVE);
+    expect not position(PredostavitOtchetBezSroka, VIOLATED);
+    expect not position(PredostavitOtchet, ACTIVE);
+    expect not position(PredostavitOtchet, VIOLATED);
+    expect not position(PredostavitOtchet, SATISFIED);
+}

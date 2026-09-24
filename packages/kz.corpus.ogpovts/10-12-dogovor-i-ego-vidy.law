@@ -1,0 +1,894 @@
+// СТАТЬИ 10, 11 И 12. ДОГОВОР ОБЯЗАТЕЛЬНОГО СТРАХОВАНИЯ, ПОРЯДОК ЕГО
+// ЗАКЛЮЧЕНИЯ И ДВА ЕГО ВИДА.
+//
+// До этого модуля пакет знал сущность `InsuranceContract`, но не знал О НЁМ
+// НИЧЕГО: ни сторон, ни вида, ни того, чем полис обязан быть заполнен.
+// Статьи 19 и 20 считали цену договора, статьи 22–29 — выплату по нему, а сам
+// договор оставался неопознанным носителем ключа. Модуль закрывает середину.
+//
+// ЧТО ЗДЕСЬ ПЕРЕИСПОЛЬЗОВАНО, А НЕ ЗАВЕДЕНО ЗАНОВО (правило соседства):
+//
+//   `standard_contract`      — `20-reduction.law`, факт дела «заключается
+//                              стандартный договор». Пункт 4 статьи 10 делит
+//                              договоры на два вида, и второй вид заведён
+//                              РЯДОМ (`complex_contract`), а не поверх
+//                              первого: двойника у существующего предиката
+//                              здесь нет.
+//   `insured_kind_of`        — `19-premium.law`, физическое либо юридическое
+//                              лицо. Пункт 9 статьи 10 (единовременный платёж
+//                              физического лица) и пункт 1 статьи 12
+//                              (комплексный договор — только физическому
+//                              лицу) читают ЕГО, а не заводят второй признак.
+//   `contract_insured_person`,
+//   `contract_covers_vehicle` — `22-strakhovoy-sluchay.law`, оба `pub`.
+//   `vehicle_of`             — `05-obyazannost-strakhovaniya.law`: счёт единиц
+//                              транспорта у владельца для пункта 1 статьи 12.
+//   `insured_event`          — `22-strakhovoy-sluchay.law`, для пункта 8
+//                              статьи 10 (условия, ухудшающие положение).
+//
+// ПОЧЕМУ ПУНКТ 5 СТАТЬИ 11 ПОЛУЧИЛ ОТДЕЛЬНЫЙ `pub`-ПРЕДИКАТ. Пункт 2 статьи 28
+// («если виновником причинённого вреда является лицо, указанное в подпунктах
+// 1) и 2) пункта 5 статьи 11») сегодня объявлен границей в
+// `28-29-regress-i-otkaz.law` ровно потому, что статьи 11 в пакете не было.
+// Здесь она есть, и подпункты 1) и 2) — И ТОЛЬКО ОНИ, без подпункта 3) —
+// выведены в `standard_contract_insured_answers_for_driver`, объявленный `pub`.
+// Регресс сможет читать его вместо пересказа чужой статьи под своим якорем.
+// Чего для смыкания моста ещё не хватает — разобрано в отчёте наряда: у
+// пакета нет факта, связывающего происшествие (`TrafficAccident`) с договором
+// (`InsuranceContract`) в ту же сторону, в какую его читает статья 28.
+//
+// ЧТО ОБЪЯВЛЕНО ГРАНИЦЕЙ И ПОЧЕМУ (решение формализатора, 10.09.2026):
+//
+//   статья 10 пункт 6 абзац второй — «Требования по содержанию и оформлению
+//              страхового полиса… устанавливаются законодательством
+//              Республики Казахстан о страховании и страховой деятельности».
+//              Прямое делегирование чужому акту: этот закон называет ДВА
+//              собственных реквизита (пункт 6 абзац первый) и умолкает.
+//              Замыкание `PolicyRequisitesOfArticleTenClosure` ниже выражает
+//              именно закрытость СВОЕГО перечня, а не полноту требований.
+//
+//   статья 10 пункт 6 абзац первый в части «условий, перечисленных в статье
+//              826 Гражданского кодекса» — отсылка к чужому акту. Условия
+//              статьи 826 ГК здесь не пересказываются: мост к
+//              `kz.corpus.civilcode` записан в отчёте наряда.
+//
+//   статья 10 пункт 5 абзац второй в части «данных, необходимых для
+//              идентификации страхователя, застрахованного» — состав данных
+//              идентификации закон не называет. Вторая половина того же
+//              абзаца («данные, необходимые для расчёта страховой премии»)
+//              границей НЕ является: она выводится из статьи 19 этого же
+//              пакета и взята правилом `ApplicationCarriesPremiumData`.
+//
+//   статья 10 пункты 7 и 10, статья 11 пункты 4 и 6, статья 12 пункты 4 и 6 —
+//              исключены поправками 2009, 2018 и 2022 годов. В закреплённом
+//              тексте от них осталась строка об исключении, нормы в них нет.
+//
+//   статья 10 пункт 5-2 абзац второй — сообщение о нормативном постановлении
+//              Конституционного Суда о соответствии пункта Конституции.
+//              Это утверждение О НОРМЕ, а не норма: условия и последствия у
+//              него нет, адресата тоже.
+
+
+// ============================================================================
+// Статья 10 пункт 1. Стороны договора
+// ============================================================================
+//
+// Пункт 1 не имеет ни гипотезы, ни санкции — он называет СОСТАВ отношения:
+// договор, страхователь, страховщик. Поэтому его форма здесь — сигнатура
+// факта дела, от которого зависит всё остальное в модуле, а не правило с
+// пустой посылкой.
+
+relation insurance_contract_of(contract: InsuranceContract, policyholder: VehicleOwner,
+                               insurer: Insurer) kind empirical {
+    key(contract);
+    label ru-KZ official "договор обязательного страхования ответственности владельцев транспортных средств заключён между названными страхователем и страховщиком";
+}
+
+// Домен замыканий §70 этого модуля и модуля статей 13–15. Замыкание v1
+// требует доменом унарный предикат-перечисление (с именем аргумента оракул
+// отвечает NON_EXECUTABLE_CLOSURE — разбор при `PremiumReductionBarByCase` в
+// `20-reduction.law`), а ни один из уже имеющихся унарных предикатов пакета не
+// покрывает договор ЛЮБОГО вида: `standard_contract` — только стандартный.
+relation contract_in_question(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "договор обязательного страхования, о котором поставлен вопрос в деле";
+}
+
+// ============================================================================
+// Статья 10 пункт 2. Что покрывается договором и что из него изъято
+// ============================================================================
+//
+// Пункт 2 — ЕДИНСТВЕННОЕ место закона, где перечислены изъятия из предмета
+// договора, и потому взят он не описанием, а двумя перечнями с общим входом:
+// вид вреда, заявленного требованием. Изъятия — четыре, и каждое своим
+// членом: моральный вред, упущенная выгода, утрата товарной стоимости
+// (текст называет её ЧАСТЬЮ упущенной выгоды — «включая утрату товарной
+// стоимости имущества», — и потому она отдельный член того же перечня, а не
+// синоним) и неустойка за нарушение потерпевшим его обязательств по
+// контрактам.
+
+enum HarmKindUnderContract {
+    label ru-KZ official "вид вреда (возмещения), заявленного по договору обязательного страхования (статья 10 пункт 2)";
+    HarmToLifeOrHealth;
+    HarmToProperty;
+    MoralHarm;
+    LostProfit;
+    LossOfMarketableValue;
+    PenaltyForBreachOfVictimObligations;
+}
+
+relation claimed_harm_kind(demand: PaymentClaim, kind: HarmKindUnderContract)
+    kind empirical {
+    label ru-KZ official "по требованию о страховой выплате заявлено возмещение названного вида";
+}
+
+relation contract_cover_kind(kind: HarmKindUnderContract) kind institutional {
+    label ru-KZ official "вид вреда, по обязательствам вследствие причинения которого договором предусматривается осуществление страховой выплаты";
+}
+
+relation contract_exclusion_kind(kind: HarmKindUnderContract) kind institutional {
+    label ru-KZ official "вид возмещения, изъятый пунктом 2 статьи 10 из предмета договора обязательного страхования";
+}
+
+@source(LAW_446_ART10) {
+    assert contract_cover_kind(HarmToLifeOrHealth);
+
+    assert contract_cover_kind(HarmToProperty);
+
+    assert contract_exclusion_kind(MoralHarm);
+
+    assert contract_exclusion_kind(LostProfit);
+
+    assert contract_exclusion_kind(LossOfMarketableValue);
+
+    assert contract_exclusion_kind(PenaltyForBreachOfVictimObligations);
+}
+
+relation harm_covered_by_contract(demand: PaymentClaim, kind: HarmKindUnderContract)
+    kind institutional {
+    label ru-KZ official "по данному требованию заявлено возмещение вида, по которому договором предусматривается осуществление страховой выплаты";
+}
+
+relation harm_excluded_from_contract(demand: PaymentClaim, kind: HarmKindUnderContract)
+    kind institutional {
+    label ru-KZ official "по данному требованию заявлено возмещение, изъятое из предмета договора обязательного страхования";
+}
+
+@source(LAW_446_ART10) {
+    rule ClaimedHarmIsCoveredByContract(demand: PaymentClaim, kind: HarmKindUnderContract)
+        strict {
+        label ru-KZ official "Статья 10 пункт 2. Договором предусматривается осуществление страховой выплаты по обязательствам, возникшим вследствие причинения вреда жизни, здоровью и (или) имуществу потерпевшего";
+        when claimed_harm_kind(demand, kind);
+        when contract_cover_kind(kind);
+        then harm_covered_by_contract(demand, kind);
+    }
+
+    rule ClaimedHarmIsExcludedFromContract(demand: PaymentClaim, kind: HarmKindUnderContract)
+        strict {
+        label ru-KZ official "Статья 10 пункт 2. Возмещение морального вреда и упущенной выгоды потерпевшего, включая утрату товарной стоимости имущества, а также возмещение неустойки в связи с нарушением потерпевшим сроков поставки товаров или производства работ (оказания услуг), иных его обязательств по контрактам (договорам), договором не предусматривается";
+        when claimed_harm_kind(demand, kind);
+        when contract_exclusion_kind(kind);
+        then harm_excluded_from_contract(demand, kind);
+    }
+}
+
+// ============================================================================
+// Статья 10 пункт 3. Лицензия, свобода выбора, запрет отказа, встречные
+// обязательства сторон
+// ============================================================================
+
+relation insurer_licensed(insurer: Insurer) kind empirical {
+    label ru-KZ official "страховщик имеет лицензию на право осуществления деятельности по обязательному страхованию ответственности владельцев транспортных средств";
+}
+
+relation insurance_application_submitted(contract: InsuranceContract,
+                                         policyholder: VehicleOwner,
+                                         insurer: Insurer) kind empirical {
+    key(contract);
+    label ru-KZ official "страхователь подал страховщику заявление о заключении договора обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation refusal_of_conclusion_permitted_by_law(contract: InsuranceContract)
+    kind empirical {
+    label ru-KZ official "отказ в заключении договора по данному заявлению предусмотрен законами Республики Казахстан";
+}
+
+// ЗАМЫКАНИЕ §70. Без него «за исключением случаев, предусмотренных законами
+// Республики Казахстан» осталось бы неразрешимым: классическое `not` без
+// продюсера отрицания не срабатывает никогда (§113), и запрет отказа не
+// возникал бы ни на одном деле. Дата полноты — день принятия акта: закрытость
+// исключения есть свойство самой нормы, а не позднейшего снимка.
+closure ConclusionRefusalPermissionByCase {
+    label ru-KZ official "молчание дела значит: закон Республики Казахстан не предусматривает отказа в заключении договора по данному заявлению";
+    predicate refusal_of_conclusion_permitted_by_law;
+    domain contract_in_question;
+    snapshot "urn:kz:corpus:clir:ogpo-vts:snapshot:conclusion-refusal-permissions";
+    complete_as_of @2003-07-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+relation contract_insurer_requirement_met(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "договор заключён со страховщиком, имеющим лицензию на право осуществления деятельности по данному виду (классу) обязательного страхования";
+}
+
+relation contract_concluded_with_chosen_insurer(policyholder: VehicleOwner, insurer: Insurer)
+    kind empirical {
+    label ru-KZ official "страхователь заключил договор обязательного страхования с выбранным им страховщиком";
+}
+
+relation conclusion_refused(insurer: Insurer, policyholder: VehicleOwner) kind empirical {
+    label ru-KZ official "страховщик отказал страхователю в заключении договора обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation insurance_premium_paid_in_full(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователь уплатил страховую премию по договору обязательного страхования";
+}
+
+@source(LAW_446_ART10) {
+    rule ContractRequiresLicensedInsurer(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 3 абзац первый. Договор обязательного страхования ответственности владельцев транспортных средств должен быть заключен только со страховщиком, имеющим лицензию на право осуществления деятельности по данному виду (классу) обязательного страхования";
+        when insurance_contract_of(contract, policyholder, insurer);
+        when insurer_licensed(insurer);
+        then contract_insurer_requirement_met(contract);
+    }
+
+    // Абзац второй — ПРАВО, а не обязанность и не факт: `liberty` §128.
+    // Условие права — наличие у лица транспортного средства и лицензия у
+    // выбираемого страховщика; двух этих посылок довольно, потому что закон
+    // не ставит выбору никаких иных условий.
+    rule PolicyholderFreeToChooseInsurer(
+        vehicle: Vehicle,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 3 абзац второй. Страхователь свободен в выборе страховщика";
+        when vehicle_of(vehicle, policyholder);
+        when insurer_licensed(insurer);
+        then liberty VybratStrakhovshchika {
+            holder policyholder;
+            action contract_concluded_with_chosen_insurer(policyholder, insurer);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Абзац третий — ЗАПРЕТ с открытым исключением. `prohibition` §127:
+    // страховщику запрещено отказывать, кроме случаев, предусмотренных
+    // законами Республики Казахстан. Отрицание разрешимо замыканием выше.
+    rule InsurerMayNotRefuseToConclude(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 3 абзац третий. Страховщик не вправе отказывать страхователю в заключении договора обязательного страхования ответственности владельцев транспортных средств, за исключением случаев, предусмотренных законами Республики Казахстан";
+        when insurance_application_submitted(contract, policyholder, insurer);
+        when not refusal_of_conclusion_permitted_by_law(contract);
+        then prohibition OtkazatVZaklyucheniiDogovora {
+            bearer insurer;
+            beneficiary policyholder;
+            action conclusion_refused(insurer, policyholder);
+            window [@2026-07-23, infinity);
+        };
+    }
+
+    // Абзац четвёртый, первая половина. Вторая половина того же абзаца —
+    // обязанность страховщика осуществить выплату — уже выведена соседним
+    // модулем `26-poryadok-vyplaty.law` позицией
+    // `OsushchestvitStrakhovuyuVyplatuVSrok`, и второй такой же здесь не
+    // заводится: у неё там есть то, чего нет тут, — срок.
+    rule PolicyholderMustPayPremium(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 3 абзац четвёртый. По договору обязательного страхования ответственности владельцев транспортных средств страхователь обязуется уплатить страховую премию";
+        when insurance_contract_of(contract, policyholder, insurer);
+        then duty UplatitStrakhovuyuPremiyuPoDogovoru {
+            bearer policyholder;
+            beneficiary insurer;
+            achieve insurance_premium_paid_in_full(contract) during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Статья 10 пункт 4. Два вида договора
+// ============================================================================
+//
+// `standard_contract` уже есть у статьи 20 — здесь заведён только второй вид.
+// Перечень закрыт самим пунктом («подразделяются на следующие виды»), и
+// закрытость выражена тем, что третьего правила у `contract_kind_established`
+// нет, а вопрос о виде договора, не названном делом, остаётся без ответа.
+
+relation complex_contract(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "заключается комплексный договор обязательного страхования";
+}
+
+relation contract_kind_established(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "вид договора обязательного страхования определён: стандартный либо комплексный";
+}
+
+@source(LAW_446_ART10) {
+    rule ContractKindIsStandard(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 10 пункт 4 подпункт 1). Договоры обязательного страхования ответственности владельцев транспортных средств подразделяются на стандартный";
+        when standard_contract(contract);
+        then contract_kind_established(contract);
+    }
+
+    rule ContractKindIsComplex(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 10 пункт 4 подпункт 2). Договоры обязательного страхования ответственности владельцев транспортных средств подразделяются на комплексный";
+        when complex_contract(contract);
+        then contract_kind_established(contract);
+    }
+}
+
+// ============================================================================
+// Статья 10 пункты 5, 5-1 и 5-2. Порядок заключения
+// ============================================================================
+
+relation electronic_policy_issued(contract: InsuranceContract, insurer: Insurer)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "страховщик оформил страховой полис в электронной форме";
+}
+
+enum ConclusionChannel {
+    label ru-KZ official "способ заключения договора обязательного страхования по желанию страхователя (статья 10 пункт 5-1)";
+    DirectApplicationToInsurer;
+    DigitalResourceExchange;
+}
+
+relation conclusion_channel_used(contract: InsuranceContract, channel: ConclusionChannel)
+    kind empirical {
+    key(contract);
+    label ru-KZ official "договор заключается названным способом: обращением к страховщику либо обменом цифровыми ресурсами";
+}
+
+relation contract_concluded(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "договор обязательного страхования ответственности владельцев транспортных средств заключён";
+}
+
+relation ground_for_conclusion_established(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "имеется основание для заключения договора обязательного страхования — заявление страхователя";
+}
+
+relation application_carries_premium_data(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "заявление страхователя содержит данные, необходимые для расчёта страховой премии";
+}
+
+relation conclusion_channel_permitted(contract: InsuranceContract, channel: ConclusionChannel)
+    kind institutional {
+    label ru-KZ official "названный способ заключения договора допускается по желанию страхователя";
+}
+
+@source(LAW_446_ART10) {
+    rule ContractConcludedByElectronicPolicy(contract: InsuranceContract, insurer: Insurer)
+        strict {
+        label ru-KZ official "Статья 10 пункт 5 абзац первый. Договор обязательного страхования ответственности владельцев транспортных средств заключается путем оформления страховщиком страхового полиса в электронной форме";
+        when electronic_policy_issued(contract, insurer);
+        then contract_concluded(contract);
+    }
+
+    rule ApplicationIsGroundForConclusion(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 5 абзац второй. Основанием для заключения договора обязательного страхования ответственности владельцев транспортных средств является заявление страхователя";
+        when insurance_application_submitted(contract, policyholder, insurer);
+        then ground_for_conclusion_established(contract);
+    }
+
+    // «Данные, необходимые для расчёта страховой премии» — не описание, а
+    // ПРОВЕРЯЕМОЕ условие: премия статьи 19 либо выводится из поданных делом
+    // данных, либо нет. Правило и спрашивает у статьи 19 её собственный
+    // ответ, вместо того чтобы пересчитывать перечень её входов вручную.
+    rule ApplicationCarriesPremiumData(contract: InsuranceContract, premium: Money) strict {
+        label ru-KZ official "Статья 10 пункт 5 абзац второй. Заявление страхователя содержит данные, необходимые для расчета страховой премии";
+        when annual_premium_calculated(contract, premium);
+        then application_carries_premium_data(contract);
+    }
+
+    rule ConclusionByDirectApplication(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 10 пункт 5-1. Договор обязательного страхования по желанию страхователя может быть заключен путем обращения к страховщику";
+        when conclusion_channel_used(contract, DirectApplicationToInsurer);
+        then conclusion_channel_permitted(contract, DirectApplicationToInsurer);
+    }
+
+    rule ConclusionByDigitalResourceExchange(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 10 пункт 5-1. Договор обязательного страхования по желанию страхователя может быть заключен путем обмена цифровыми ресурсами между страхователем и страховщиком";
+        when conclusion_channel_used(contract, DigitalResourceExchange);
+        then conclusion_channel_permitted(contract, DigitalResourceExchange);
+    }
+
+    rule PolicyholderChoosesConclusionChannel(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+        channel: ConclusionChannel,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 5-1. Договор обязательного страхования ответственности владельцев транспортных средств по желанию страхователя может быть заключен путем обращения к страховщику либо обмена цифровыми ресурсами между страхователем и страховщиком";
+        when insurance_application_submitted(contract, policyholder, insurer);
+        when conclusion_channel_permitted(contract, channel);
+        then liberty VybratSposobZaklyucheniyaDogovora {
+            holder policyholder;
+            action conclusion_channel_used(contract, channel);
+            window [@2026-07-23, infinity);
+        };
+    }
+}
+
+// Пункт 5-2. ОБЕ ПОЛЯРНОСТИ ПОЛОЖИТЕЛЬНЫ — тем же приёмом и по той же
+// причине, что `international_movement_status` в `05-obyazannost-
+// strakhovaniya.law`: классическое `not` без продюсера отрицания не
+// срабатывает никогда, а исключение из запрета («за исключением транспортных
+// средств, зарегистрированных (подлежащих государственной регистрации)»)
+// требует РАЗЛИЧАТЬ «зарегистрировано», «не зарегистрировано» и «неизвестно».
+// Третье состояние есть отсутствие факта: запрет тогда не возникает, и это
+// верное прочтение пункта при неполных фактах.
+enum VehicleRegistrationStatus {
+    label ru-KZ official "положение транспортного средства относительно государственной регистрации в территориальных подразделениях уполномоченного органа по обеспечению безопасности дорожного движения (статья 10 пункт 5-2)";
+    RegisteredOrSubjectToRegistration;
+    NeitherRegisteredNorSubjectToRegistration;
+}
+
+relation vehicle_registration_status(vehicle: Vehicle, status: VehicleRegistrationStatus)
+    kind empirical {
+    key(vehicle);
+    label ru-KZ official "транспортное средство зарегистрировано (подлежит государственной регистрации) в территориальных подразделениях уполномоченного органа по обеспечению безопасности дорожного движения либо не зарегистрировано и регистрации не подлежит";
+}
+
+@source(LAW_446_ART10, quote = "Не допускается заключение договора обязательного страхования ответственности владельцев транспортных средств, не находящихся в международном движении на территории Республики Казахстан, за исключением транспортных средств, зарегистрированных (подлежащих государственной регистрации) в территориальных подразделениях уполномоченного органа по обеспечению безопасности дорожного движения.")
+rule ConclusionForbiddenOutsideInternationalMovement(
+    contract: InsuranceContract,
+    policyholder: VehicleOwner,
+    insurer: Insurer,
+    vehicle: Vehicle,
+) strict {
+    label ru-KZ official "Статья 10 пункт 5-2. Не допускается заключение договора обязательного страхования ответственности владельцев транспортных средств, не находящихся в международном движении на территории Республики Казахстан, за исключением транспортных средств, зарегистрированных (подлежащих государственной регистрации) в территориальных подразделениях уполномоченного органа по обеспечению безопасности дорожного движения";
+    when insurance_application_submitted(contract, policyholder, insurer);
+    when contract_covers_vehicle(contract, vehicle);
+    when international_movement_status(vehicle, NotInInternationalMovement);
+    when vehicle_registration_status(vehicle, NeitherRegisteredNorSubjectToRegistration);
+    then prohibition ZaklyuchitDogovorVneMezhdunarodnogoDvizheniya {
+        bearer insurer;
+        action electronic_policy_issued(contract, insurer);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// ============================================================================
+// Статья 10 пункт 6 и пункт 6-1; статья 11 пункт 3; статья 12 пункт 3.
+// Содержание страхового полиса
+// ============================================================================
+//
+// Четыре реквизита в одном перечислении, но требуются они РАЗНЫМ договорам:
+// два — всякому (пункт 6 статьи 10), третий — стандартному (пункт 3 статьи
+// 11), четвёртый — комплексному (пункт 3 статьи 12). Поэтому требование
+// выражено отношением «реквизит требуется ЭТОМУ договору», а не свойством
+// самого реквизита.
+
+enum PolicyRequisiteKind {
+    label ru-KZ official "реквизит страхового полиса, требуемый настоящим Законом";
+    LiabilityLimitPerInsuredEvent;
+    ContractKindIndication;
+    StandardInsuredAndVehicleDetails;
+    ComplexNaturalPersonAndVehiclesDetails;
+}
+
+relation policy_requisite_kind(requisite: PolicyRequisiteKind) kind institutional {
+    label ru-KZ official "реквизит страхового полиса, известный настоящему Закону";
+}
+
+relation requisite_added_by_article_ten(requisite: PolicyRequisiteKind) kind institutional {
+    label ru-KZ official "реквизит, который пункт 6 статьи 10 требует помимо условий, перечисленных в статье 826 Гражданского кодекса Республики Казахстан";
+}
+
+@source(LAW_446_ART10) {
+    assert policy_requisite_kind(LiabilityLimitPerInsuredEvent);
+
+    assert policy_requisite_kind(ContractKindIndication);
+
+    assert policy_requisite_kind(StandardInsuredAndVehicleDetails);
+
+    assert policy_requisite_kind(ComplexNaturalPersonAndVehiclesDetails);
+
+    assert requisite_added_by_article_ten(LiabilityLimitPerInsuredEvent);
+
+    assert requisite_added_by_article_ten(ContractKindIndication);
+}
+
+// ЗАМЫКАНИЕ §70 над перечнем ПУНКТА 6, а не над требованиями к полису
+// вообще. Разница существенна: абзац второй того же пункта отдаёт требования
+// к содержанию полиса законодательству о страховой деятельности, и объявить
+// полным перечень ТРЕБОВАНИЙ значило бы соврать. Полон здесь только список
+// того, что пункт 6 добавляет к статье 826 Гражданского кодекса, — и он
+// закрыт самим текстом («помимо условий… должен содержать»).
+closure PolicyRequisitesOfArticleTenClosure {
+    label ru-KZ official "перечень реквизитов, добавляемых пунктом 6 статьи 10 к условиям статьи 826 Гражданского кодекса, полон";
+    predicate requisite_added_by_article_ten;
+    domain policy_requisite_kind;
+    snapshot "urn:kz:corpus:clir:ogpo-vts:snapshot:policy-requisites";
+    complete_as_of @2003-07-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+relation policy_contains_requisite(contract: InsuranceContract, requisite: PolicyRequisiteKind)
+    kind empirical {
+    label ru-KZ official "страховой полис по данному договору содержит названный реквизит";
+}
+
+relation policy_requisite_required(contract: InsuranceContract, requisite: PolicyRequisiteKind)
+    kind institutional {
+    label ru-KZ official "названный реквизит должен содержаться в страховом полисе по данному договору";
+}
+
+relation policy_meets_requisites_of_this_law(contract: InsuranceContract) kind institutional {
+    label ru-KZ official "страховой полис содержит все реквизиты, требуемые настоящим Законом для договора данного вида";
+}
+
+relation policy_amended(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "в страховой полис внесены изменения и дополнения";
+}
+
+@source(LAW_446_ART10) {
+    rule LiabilityLimitRequiredInPolicy(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 6 абзац первый. Страховой полис должен содержать размер предельного объема ответственности страховщика по одному страховому случаю";
+        when insurance_contract_of(contract, policyholder, insurer);
+        then policy_requisite_required(contract, LiabilityLimitPerInsuredEvent);
+    }
+
+    rule ContractKindRequiredInPolicy(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 6 абзац первый. Страховой полис должен содержать указание на вид договора";
+        when insurance_contract_of(contract, policyholder, insurer);
+        then policy_requisite_required(contract, ContractKindIndication);
+    }
+
+    // Пункт 6-1 — запрет без исключений. Носитель — страховщик: полис
+    // оформляет он (пункт 5), и вносить в него изменения может он же.
+    rule PolicyMayNotBeAmended(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 6-1. Внесение изменений и дополнений в страховой полис не допускается";
+        when insurance_contract_of(contract, policyholder, insurer);
+        then prohibition VnestiIzmeneniyaVStrakhovoyPolis {
+            bearer insurer;
+            beneficiary policyholder;
+            action policy_amended(contract);
+            window [@2026-07-23, infinity);
+        };
+    }
+}
+
+@source(LAW_446_ART11, quote = "Страховой полис должен содержать сведения о страхователе (застрахованном, застрахованных) и эксплуатируемом транспортном средстве.")
+rule StandardPolicyDetailsRequired(contract: InsuranceContract) strict {
+    label ru-KZ official "Статья 11 пункт 3. Страховой полис должен содержать сведения о страхователе (застрахованном, застрахованных) и эксплуатируемом транспортном средстве";
+    when standard_contract(contract);
+    then policy_requisite_required(contract, StandardInsuredAndVehicleDetails);
+}
+
+@source(LAW_446_ART12, quote = "Страховой полис должен содержать сведения о страхователе (застрахованном) - физическом лице и эксплуатируемых им транспортных средствах.")
+rule ComplexPolicyDetailsRequired(contract: InsuranceContract) strict {
+    label ru-KZ official "Статья 12 пункт 3. Страховой полис должен содержать сведения о страхователе (застрахованном) - физическом лице и эксплуатируемых им транспортных средствах";
+    when complex_contract(contract);
+    then policy_requisite_required(contract, ComplexNaturalPersonAndVehiclesDetails);
+}
+
+// Полнота полиса — ДВА правила по видам договора, а не одно с отрицанием:
+// перечень требуемых реквизитов у каждого вида свой и конечный, и конъюнкция
+// прямо называет тот состав, который закон предъявляет именно этому виду.
+@source(LAW_446_ART11)
+rule StandardPolicyMeetsRequisites(contract: InsuranceContract) strict {
+    label ru-KZ official "Статья 11 пункт 3 и статья 10 пункт 6. Страховой полис по стандартному договору содержит предельный объем ответственности страховщика по одному страховому случаю, указание на вид договора и сведения о страхователе (застрахованном, застрахованных) и эксплуатируемом транспортном средстве";
+    when standard_contract(contract);
+    when policy_contains_requisite(contract, LiabilityLimitPerInsuredEvent);
+    when policy_contains_requisite(contract, ContractKindIndication);
+    when policy_contains_requisite(contract, StandardInsuredAndVehicleDetails);
+    then policy_meets_requisites_of_this_law(contract);
+}
+
+@source(LAW_446_ART12)
+rule ComplexPolicyMeetsRequisites(contract: InsuranceContract) strict {
+    label ru-KZ official "Статья 12 пункт 3 и статья 10 пункт 6. Страховой полис по комплексному договору содержит предельный объем ответственности страховщика по одному страховому случаю, указание на вид договора и сведения о страхователе (застрахованном) - физическом лице и эксплуатируемых им транспортных средствах";
+    when complex_contract(contract);
+    when policy_contains_requisite(contract, LiabilityLimitPerInsuredEvent);
+    when policy_contains_requisite(contract, ContractKindIndication);
+    when policy_contains_requisite(contract, ComplexNaturalPersonAndVehiclesDetails);
+    then policy_meets_requisites_of_this_law(contract);
+}
+
+// ============================================================================
+// Статья 10 пункты 8 и 9
+// ============================================================================
+
+relation contract_terms_worsen_position(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "договор заключён на условиях, ухудшающих положение страхователя (застрахованного) или потерпевшего по сравнению с тем, которое предусмотрено настоящим Законом";
+}
+
+relation insurer_obligations_governed_by_this_law(contract: InsuranceContract,
+                                                  accident: TrafficAccident)
+    kind institutional {
+    label ru-KZ official "при наступлении страхового случая страховщик несёт обязательства перед страхователем (застрахованным) и потерпевшим на условиях, установленных настоящим Законом";
+}
+
+relation premium_paid_in_single_payment(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страховая премия по договору оплачена единовременным платежом";
+}
+
+@source(LAW_446_ART10) {
+    // Пункт 8 — не запрет заключать такой договор, а ЗАМЕЩЕНИЕ его условий
+    // условиями закона, и наступает оно при страховом случае. Потому голова —
+    // институциональный факт, а не позиция: решения ни у кого нет.
+    rule WorseTermsReplacedByStatutoryTerms(contract: InsuranceContract,
+                                            accident: TrafficAccident) strict {
+        label ru-KZ official "Статья 10 пункт 8. Если страховщик заключил договор на условиях, ухудшающих положение страхователя (застрахованного) или потерпевшего по сравнению с тем, которое предусмотрено настоящим Законом, то при наступлении страхового случая страховщик несет обязательства перед страхователем (застрахованным) и потерпевшим на условиях, установленных настоящим Законом";
+        when contract_terms_worsen_position(contract);
+        when insured_event(contract, accident);
+        then insurer_obligations_governed_by_this_law(contract, accident);
+    }
+
+    // Пункт 9 адресован ФИЗИЧЕСКОМУ лицу, и признак лица здесь читается у
+    // статьи 19 (`insured_kind_of`), а не заводится вторым.
+    rule NaturalPersonPaysPremiumInSinglePayment(
+        contract: InsuranceContract,
+        policyholder: VehicleOwner,
+        insurer: Insurer,
+    ) strict {
+        label ru-KZ official "Статья 10 пункт 9. Оплата страховой премии по договору обязательного страхования ответственности владельцев транспортных средств производится физическим лицом единовременным платежом";
+        when insurance_contract_of(contract, policyholder, insurer);
+        when insured_kind_of(contract, NaturalPerson);
+        then duty UplatitPremiyuEdinovremennymPlatezhom {
+            bearer policyholder;
+            beneficiary insurer;
+            achieve premium_paid_in_single_payment(contract) during [@2026-07-23, infinity);
+        };
+    }
+}
+
+// ============================================================================
+// Статья 11. Стандартный договор
+// ============================================================================
+
+relation standard_contract_insures_owner(contract: InsuranceContract, owner: VehicleOwner)
+    kind institutional {
+    label ru-KZ official "по стандартному договору застрахована гражданско-правовая ответственность названного владельца транспортного средства";
+}
+
+// КЛЮЧ ПО ДОГОВОРУ — ЭТО И ЕСТЬ ПУНКТ 2. «Стандартный договор заключается на
+// каждую единицу эксплуатируемого транспортного средства» значит: одному
+// стандартному договору соответствует ОДНА единица. Второе транспортное
+// средство в том же договоре даёт KEY_CONFLICT с именем договора, а не тихий
+// второй ответ.
+relation standard_contract_vehicle(contract: InsuranceContract, vehicle: Vehicle)
+    kind institutional {
+    key(contract);
+    label ru-KZ official "единица эксплуатируемого транспортного средства, на которую заключён стандартный договор";
+}
+
+@source(LAW_446_ART11) {
+    rule StandardContractInsuresNamedOwners(contract: InsuranceContract, owner: VehicleOwner)
+        strict {
+        label ru-KZ official "Статья 11 пункт 1. По стандартному договору может быть застрахована гражданско-правовая ответственность одного или нескольких владельцев транспортного средства";
+        when standard_contract(contract);
+        when contract_insured_person(contract, owner);
+        then standard_contract_insures_owner(contract, owner);
+    }
+
+    rule StandardContractIsPerVehicle(contract: InsuranceContract, vehicle: Vehicle) strict {
+        label ru-KZ official "Статья 11 пункт 2. Стандартный договор заключается на каждую единицу эксплуатируемого транспортного средства";
+        when standard_contract(contract);
+        when contract_covers_vehicle(contract, vehicle);
+        then standard_contract_vehicle(contract, vehicle);
+    }
+}
+
+// --- Пункт 5. Чья ответственность считается застрахованной ------------------
+//
+// Четыре основания — четыре правила (§206): вред, причинённый самим
+// страхователем, и три случая, когда транспортным средством управляло другое
+// лицо. Дизъюнкцией их не свести: на вопрос «почему ответственность
+// застрахована» акт обязан отвечать конкретным подпунктом, и `why-not` на
+// незастрахованном деле обязан назвать, какого подпункта делу не хватило.
+
+relation harm_to_third_party_caused_by(contract: InsuranceContract, causer: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "названное лицо причинило вред третьим лицам при эксплуатации транспортного средства, указанного в договоре";
+}
+
+relation driver_had_right_to_drive_in_presence_of_insured(contract: InsuranceContract,
+                                                          driver: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "транспортным средством управляло лицо, имеющее право на его управление, в присутствии страхователя (застрахованного)";
+}
+
+relation driver_under_written_contract_with_insured(contract: InsuranceContract,
+                                                    driver: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "транспортным средством управляло лицо на основании трудового или иного договора со страхователем (застрахованным), оформленного в письменной форме";
+}
+
+relation driver_unlawfully_took_vehicle(contract: InsuranceContract, driver: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "транспортным средством управляло лицо, противоправно завладевшее транспортным средством";
+}
+
+relation liability_imposed_on_insured_for_unlawful_taking(contract: InsuranceContract,
+                                                          driver: VehicleOwner)
+    kind empirical {
+    label ru-KZ official "ответственность за вред, причинённый лицом, противоправно завладевшим транспортным средством, возложена на страхователя (застрахованного)";
+}
+
+// МОСТ К СТАТЬЕ 28 ПУНКТУ 2. `pub` стоит здесь, а не у потребителя, потому
+// что владелец нормы — статья 11: пункт 2 статьи 28 ссылается на её подпункты
+// именами, и пересказать их под якорем статьи 28 значило бы формализовать
+// чужую статью. Подпункт 3) сюда НЕ входит — пункт 2 статьи 28 называет
+// только подпункты 1) и 2).
+pub relation standard_contract_insured_answers_for_driver(contract: InsuranceContract,
+                                                          insured: VehicleOwner,
+                                                          driver: VehicleOwner)
+    kind institutional {
+    label ru-KZ official "по стандартному договору страхователь (застрахованный) отвечает за лицо, указанное в подпунктах 1) и 2) пункта 5 статьи 11";
+}
+
+relation liability_insured_under_standard_contract(contract: InsuranceContract,
+                                                   insured: VehicleOwner,
+                                                   causer: VehicleOwner)
+    kind institutional {
+    label ru-KZ official "по стандартному договору считается застрахованной гражданско-правовая ответственность страхователя (застрахованного), возникшая в результате причинения вреда названным лицом";
+}
+
+@source(LAW_446_ART11) {
+    rule StandardCoverHarmByInsuredPersonally(contract: InsuranceContract,
+                                              insured: VehicleOwner) strict {
+        label ru-KZ official "Статья 11 пункт 5. По стандартному договору считается застрахованной гражданско-правовая ответственность страхователя (застрахованного), возникшая в результате причинения вреда третьим лицам самим страхователем (застрахованным)";
+        when standard_contract(contract);
+        when contract_insured_person(contract, insured);
+        when harm_to_third_party_caused_by(contract, insured);
+        then liability_insured_under_standard_contract(contract, insured, insured);
+    }
+
+    rule InsuredAnswersForDriverInHisPresence(contract: InsuranceContract,
+                                              insured: VehicleOwner,
+                                              driver: VehicleOwner) strict {
+        label ru-KZ official "Статья 11 пункт 5 подпункт 1). Управление транспортным средством лицом, имеющим право на его управление в присутствии страхователя (застрахованного)";
+        when standard_contract(contract);
+        when contract_insured_person(contract, insured);
+        when driver_had_right_to_drive_in_presence_of_insured(contract, driver);
+        then standard_contract_insured_answers_for_driver(contract, insured, driver);
+    }
+
+    rule InsuredAnswersForDriverUnderWrittenContract(contract: InsuranceContract,
+                                                     insured: VehicleOwner,
+                                                     driver: VehicleOwner) strict {
+        label ru-KZ official "Статья 11 пункт 5 подпункт 2). Управление транспортным средством лицом на основании трудового или иного договора со страхователем (застрахованным), оформленного в письменной форме";
+        when standard_contract(contract);
+        when contract_insured_person(contract, insured);
+        when driver_under_written_contract_with_insured(contract, driver);
+        then standard_contract_insured_answers_for_driver(contract, insured, driver);
+    }
+
+    rule StandardCoverHarmByAnsweredForDriver(contract: InsuranceContract,
+                                              insured: VehicleOwner,
+                                              driver: VehicleOwner) strict {
+        label ru-KZ official "Статья 11 пункт 5 подпункты 1) и 2). Гражданско-правовая ответственность страхователя (застрахованного) считается застрахованной и в случае причинения вреда лицом, за которое он отвечает";
+        when standard_contract_insured_answers_for_driver(contract, insured, driver);
+        when harm_to_third_party_caused_by(contract, driver);
+        then liability_insured_under_standard_contract(contract, insured, driver);
+    }
+
+    rule StandardCoverHarmByUnlawfulTaker(contract: InsuranceContract,
+                                          insured: VehicleOwner,
+                                          driver: VehicleOwner) strict {
+        label ru-KZ official "Статья 11 пункт 5 подпункт 3). Управление транспортным средством лицом, противоправно завладевшим транспортным средством, если ответственность за причиненный вред возложена на страхователя (застрахованного)";
+        when standard_contract(contract);
+        when contract_insured_person(contract, insured);
+        when driver_unlawfully_took_vehicle(contract, driver);
+        when liability_imposed_on_insured_for_unlawful_taking(contract, driver);
+        when harm_to_third_party_caused_by(contract, driver);
+        then liability_insured_under_standard_contract(contract, insured, driver);
+    }
+}
+
+// ============================================================================
+// Статья 12. Комплексный договор
+// ============================================================================
+//
+// ПУНКТ 1 — ЕДИНСТВЕННОЕ МЕСТО СРЕЗА, ГДЕ ЗАКОН СЧИТАЕТ. «Владелец двух и
+// более единиц транспортных средств» есть порог, и он взят агрегатом §59 по
+// единицам транспорта владельца, а не спрятан в факт дела вида
+// «владеет_двумя_и_более». Счёт идёт по `collect` (множеству), а не по
+// `collect all`: считаются РАЗЛИЧНЫЕ единицы, и дважды названная делом машина
+// вторым транспортным средством не становится.
+
+relation complex_contract_available_to_insured(contract: InsuranceContract,
+                                               owner: VehicleOwner)
+    kind institutional {
+    label ru-KZ official "по комплексному договору может быть застрахована гражданско-правовая ответственность названного физического лица";
+}
+
+relation complex_contract_covers_vehicle(contract: InsuranceContract, vehicle: Vehicle)
+    kind institutional {
+    label ru-KZ official "комплексный договор заключён на названную эксплуатируемую единицу транспортного средства";
+}
+
+@source(LAW_446_ART12) {
+    rule ComplexContractRequiresTwoOrMoreVehicles(contract: InsuranceContract,
+                                                  owner: VehicleOwner) strict {
+        label ru-KZ official "Статья 12 пункт 1. По комплексному договору может быть застрахована гражданско-правовая ответственность физического лица, являющегося владельцем двух и более единиц транспортных средств";
+        when complex_contract(contract);
+        when insured_kind_of(contract, NaturalPerson);
+        when contract_insured_person(contract, owner);
+        when count(collect v: Vehicle where vehicle_of(v, owner)) >= 2;
+        then complex_contract_available_to_insured(contract, owner);
+    }
+
+    rule ComplexContractCoversAllOperatedVehicles(contract: InsuranceContract,
+                                                  owner: VehicleOwner,
+                                                  vehicle: Vehicle) strict {
+        label ru-KZ official "Статья 12 пункт 2. Комплексный договор заключается на все эксплуатируемые транспортные средства";
+        when complex_contract(contract);
+        when contract_insured_person(contract, owner);
+        when vehicle_of(vehicle, owner);
+        then complex_contract_covers_vehicle(contract, vehicle);
+    }
+}
+
+// --- Пункт 5. Чья ответственность застрахована по комплексному договору -----
+//
+// Три правила против четырёх у статьи 11, и разница НЕ в оформлении: пункт 5
+// статьи 12 не знает подпункта об управлении по трудовому или иному
+// письменному договору. Свести обе статьи к одному предикату значило бы
+// подарить комплексному договору покрытие, которого закон ему не дал.
+
+relation liability_insured_under_complex_contract(contract: InsuranceContract,
+                                                  insured: VehicleOwner,
+                                                  causer: VehicleOwner)
+    kind institutional {
+    label ru-KZ official "по комплексному договору считается застрахованной гражданско-правовая ответственность страхователя (застрахованного), возникшая в результате причинения вреда названным лицом";
+}
+
+@source(LAW_446_ART12) {
+    rule ComplexCoverHarmByInsuredPersonally(contract: InsuranceContract,
+                                             insured: VehicleOwner) strict {
+        label ru-KZ official "Статья 12 пункт 5. По комплексному договору считается застрахованной гражданско-правовая ответственность страхователя (застрахованного), возникшая в результате причинения вреда третьим лицам самим страхователем (застрахованным)";
+        when complex_contract(contract);
+        when contract_insured_person(contract, insured);
+        when harm_to_third_party_caused_by(contract, insured);
+        then liability_insured_under_complex_contract(contract, insured, insured);
+    }
+
+    rule ComplexCoverHarmByDriverInPresence(contract: InsuranceContract,
+                                            insured: VehicleOwner,
+                                            driver: VehicleOwner) strict {
+        label ru-KZ official "Статья 12 пункт 5 подпункт 1). Управление транспортным средством лицом, имеющим право на его управление в присутствии страхователя (застрахованного)";
+        when complex_contract(contract);
+        when contract_insured_person(contract, insured);
+        when driver_had_right_to_drive_in_presence_of_insured(contract, driver);
+        when harm_to_third_party_caused_by(contract, driver);
+        then liability_insured_under_complex_contract(contract, insured, driver);
+    }
+
+    rule ComplexCoverHarmByUnlawfulTaker(contract: InsuranceContract,
+                                         insured: VehicleOwner,
+                                         driver: VehicleOwner) strict {
+        label ru-KZ official "Статья 12 пункт 5 подпункт 2). Управление транспортным средством лицом, противоправно завладевшим транспортным средством, если ответственность за причиненный вред возложена на страхователя (застрахованного)";
+        when complex_contract(contract);
+        when contract_insured_person(contract, insured);
+        when driver_unlawfully_took_vehicle(contract, driver);
+        when liability_imposed_on_insured_for_unlawful_taking(contract, driver);
+        when harm_to_third_party_caused_by(contract, driver);
+        then liability_insured_under_complex_contract(contract, insured, driver);
+    }
+}

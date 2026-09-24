@@ -1,0 +1,783 @@
+// РАЗДЕЛ 4. РАЗРАБОТКА, РАССМОТРЕНИЕ, УТВЕРЖДЕНИЕ, УТОЧНЕНИЕ, КОРРЕКТИРОВКА,
+// СЕКВЕСТР БЮДЖЕТА (главы 14–20, статьи 70–100).
+//
+// Выражено правилами: защита от секвестра расходов по обязательствам
+// государства (ст. 70 п. 6) — сторожевая норма, на которой стоит одна из
+// целей акта; десятидневный срок бюджетного запроса (ст. 75 пп. 11–12) в
+// РАБОЧИХ днях; запрет межбюджетных взаимоотношений через уровень (ст. 76
+// п. 2) с изъятиями п. 3 дефитерами; запрет вмешательства в бюджетный
+// процесс нижестоящего уровня (ст. 76 п. 4); запрет изъятия дополнительно
+// полученных доходов (ст. 76 п. 5); запрет уменьшения целевых трансфертов
+// на развитие (ст. 83 п. 5) и целевое использование трансфертов (ст. 83
+// п. 6); право приостановить операции при сокращении (ст. 94 п. 3);
+// пределы корректировки — 15 % для республиканского и областного, 20 % для
+// бюджета города районного значения, села, посёлка, сельского округа
+// (ст. 98 пп. 2–4) — с запретом перераспределения средств займов и грантов.
+//
+// ГРАНИЦЫ РАЗДЕЛА:
+//   - ст. 71, 72, 74, 80, 81, 82, 85–89 (процесс планирования, лимиты
+//     расходов, разработка проектов) — ПОСЛЕДОВАТЕЛЬНОСТИ действий с
+//     календарными датами («не позднее 1 сентября», «не позднее 15
+//     октября»). Даты не выводятся: конструктора даты из года, месяца и
+//     дня в §258 нет, и срок «1 сентября года дела» из года дела получить
+//     нечем. Сами последовательности адресуемы фрагментами;
+//   - ст. 73 (рассмотрение проектов НПА, влияющих на доходы и расходы) —
+//     процедура межведомственного согласования, чей порядок определяется
+//     бюджетной комиссией; кодекс называет участников, а не условия;
+//   - ст. 77–79, 84 (формы регулирования межбюджетных отношений, трансферты
+//     общего характера) — объёмы устанавливаются ОТДЕЛЬНЫМ законом и
+//     решениями маслихатов, кодекс задаёт порядок их разработки;
+//   - ст. 90–93 (рассмотрение и утверждение проектов бюджетов) — регламент
+//     Курултая и маслихатов, календарные даты;
+//   - ст. 95, 96 (уточнение республиканского и местного бюджетов) — состав
+//     документов и сроки в рабочих днях внутри процедуры уточнения;
+//     выражена общая норма ст. 94, называющая правовое последствие;
+//   - ст. 99, 100 (чрезвычайный государственный бюджет) — основание вводится
+//     актом Президента при чрезвычайном или военном положении; условие в
+//     кодексе не замкнуто.
+
+
+// --- Ст. 70 п. 6: расходы, не подлежащие секвестру --------------------------
+// Сторожевая норма: секвестр есть сокращение расходов, и кодекс сам
+// исключает из него две группы — расходы по обязательствам государства
+// (ст. 70 п. 6) и программы перечня, утверждаемого законом о республиканском
+// бюджете (ст. 97 п. 4).
+
+relation state_obligation_expenditure(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "расход связан с выполнением обязательств государства и планируется по требованиям статей 148 и 149 настоящего Кодекса";
+}
+
+relation listed_as_sequester_exempt(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "бюджетная программа включена в перечень программ, не подлежащих секвестру, утверждаемый законом о республиканском бюджете";
+}
+
+relation not_subject_to_sequester(p: BudgetProgramme) kind institutional {
+    label ru-KZ official "бюджетная программа секвестру не подлежит";
+}
+
+@source(BC_ART70)
+rule StateObligationNotSequestered(p: BudgetProgramme) strict {
+    when state_obligation_expenditure(p);
+    then not_subject_to_sequester(p);
+    label ru-KZ official "Статья 70 пункт 6. Расходы, связанные с выполнением обязательств государства, финансируются в обязательном порядке и секвестру не подлежат";
+}
+
+@source(BC_ART97)
+rule ListedProgrammeNotSequestered(p: BudgetProgramme) strict {
+    when listed_as_sequester_exempt(p);
+    then not_subject_to_sequester(p);
+    label ru-KZ official "Статья 97 пункт 4 абзац второй. Перечень бюджетных программ, не подлежащих секвестру, утверждается законом о республиканском бюджете";
+}
+
+relation sequester_applied(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "к бюджетной программе применён секвестр";
+}
+
+relation sequester_unlawful(p: BudgetProgramme) kind institutional {
+    label ru-KZ official "применение секвестра к бюджетной программе противоречит настоящему Кодексу";
+}
+
+@source(BC_ART70)
+rule SequesterOfProtectedProgrammeUnlawful(p: BudgetProgramme) strict {
+    when not_subject_to_sequester(p);
+    when sequester_applied(p);
+    then sequester_unlawful(p);
+    label ru-KZ official "Статья 70 пункт 6. Секвестр расхода, секвестру не подлежащего, настоящему Кодексу противоречит";
+}
+
+// Снимок календаря §85 на 2026 год — ТОТ ЖЕ ресурс, что у прочих актов
+// корпуса, считающих рабочие дни: он выведен исполнением Закона «О
+// праздниках в Республике Казахстан» (kz.corpus.prazdniki, ст. 5) и потому
+// является общим ресурсом права, а не данными этого пакета. Дневной терм
+// `add_business_days` требует снимок ВСЕГДА — в отличие от календарного
+// шага §86, который его не спрашивает никогда (E-0029).
+@source("urn:kz:corpus:clir:prazdniki#PRAZ_ART5")
+@id("urn:kz:corpus:clir:budget-code#calendar-snapshot")
+calendar budget_code_calendar {
+    timezone "Asia/Almaty";
+    timezone_db "iana-tzdb@2026a";
+    period [@2026-01-01, @2027-01-01);
+    source "urn:kz:corpus:clir:prazdniki#PRAZ_ART5";
+    resource "artifact:corpus/clir/kz-official-2026.calendar.json";
+    format "law.calendar/0.1";
+    content_hash "sha256:d04f48761d98cdcf2a094cc728fd160fbc3b73e2eb5ebbed6743d17e976fe9c6";
+}
+
+// --- Ст. 75 пп. 11–12: десять РАБОЧИХ дней со дня доведения лимитов ---------
+// Единица счёта названа статьёй дословно, и она дневная: `add_business_days`
+// требует снимок календаря §85 всегда — в отличие от календарного шага.
+
+relation expenditure_limits_communicated(a: Administrator, d: Date) kind empirical {
+    key(a);
+    label ru-KZ official "лимиты расходов доведены до администратора бюджетных программ названной датой";
+}
+
+relation budget_request_deadline(a: Administrator, d: Date) kind institutional {
+    label ru-KZ official "бюджетный запрос и паспорт бюджетной программы подписываются и представляются не позднее названной даты";
+}
+
+relation budget_request_submitted(a: Administrator, d: Date) kind empirical {
+    key(a);
+    label ru-KZ official "бюджетный запрос представлен названной датой";
+}
+
+relation budget_request_timely(a: Administrator) kind institutional {
+    label ru-KZ official "бюджетный запрос представлен в срок";
+}
+
+relation budget_request_late(a: Administrator) kind institutional {
+    label ru-KZ official "бюджетный запрос представлен с нарушением срока";
+}
+
+@source(BC_ART75) {
+    rule BudgetRequestDeadline(a: Administrator, communicated: Date) strict {
+        when expenditure_limits_communicated(a, communicated);
+        then budget_request_deadline(a, add_business_days(communicated, 10 business_day));
+        label ru-KZ official "Статья 75 пункт 11. Бюджетный запрос на очередной плановый период представляется в течение десяти рабочих дней со дня доведения лимитов расходов";
+    }
+
+    rule BudgetRequestTimely(a: Administrator, submitted: Date, deadline: Date) strict {
+        when budget_request_submitted(a, submitted);
+        when budget_request_deadline(a, deadline);
+        when submitted <= deadline;
+        then budget_request_timely(a);
+        label ru-KZ official "Статья 75 пункт 11. Бюджетный запрос, представленный не позднее последнего дня десятидневного срока, представлен в срок";
+    }
+
+    rule BudgetRequestLate(a: Administrator, submitted: Date, deadline: Date) strict {
+        when budget_request_submitted(a, submitted);
+        when budget_request_deadline(a, deadline);
+        when submitted > deadline;
+        then budget_request_late(a);
+        label ru-KZ official "Статья 75 пункт 11. Бюджетный запрос, представленный после последнего дня десятидневного срока, представлен с нарушением срока";
+    }
+}
+
+// --- Ст. 76 пп. 2–5: границы межбюджетных отношений -------------------------
+
+relation inter_budget_relation(a: Budget, b: Budget) kind empirical {
+    label ru-KZ official "между названными бюджетами установлены межбюджетные взаимоотношения";
+}
+
+relation same_level_relation_allowed_by_government(a: Budget, b: Budget) kind empirical {
+    label ru-KZ official "взаимоотношения местных бюджетов одного уровня допущены решением Правительства Республики Казахстан либо поручением Президента Республики Казахстан";
+}
+
+relation agglomeration_joint_matter(a: Budget, b: Budget) kind empirical {
+    label ru-KZ official "взаимоотношения местных бюджетов одного уровня возникли при совместном решении вопросов местного значения на территории агломерации";
+}
+
+relation inter_budget_relation_forbidden(a: Budget, b: Budget) kind institutional {
+    label ru-KZ official "межбюджетные взаимоотношения между названными бюджетами не допускаются";
+}
+
+// Республиканский бюджет — с районным и с бюджетом города районного
+// значения; областной — с бюджетом города районного значения; и местные
+// одного уровня друг с другом. Три случая — три правила: у первых двух
+// изъятий нет вовсе, у третьего изъятия названы пунктом 3.
+@source(BC_ART76) {
+    rule NoRepublicanToDistrictRelation(a: Budget, b: Budget) strict {
+        when inter_budget_relation(a, b);
+        when budget_level(a, Republican);
+        when budget_level(b, District);
+        then inter_budget_relation_forbidden(a, b);
+        label ru-KZ official "Статья 76 пункт 2 абзац второй. Не допускаются взаимоотношения республиканского бюджета с районными (городов областного значения) бюджетами";
+    }
+
+    rule NoRepublicanToRuralRelation(a: Budget, b: Budget) strict {
+        when inter_budget_relation(a, b);
+        when budget_level(a, Republican);
+        when budget_level(b, Rural);
+        then inter_budget_relation_forbidden(a, b);
+        label ru-KZ official "Статья 76 пункт 2 абзац второй. Не допускаются взаимоотношения республиканского бюджета с бюджетами городов районного значения, сёл, посёлков, сельских округов";
+    }
+
+    rule NoRegionalToRuralRelation(a: Budget, b: Budget) strict {
+        when inter_budget_relation(a, b);
+        when budget_level(a, Regional);
+        when budget_level(b, Rural);
+        then inter_budget_relation_forbidden(a, b);
+        label ru-KZ official "Статья 76 пункт 2 абзац третий. Не допускаются взаимоотношения областных бюджетов с бюджетами городов районного значения, сёл, посёлков, сельских округов";
+    }
+
+    // Местные бюджеты ОДНОГО уровня: запрет поражаемый, потому что пункт 3
+    // называет четыре случая, когда взаимоотношения допускаются.
+    rule NoSameLevelLocalRelation(a: Budget, b: Budget, level: BudgetLevel) defeasible {
+        when inter_budget_relation(a, b);
+        when budget_level(a, level);
+        when budget_level(b, level);
+        when level != Republican;
+        then inter_budget_relation_forbidden(a, b);
+        label ru-KZ official "Статья 76 пункт 2 абзац четвёртый. Не допускаются взаимоотношения местных бюджетов одного уровня друг с другом, за исключением случаев пункта 3 настоящей статьи";
+    }
+
+    rule SameLevelAllowedByGovernment(a: Budget, b: Budget) defeater {
+        when inter_budget_relation(a, b);
+        when same_level_relation_allowed_by_government(a, b);
+        defeat inter_budget_relation_forbidden(a, b);
+        label ru-KZ official "Статья 76 пункт 3. По решению Правительства Республики Казахстан и по поручению Президента Республики Казахстан взаимоотношения местных бюджетов одного уровня допускаются";
+    }
+
+    rule SameLevelAllowedForAgglomeration(a: Budget, b: Budget) defeater {
+        when inter_budget_relation(a, b);
+        when agglomeration_joint_matter(a, b);
+        defeat inter_budget_relation_forbidden(a, b);
+        label ru-KZ official "Статья 76 пункт 3 абзац пятый. Взаимоотношения местных бюджетов одного уровня допускаются при совместном решении вопросов местного значения на территории агломерации";
+    }
+}
+
+relation interference_in_budget_process(b: Body, target: Budget) kind empirical {
+    label ru-KZ official "участник вмешивается в бюджетный процесс нижестоящего уровня государственного управления";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation interfere_in_budget_process(target: Budget) kind empirical {
+    label ru-KZ unofficial "действие нормы: interfere in budget process";
+}
+
+@source(BC_ART76)
+rule NoInterferenceInLowerBudgetProcess(b: Body, target: Budget) strict {
+    when interference_in_budget_process(b, target);
+    then prohibition InterfereInBudgetProcess {
+        bearer b;
+        action interfere_in_budget_process(target);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 76 пункт 4. Не допускается вмешательство Правительства и центральных государственных органов в бюджетный процесс нижестоящего уровня, за исключением случаев, предусмотренных настоящим Кодексом";
+}
+
+relation withdraws_additional_local_revenue(b: Body, target: Budget) kind empirical {
+    label ru-KZ official "участник изымает в вышестоящий бюджет доходы, дополнительно полученные в ходе исполнения местного бюджета";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation withdraw_additional_revenue(target: Budget) kind empirical {
+    label ru-KZ unofficial "действие нормы: withdraw additional revenue";
+}
+
+@source(BC_ART76)
+rule NoWithdrawalOfAdditionalLocalRevenue(b: Body, target: Budget) strict {
+    when withdraws_additional_local_revenue(b, target);
+    then prohibition WithdrawAdditionalLocalRevenue {
+        bearer b;
+        action withdraw_additional_revenue(target);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 76 пункт 5. Не допускается изъятие доходов, дополнительно полученных в ходе исполнения местных бюджетов, в вышестоящий бюджет";
+}
+
+// --- Ст. 83 пп. 5–6: целевые трансферты -------------------------------------
+
+relation development_targeted_transfer(t: Transfer) kind empirical {
+    label ru-KZ official "трансферт является целевым трансфертом на развитие, передаваемым вышестоящим бюджетом в нижестоящий";
+}
+
+relation reduction_due_to_additional_revenue(t: Transfer, b: Body) kind empirical {
+    label ru-KZ official "участник уменьшает объём трансферта в связи с дополнительно полученными нижестоящим бюджетом доходами";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation reduce_transfer(t: Transfer) kind empirical {
+    label ru-KZ unofficial "действие нормы: reduce transfer";
+}
+
+@source(BC_ART83)
+rule NoDevelopmentTransferReduction(t: Transfer, b: Body) strict {
+    when development_targeted_transfer(t);
+    when reduction_due_to_additional_revenue(t, b);
+    then prohibition ReduceDevelopmentTransfer {
+        bearer b;
+        action reduce_transfer(t);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 83 пункт 5. Не допускается уменьшение объёмов целевых трансфертов на развитие в связи с дополнительно полученными нижестоящими бюджетами доходами";
+}
+
+relation transfer_received_by(t: Transfer, b: Body) kind empirical {
+    label ru-KZ official "целевой трансферт получен названным местным исполнительным органом";
+}
+
+relation transfer_used_for_designated_purpose(t: Transfer) kind empirical {
+    label ru-KZ official "целевой трансферт использован в соответствии с целевым назначением, определённым паспортом бюджетной программы";
+}
+
+@source(BC_ART83)
+rule TargetedTransferPurposeDuty(t: Transfer, b: Body) strict {
+    when transfer_received_by(t, b);
+    then duty UseTransferForDesignatedPurpose {
+        bearer b;
+        beneficiary b;
+        achieve transfer_used_for_designated_purpose(t) during [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 83 пункт 6. Целевые трансферты используются местными исполнительными органами только в соответствии с их целевым назначением";
+}
+
+// --- Ст. 94 п. 3: право приостановить операции ------------------------------
+
+relation reduction_decided(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "по бюджетной программе принято решение о сокращении бюджетных средств";
+}
+
+relation budget_execution_body(b: Body) kind empirical {
+    label ru-KZ official "лицо является уполномоченным органом по исполнению бюджета";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation suspend_operations(p: BudgetProgramme) kind empirical {
+    label ru-KZ unofficial "действие нормы: suspend operations";
+}
+
+@source(BC_ART94)
+rule SuspendOperationsLiberty(p: BudgetProgramme, b: Body) strict {
+    when reduction_decided(p);
+    when budget_execution_body(b);
+    then liberty SuspendProgrammeOperations {
+        holder b;
+        action suspend_operations(p);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 94 пункт 3. Уполномоченный орган по исполнению бюджета вправе приостановить операции по бюджетным программам, по которым принято решение о сокращении бюджетных средств";
+}
+
+// --- Ст. 98 пп. 2–4: пределы перераспределения при корректировке ------------
+// Пятнадцать процентов — для республиканского и местного бюджетов уровня
+// области, района; двадцать — для бюджета города районного значения, села,
+// посёлка, сельского округа. Порог различает уровень, и одно правило на оба
+// было бы удобнее и неверно.
+
+relation redistribution_amount(p: BudgetProgramme, amount: Money) kind empirical {
+    key(p);
+    label ru-KZ official "объём перераспределяемых при корректировке средств составляет названную сумму";
+}
+
+relation redistribution_within_limit(p: BudgetProgramme) kind institutional {
+    label ru-KZ official "объём перераспределяемых средств не выходит за предел корректировки";
+}
+
+relation redistribution_over_limit(p: BudgetProgramme) kind institutional {
+    label ru-KZ official "объём перераспределяемых средств выходит за предел корректировки";
+}
+
+relation loan_or_grant_funded(p: BudgetProgramme) kind empirical {
+    label ru-KZ official "средства бюджетной программы направлены на использование займов либо грантов";
+}
+
+@source(BC_ART98) {
+    rule RedistributionWithinFifteenPercent(
+        p: BudgetProgramme,
+        b: Budget,
+        level: BudgetLevel,
+        moved: Money,
+        total: Money,
+    ) strict {
+        when programme_of(p, b);
+        when budget_level(b, level);
+        when level != Rural;
+        when redistribution_amount(p, moved);
+        when programme_expenditure(p, total);
+        when moved * 20 <= total * 3;
+        then redistribution_within_limit(p);
+        label ru-KZ official "Статья 98 пункты 2 и 3 подпункты 2) и 4). Перераспределение средств при корректировке осуществляется в объёме не более пятнадцати процентов объёма расходов бюджетной программы";
+    }
+
+    rule RedistributionOverFifteenPercent(
+        p: BudgetProgramme,
+        b: Budget,
+        level: BudgetLevel,
+        moved: Money,
+        total: Money,
+    ) strict {
+        when programme_of(p, b);
+        when budget_level(b, level);
+        when level != Rural;
+        when redistribution_amount(p, moved);
+        when programme_expenditure(p, total);
+        when moved * 20 > total * 3;
+        then redistribution_over_limit(p);
+        label ru-KZ official "Статья 98 пункты 2 и 3. Перераспределение свыше пятнадцати процентов объёма расходов бюджетной программы предел корректировки превышает";
+    }
+
+    rule RuralRedistributionWithinTwentyPercent(
+        p: BudgetProgramme,
+        b: Budget,
+        moved: Money,
+        total: Money,
+    ) strict {
+        when programme_of(p, b);
+        when budget_level(b, Rural);
+        when redistribution_amount(p, moved);
+        when programme_expenditure(p, total);
+        when moved * 5 <= total;
+        then redistribution_within_limit(p);
+        label ru-KZ official "Статья 98 пункт 4. Корректировка бюджета города районного значения, села, посёлка, сельского округа осуществляется при перераспределении не более двадцати процентов объёма расходов бюджетной программы";
+    }
+
+    rule RuralRedistributionOverTwentyPercent(
+        p: BudgetProgramme,
+        b: Budget,
+        moved: Money,
+        total: Money,
+    ) strict {
+        when programme_of(p, b);
+        when budget_level(b, Rural);
+        when redistribution_amount(p, moved);
+        when programme_expenditure(p, total);
+        when moved * 5 > total;
+        then redistribution_over_limit(p);
+        label ru-KZ official "Статья 98 пункт 4. Перераспределение свыше двадцати процентов объёма расходов бюджетной программы предел корректировки бюджета города районного значения, села, посёлка, сельского округа превышает";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation redistribute_funds(p: BudgetProgramme) kind empirical {
+        label ru-KZ unofficial "действие нормы: redistribute funds";
+    }
+
+    rule NoRedistributionOfLoanOrGrantFunds(p: BudgetProgramme, a: Administrator) strict {
+        when loan_or_grant_funded(p);
+        when programme_administrator(p, a);
+        then prohibition RedistributeLoanOrGrantFunds {
+            bearer a;
+            action redistribute_funds(p);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 98 пункт 2 подпункт 2) абзац четвёртый. Не допускается перераспределение средств, направленных на использование займов и грантов";
+    }
+}
+
+// --- Предметы публикации, названные статьями раздела 4 (второй проход) -----
+
+relation general_transfers_draft(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является проектом закона либо проектом решения маслихата об объёмах трансфертов общего характера";
+}
+
+@source(BC_ART81)
+rule GeneralTransfersDraftIsPublicationSubject(d: ProcessDocument) strict {
+    when general_transfers_draft(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 81. Проект закона об объёмах трансфертов общего характера и проект решения маслихата об объёмах трансфертов общего характера подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation republican_budget_act(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является законом о республиканском бюджете с приложениями либо указом Президента о республиканском финансовом плане на первый квартал";
+}
+
+@source(BC_ART90)
+rule RepublicanBudgetActIsPublicationSubject(d: ProcessDocument) strict {
+    when republican_budget_act(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 90. Закон о республиканском бюджете с приложениями и указ Президента о республиканском финансовом плане на первый квартал подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation local_budget_act(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является решением маслихата о местном бюджете с приложениями либо постановлением местного исполнительного органа о местном финансовом плане на первый квартал";
+}
+
+@source(BC_ART91)
+rule LocalBudgetActIsPublicationSubject(d: ProcessDocument) strict {
+    when local_budget_act(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 91. Решение маслихата о местном бюджете с приложениями и постановление о местном финансовом плане на первый квартал подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+// === ВТОРОЙ ПРОХОД (02.09.2026): статьи 73, 79, 82, 93, 96, 99 ==============
+
+// --- Ст. 73: проект НПА, влияющий на доходы и расходы бюджета ---------------
+// «Могут быть внесены ЛИШЬ при наличии положительного заключения» — норма с
+// условием и следствием, а не процедурное описание: без заключения внесение
+// не допускается, и это ЗАПРЕТ с носителем.
+
+entity Draft_ {
+    label ru-KZ official "проект нормативного правового акта, влияющий на доходы и расходы бюджета";
+}
+
+relation reduces_revenue_or_raises_expenditure(x: Draft_) kind empirical {
+    label ru-KZ official "проект предусматривает сокращение государственных доходов либо увеличение государственных расходов";
+}
+
+relation positive_government_conclusion(x: Draft_) kind empirical {
+    label ru-KZ official "по проекту имеется положительное заключение Правительства Республики Казахстан";
+}
+
+relation positive_akim_conclusion(x: Draft_) kind empirical {
+    label ru-KZ official "по проекту имеется положительное заключение акима";
+}
+
+relation submitted_to_kurultai_by(x: Draft_, b: Body) kind empirical {
+    label ru-KZ official "проект вносится названным лицом в Курултай Республики Казахстан";
+}
+
+relation submitted_to_maslikhat_by(x: Draft_, b: Body) kind empirical {
+    label ru-KZ official "проект решения вносится названным лицом на рассмотрение маслихата";
+}
+
+relation draft_in_question(x: Draft_) kind empirical {
+    label ru-KZ official "проект поставлен вопросом по настоящему делу";
+}
+
+closure GovernmentConclusionClosure {
+    label ru-KZ official "перечень проектов с положительным заключением Правительства по делу закрыт";
+    predicate positive_government_conclusion;
+    domain draft_in_question;
+    snapshot "urn:kz:corpus:clir:budget-code:snapshot:government-conclusions";
+    complete_as_of @2025-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+closure AkimConclusionClosure {
+    label ru-KZ official "перечень проектов с положительным заключением акима по делу закрыт";
+    predicate positive_akim_conclusion;
+    domain draft_in_question;
+    snapshot "urn:kz:corpus:clir:budget-code:snapshot:akim-conclusions";
+    complete_as_of @2025-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation submit_draft(x: Draft_) kind empirical {
+    label ru-KZ unofficial "действие нормы: submit draft";
+}
+
+@source(BC_ART73) {
+    rule NoSubmissionWithoutGovernmentConclusion(x: Draft_, b: Body) strict {
+        when submitted_to_kurultai_by(x, b);
+        when draft_in_question(x);
+        when reduces_revenue_or_raises_expenditure(x);
+        when not positive_government_conclusion(x);
+        then prohibition SubmitDraftWithoutConclusion {
+            bearer b;
+            action submit_draft(x);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 73 пункт 1. Проекты законов, предусматривающие сокращение государственных доходов или увеличение государственных расходов, могут быть внесены в Курултай Республики Казахстан лишь при наличии положительного заключения Правительства Республики Казахстан";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation submit_local_draft(x: Draft_) kind empirical {
+        label ru-KZ unofficial "действие нормы: submit local draft";
+    }
+
+    rule NoLocalSubmissionWithoutAkimConclusion(x: Draft_, b: Body) strict {
+        when submitted_to_maslikhat_by(x, b);
+        when draft_in_question(x);
+        when reduces_revenue_or_raises_expenditure(x);
+        when not positive_akim_conclusion(x);
+        then prohibition SubmitLocalDraftWithoutConclusion {
+            bearer b;
+            action submit_local_draft(x);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 73 пункт 3. Проекты решений местных представительных органов, предусматривающие сокращение доходов местных бюджетов или увеличение расходов местных бюджетов, могут быть внесены на рассмотрение маслихатов лишь при наличии положительного заключения акима";
+    }
+}
+
+// --- Ст. 79: объёмы трансфертов общего характера ----------------------------
+
+relation general_transfers_set_on(t: Transfer, d: Date) kind empirical {
+    key(t);
+    label ru-KZ official "объёмы трансфертов общего характера установлены названной датой";
+}
+
+relation general_transfers_change_due(t: Transfer, d: Date) kind institutional {
+    label ru-KZ official "объёмы трансфертов общего характера подлежат изменению не позднее названной даты";
+}
+
+@source(BC_ART79)
+rule GeneralTransfersChangeEveryThreeYears(t: Transfer, set_on: Date) strict {
+    when general_transfers_set_on(t, set_on);
+    then general_transfers_change_due(t, add_calendar_period(set_on, 3 calendar_year));
+    label ru-KZ official "Статья 79 пункт 2. Объёмы трансфертов общего характера подлежат изменению через каждые три года";
+}
+
+// --- Ст. 82 п. 5: целевое назначение объёмов трансфертов --------------------
+
+relation purpose_change_sought(t: Transfer, b: Body) kind empirical {
+    label ru-KZ official "участник изменяет целевое назначение объёмов целевых трансфертов общего характера";
+}
+
+relation redistribution_within_same_direction(t: Transfer) kind empirical {
+    label ru-KZ official "изменение есть перераспределение в пределах достижения целей того же направления";
+}
+
+relation purpose_change_forbidden(t: Transfer) kind institutional {
+    label ru-KZ official "целевое назначение объёмов трансфертов изменению не подлежит";
+}
+
+@source(BC_ART82) {
+    rule TransferPurposeUnchangeable(t: Transfer, b: Body) defeasible {
+        when purpose_change_sought(t, b);
+        then purpose_change_forbidden(t);
+        label ru-KZ official "Статья 82 пункт 5. Целевое назначение объёмов целевых трансфертов общего характера изменению не подлежит, за исключением случаев их перераспределения в пределах достижения целей этого же направления";
+    }
+
+    rule SameDirectionRedistributionAllowed(t: Transfer) defeater {
+        when redistribution_within_same_direction(t);
+        defeat purpose_change_forbidden(t);
+        label ru-KZ official "Статья 82 пункт 5. Изъятие: перераспределение в пределах достижения целей того же направления изменением целевого назначения не является";
+    }
+}
+
+// --- Ст. 93 п. 4 и ст. 96 п. 3: два срока разной ЕДИНИЦЫ --------------------
+// Десять КАЛЕНДАРНЫХ ДНЕЙ у статьи 93 и ДВУХНЕДЕЛЬНЫЙ срок у статьи 96.
+// Неделя — единица КАЛЕНДАРНОГО семейства (E-0038): недельный срок истекает
+// в соответствующий день недели, а не на четырнадцатый считающийся день, и
+// записать его днями значило бы выдать срок, истекающий раньше
+// установленного.
+
+entity Resolution {
+    label ru-KZ official "постановление о реализации закона о бюджете либо решение маслихата об уточнении бюджета";
+}
+
+relation budget_clarified_on(r: Resolution, d: Date) kind empirical {
+    key(r);
+    label ru-KZ official "бюджет уточнён названной датой";
+}
+
+relation resolution_deadline(r: Resolution, d: Date) kind institutional {
+    label ru-KZ official "постановление о внесении изменений подлежит утверждению не позднее названной даты";
+}
+
+relation local_decision_deadline(r: Resolution, d: Date) kind institutional {
+    label ru-KZ official "решение маслихата об уточнении местного бюджета принимается не позднее названной даты";
+}
+
+@source(BC_ART93)
+rule ResolutionWithinTenCalendarDays(r: Resolution, clarified: Date) strict {
+    when budget_clarified_on(r, clarified);
+    then resolution_deadline(r, add_business_days(clarified, 10 calendar_day));
+    label ru-KZ official "Статья 93 пункт 4. В случае уточнения республиканского бюджета постановление Правительства о внесении изменений и дополнений утверждается в течение десяти календарных дней";
+}
+
+@source(BC_ART96)
+rule LocalDecisionWithinTwoWeeks(r: Resolution, clarified: Date) strict {
+    when budget_clarified_on(r, clarified);
+    then local_decision_deadline(r, add_calendar_period(clarified, 2 calendar_week));
+    label ru-KZ official "Статья 96 пункт 3. Когда уточнение местных бюджетов проводится в связи с уточнением вышестоящего бюджета, соответствующее решение маслихата принимается не позднее двухнедельного срока";
+}
+
+// --- Ст. 99 п. 2: основание чрезвычайного государственного бюджета ----------
+
+relation emergency_declared_in_several_regions(b: Budget) kind empirical {
+    label ru-KZ official "чрезвычайное положение введено на территории нескольких регионов Республики Казахстан одновременно";
+}
+
+relation consequences_threaten_stability(b: Budget) kind empirical {
+    label ru-KZ official "последствия чрезвычайного положения могут создать реальную угрозу стабильности";
+}
+
+relation emergency_budget_ground(b: Budget) kind institutional {
+    label ru-KZ official "имеется основание для введения чрезвычайного государственного бюджета";
+}
+
+@source(BC_ART99)
+rule EmergencyBudgetGround(b: Budget) strict {
+    when emergency_declared_in_several_regions(b);
+    when consequences_threaten_stability(b);
+    then emergency_budget_ground(b);
+    label ru-KZ official "Статья 99 пункт 2. Введение чрезвычайного положения на территории нескольких регионов может являться основанием для введения чрезвычайного государственного бюджета лишь в случае, когда последствия могут создать реальную угрозу стабильности";
+}
+
+// --- Ст. 95 п. 3: пять РАБОЧИХ дней после заседания комиссии ---------------
+// Второй проход. Единица названа статьёй дословно и она дневная:
+// `add_business_days` требует снимок календаря §85 всегда.
+
+relation commission_meeting_held(a: Administrator, d: Date) kind empirical {
+    key(a);
+    label ru-KZ official "заседание Республиканской бюджетной комиссии по уточнению республиканского бюджета состоялось названной датой";
+}
+
+relation clarification_request_deadline(a: Administrator, d: Date) kind institutional {
+    label ru-KZ official "бюджетный запрос при уточнении бюджета представляется не позднее названной даты";
+}
+
+relation clarification_request_submitted(a: Administrator, d: Date) kind empirical {
+    key(a);
+    label ru-KZ official "бюджетный запрос при уточнении бюджета представлен названной датой";
+}
+
+relation clarification_request_timely(a: Administrator) kind institutional {
+    label ru-KZ official "бюджетный запрос при уточнении бюджета представлен в срок";
+}
+
+relation clarification_request_late(a: Administrator) kind institutional {
+    label ru-KZ official "бюджетный запрос при уточнении бюджета представлен с нарушением срока";
+}
+
+@source(BC_ART95) {
+    rule ClarificationRequestDeadline(a: Administrator, held: Date) strict {
+        when commission_meeting_held(a, held);
+        then clarification_request_deadline(a, add_business_days(held, 5 business_day));
+        label ru-KZ official "Статья 95 пункт 3. Администраторы республиканских бюджетных программ в течение пяти рабочих дней после заседания Республиканской бюджетной комиссии представляют бюджетные запросы в центральный уполномоченный орган по бюджетному планированию";
+    }
+
+    rule ClarificationRequestTimely(a: Administrator, submitted: Date, deadline: Date) strict {
+        when clarification_request_submitted(a, submitted);
+        when clarification_request_deadline(a, deadline);
+        when submitted <= deadline;
+        then clarification_request_timely(a);
+        label ru-KZ official "Статья 95 пункт 3. Запрос, представленный не позднее последнего дня пятидневного срока, представлен в срок";
+    }
+
+    rule ClarificationRequestLate(a: Administrator, submitted: Date, deadline: Date) strict {
+        when clarification_request_submitted(a, submitted);
+        when clarification_request_deadline(a, deadline);
+        when submitted > deadline;
+        then clarification_request_late(a);
+        label ru-KZ official "Статья 95 пункт 3. Запрос, представленный после последнего дня пятидневного срока, представлен с нарушением срока";
+    }
+}
+
+// --- Статья 86 пункт 4: показатели, которые обязан содержать закон о бюджете ---
+//
+// Кодекс называет ПОКРЫТИЕ показателей: текст проекта закона о республиканском
+// бюджете обязан содержать минимальные размеры заработной платы и пенсии,
+// размер месячного расчётного показателя, величину прожиточного минимума,
+// размер государственной базовой пенсионной выплаты и размер взносов
+// государства на обязательное социальное медицинское страхование. Понятие
+// показателя определяет ЭТОТ кодекс, значение на год — закон о бюджете этого
+// года: тот же раздел ролей, что у хаба лиц (DECISION-0107 §3.4, владелец
+// общего типа — акт, который определяет понятие для остальных).
+//
+// До 04.09.2026 (DECISION-0112, пилот бюджетных величин) отношения жили в
+// КАЖДОМ годовом законе, и потребитель импортировал их по одному на год:
+// пятнадцать пакетов держали ветку `effective` на каждый год, а новый год
+// требовал нового импорта у каждого. Теперь отношение одно, а закон года
+// приносит в него своё значение со СВОИМ якорем.
+
+@source(BC_ART86) {
+    pub relation mrp(year: Integer, amount: Money) kind institutional {
+        key(year);
+        label ru-KZ official "месячный расчётный показатель на финансовый год";
+    }
+
+    pub relation minimum_wage(year: Integer, amount: Money) kind institutional {
+        key(year);
+        label ru-KZ official "минимальный размер заработной платы на финансовый год";
+    }
+
+    pub relation minimum_pension(year: Integer, amount: Money) kind institutional {
+        key(year);
+        label ru-KZ official "минимальный размер пенсии на финансовый год";
+    }
+
+    pub relation base_pension(year: Integer, amount: Money) kind institutional {
+        key(year);
+        label ru-KZ official "минимальный размер государственной базовой пенсионной выплаты на финансовый год";
+    }
+
+    pub relation subsistence_minimum(year: Integer, amount: Money) kind institutional {
+        key(year);
+        label ru-KZ official "величина прожиточного минимума на финансовый год";
+    }
+
+    pub relation state_osms_rate(year: Integer, rate: Decimal) kind institutional {
+        key(year);
+        label ru-KZ official "размер взносов государства на обязательное социальное медицинское страхование на финансовый год";
+    }
+}

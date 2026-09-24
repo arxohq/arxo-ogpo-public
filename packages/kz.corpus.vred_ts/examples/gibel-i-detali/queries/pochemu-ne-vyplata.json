@@ -1,0 +1,23 @@
+{
+  "queryId": "pochemu-ne-vyplata",
+  "kind": "why_not",
+  "literal": {
+    "kind": "literal",
+    "polarity": "positive",
+    "predicate": "urn:kz:corpus:clir:vred-ts#strakhovaya_vyplata_pri_gibeli",
+    "args": [
+      {
+        "kind": "entity_ref",
+        "id": "urn:example:vred:raschet"
+      },
+      {
+        "kind": "value",
+        "type": {
+          "name": "urn:law:std#Money"
+        },
+        "currency": "KZT",
+        "value": "850000"
+      }
+    ]
+  }
+}

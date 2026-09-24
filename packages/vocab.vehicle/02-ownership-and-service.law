@@ -1,0 +1,59 @@
+// GENERATED from vehicles.json; do not edit by hand.
+language "law.core" version "0.2";
+package vocab.vehicle version "0.1.0";
+namespace "urn:law:vocab:vehicle";
+
+pub entity Owner { label ru official "владелец транспортного средства"; }
+pub entity Component { label ru official "обслуживаемый компонент транспортного средства"; }
+pub entity ServiceEvent { label ru official "событие обслуживания"; }
+pub entity OdometerReading { label ru official "показание одометра"; }
+pub entity Tyre { label ru official "шина в позиции на оси"; }
+pub entity Document { label ru official "документ водителя или транспортного средства"; }
+pub entity Symptom { label ru official "предъявленный симптом"; }
+pub entity DtcCode { label ru official "код диагностической неисправности"; }
+pub entity FuelFill { label ru official "заправка топливом"; }
+pub entity Trip { label ru official "поездка"; }
+pub entity Axle { label ru official "ось транспортного средства"; }
+
+pub enum ComponentKind { label ru official "ComponentKind"; engine_oil; oil_filter; air_filter; cabin_filter; fuel_filter; timing_belt; brake_fluid; coolant; spark_plugs; brake_pads; brake_discs; battery; tyres; }
+pub enum DocumentKind { label ru official "DocumentKind"; driver_licence; registration; ogpo_policy; technical_inspection; power_of_attorney; }
+pub enum TyreSeason { label ru official "TyreSeason"; summer; winter; all_season; }
+pub enum TyrePosition { label ru official "TyrePosition"; front_left; front_right; rear_left; rear_right; spare; }
+
+pub relation vehicle_vin(vehicle: Vehicle, vin: Text) kind empirical { label ru official "vehicle_vin"; }
+pub relation vehicle_owner(vehicle: Vehicle, owner: Owner) kind empirical { label ru official "vehicle_owner"; }
+pub relation ownership_started_on(vehicle: Vehicle, owner: Owner, date: Date) kind empirical { label ru official "ownership_started_on"; }
+pub relation component_kind(component: Component, kind: ComponentKind) kind empirical { label ru official "component_kind"; }
+pub relation service_component(service: ServiceEvent, component: Component) kind empirical { label ru official "service_component"; }
+pub relation service_date(service: ServiceEvent, date: Date) kind empirical { label ru official "service_date"; }
+pub relation service_odometer(service: ServiceEvent, reading: OdometerReading) kind empirical { label ru official "service_odometer"; }
+pub relation service_evidence(service: ServiceEvent, proof: vocab.maintenance::Evidence) kind empirical { label ru official "service_evidence"; }
+pub relation odometer_vehicle(reading: OdometerReading, vehicle: Vehicle) kind empirical { label ru official "odometer_vehicle"; }
+pub relation odometer_value(reading: OdometerReading, value: Quantity) kind empirical { label ru official "odometer_value"; }
+pub relation odometer_date(reading: OdometerReading, date: Date) kind empirical { label ru official "odometer_date"; }
+pub relation odometer_evidence(reading: OdometerReading, proof: vocab.maintenance::Evidence) kind empirical { label ru official "odometer_evidence"; }
+pub relation tyre_vehicle(tyre: Tyre, vehicle: Vehicle) kind empirical { label ru official "tyre_vehicle"; }
+pub relation tyre_position(tyre: Tyre, position: TyrePosition) kind empirical { label ru official "tyre_position"; }
+pub relation tyre_size(tyre: Tyre, size: Text) kind empirical { label ru official "tyre_size"; }
+pub relation tyre_load_index(tyre: Tyre, index: Text) kind empirical { label ru official "tyre_load_index"; }
+pub relation tyre_speed_index(tyre: Tyre, index: Text) kind empirical { label ru official "tyre_speed_index"; }
+pub relation tyre_dot_week(tyre: Tyre, week: Integer) kind empirical { label ru official "tyre_dot_week"; }
+pub relation tyre_dot_year(tyre: Tyre, year: Integer) kind empirical { label ru official "tyre_dot_year"; }
+pub relation tyre_tread_measurement(tyre: Tyre, measurement: vocab.maintenance::Measurement) kind empirical { label ru official "tyre_tread_measurement"; }
+pub relation tyre_season(tyre: Tyre, season: TyreSeason) kind empirical { label ru official "tyre_season"; }
+pub relation document_kind(document: Document, kind: DocumentKind) kind empirical { label ru official "document_kind"; }
+pub relation document_number(document: Document, number: Text) kind empirical { label ru official "document_number"; }
+pub relation document_issued_on(document: Document, date: Date) kind empirical { label ru official "document_issued_on"; }
+pub relation document_valid_until(document: Document, date: Date) kind empirical { label ru official "document_valid_until"; }
+pub relation symptom_vehicle(symptom: Symptom, vehicle: Vehicle) kind empirical { label ru official "symptom_vehicle"; }
+pub relation symptom_text(symptom: Symptom, text: Text) kind empirical { label ru official "symptom_text"; }
+pub relation dtc_vehicle(code: DtcCode, vehicle: Vehicle) kind empirical { label ru official "dtc_vehicle"; }
+pub relation dtc_text(code: DtcCode, text: Text) kind empirical { label ru official "dtc_text"; }
+pub relation fuel_fill_vehicle(fill: FuelFill, vehicle: Vehicle) kind empirical { label ru official "fuel_fill_vehicle"; }
+pub relation fuel_fill_date(fill: FuelFill, date: Date) kind empirical { label ru official "fuel_fill_date"; }
+pub relation fuel_fill_litres(fill: FuelFill, value: Quantity) kind empirical { label ru official "fuel_fill_litres"; }
+pub relation fuel_fill_odometer(fill: FuelFill, reading: OdometerReading) kind empirical { label ru official "fuel_fill_odometer"; }
+pub relation fuel_fill_evidence(fill: FuelFill, proof: vocab.maintenance::Evidence) kind empirical { label ru official "fuel_fill_evidence"; }
+pub relation trip_vehicle(trip: Trip, vehicle: Vehicle) kind empirical { label ru official "trip_vehicle"; }
+pub relation trip_distance(trip: Trip, value: Quantity) kind empirical { label ru official "trip_distance"; }
+pub relation trip_fuel(trip: Trip, value: Quantity) kind empirical { label ru official "trip_fuel"; }

@@ -1,0 +1,1113 @@
+// РАЗДЕЛ 7. ЗАИМСТВОВАНИЕ И УПРАВЛЕНИЕ ДОЛГОВЫМИ ОБЯЗАТЕЛЬСТВАМИ,
+// ГОСУДАРСТВЕННЫЕ ИНВЕСТИЦИОННЫЕ ПРОЕКТЫ, БЮДЖЕТНОЕ КРЕДИТОВАНИЕ, ГРАНТЫ
+// (главы 28–31, статьи 136–167).
+//
+// Выражено правилами: запрет одностороннего отказа от обязательства по
+// договору займа (ст. 136 п. 5); запрет обязательств местных исполнительных
+// органов по займам за третьих лиц (ст. 138); восемь требований к
+// претенденту на государственную гарантию с порогом собственного капитала
+// не менее тридцати процентов стоимости проекта и сбор два процента суммы
+// гарантии (ст. 141 п. 3); исключительное право Правительства предоставлять
+// гарантии — власть §127 с типизированным правовым эффектом (ст. 141 п. 6);
+// запрет использования средств гарантированного займа на иные цели
+// (ст. 141); восемнадцатимесячный срок исполнения обязательств по гарантии
+// (ст. 142, ст. 144, ст. 144-2) — календарный шаг §86; четыре принципа
+// бюджетного кредита, из которых СРОЧНОСТЬ и ПЛАТНОСТЬ проверяемы прямо
+// (ст. 154 п. 4), запрет кредитов на названные цели и запрет размещения
+// возвратных бюджетных средств на депозитах (ст. 154 п. 3), условия
+// предоставления кредита (ст. 154 п. 5); пять обязанностей получателя
+// связанного гранта (ст. 166 п. 2).
+//
+// ГРАНИЦЫ РАЗДЕЛА:
+//   - ст. 137, 139, 140, 145–147-1 (управление долгом, правительственный
+//     долг, долг местных исполнительных органов, поручительство, долг
+//     квазигосударственного сектора, государственные обязательства по ГЧП и
+//     по проектам «под ключ») — ЛИМИТЫ устанавливаются законом о
+//     республиканском бюджете и актами Президента, а не кодексом: величина
+//     живёт в kz.corpus.budget, и её перенос сюда был бы дублированием
+//     чужого акта;
+//   - ст. 143, 144-1 (гарантии по поддержке экспорта и частного
+//     предпринимательства) — требования зеркальны ст. 141, а отбор проектов
+//     ведёт уполномоченный орган своим порядком;
+//   - ст. 148–153 (государственные инвестиционные проекты) — порядок
+//     планирования, мониторинга и оценки определяется центральным
+//     уполномоченным органом; кодекс называет стадии, а условия отбора —
+//     подзаконный акт;
+//   - ст. 155–157, 158–162 (процедуры принятия решения, предоставления,
+//     использования, обслуживания, погашения и контроля бюджетного кредита)
+//     — условия погашения и порядок начисления вознаграждения определяются
+//     КРЕДИТНЫМ ДОГОВОРОМ и уполномоченным органом (ст. 158 п. 4, ст. 159
+//     п. 3); кодекс требует, чтобы они были УСТАНОВЛЕНЫ, и это требование
+//     выражено;
+//   - ст. 163–165, 167 (связанные и несвязанные гранты, планирование,
+//     привлечение, мониторинг) — порядок определяется актами Правительства.
+
+
+// --- Ст. 136 п. 5 и ст. 138: два запрета заимствования ----------------------
+
+entity Loan {
+    label ru-KZ official "заём";
+}
+
+relation unilateral_refusal(l: Loan, b: Body) kind empirical {
+    label ru-KZ official "сторона отказывается от исполнения обязательства по договору займа в одностороннем порядке";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation refuse_loan_obligation(l: Loan) kind empirical {
+    label ru-KZ unofficial "действие нормы: refuse loan obligation";
+}
+
+@source(BC_ART136)
+rule NoUnilateralRefusal(l: Loan, b: Body) strict {
+    when unilateral_refusal(l, b);
+    then prohibition RefuseLoanObligation {
+        bearer b;
+        action refuse_loan_obligation(l);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 136 пункт 5. Не допускается односторонний отказ от исполнения обязательства по договору займа";
+}
+
+relation local_executive_body(b: Body) kind empirical {
+    label ru-KZ official "лицо является местным исполнительным органом";
+}
+
+relation third_party_loan_obligation(l: Loan, b: Body) kind empirical {
+    label ru-KZ official "орган принимает обязательство по займу за третье лицо";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation assume_third_party_obligation(l: Loan) kind empirical {
+    label ru-KZ unofficial "действие нормы: assume third party obligation";
+}
+
+@source(BC_ART138)
+rule NoThirdPartyLoanObligation(l: Loan, b: Body) strict {
+    when local_executive_body(b);
+    when third_party_loan_obligation(l, b);
+    then prohibition AssumeThirdPartyLoanObligation {
+        bearer b;
+        action assume_third_party_obligation(l);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 138 пункт 4. Не допускается принятие местными исполнительными органами обязательств по займам за третьих лиц в любом виде и любой форме";
+}
+
+// --- Ст. 141 п. 3: требования к претенденту на государственную гарантию -----
+// Восемь требований соединены КОНЪЮНКЦИЕЙ: перечень пункта 3 не даёт
+// альтернатив, и невыполнение любого закрывает гарантию. Порог собственного
+// капитала выражен масштабированием обеих сторон.
+
+relation guarantee_applicant(g: Guarantee, q: QuasiEntity) kind empirical {
+    label ru-KZ official "названное лицо претендует на получение государственной гарантии по займу, в котором выступает заёмщиком";
+}
+
+relation resident_entrepreneur(q: QuasiEntity) kind empirical {
+    label ru-KZ official "лицо является резидентом Республики Казахстан, осуществляющим предпринимательскую деятельность";
+}
+
+relation positive_conclusions_obtained(g: Guarantee) kind empirical {
+    label ru-KZ official "получены положительные заключения отраслевого уполномоченного органа, центрального уполномоченного органа по исполнению бюджета и центрального уполномоченного органа по бюджетной политике";
+}
+
+relation project_in_guarantee_list(g: Guarantee, project: InvestmentProject) kind empirical {
+    label ru-KZ official "проект включён в перечень инвестиционных проектов, предлагаемых к финансированию за счёт негосударственных займов под государственные гарантии";
+}
+
+relation bank_guarantee_or_insurance(g: Guarantee) kind empirical {
+    label ru-KZ official "имеется гарантия банка второго уровня либо договор страхования, отвечающие требованиям обеспечения возвратности займов";
+}
+
+relation no_arrears_on_guaranteed_loans(q: QuasiEntity) kind empirical {
+    label ru-KZ official "у лица нет задолженности по ранее полученным гарантированным государством займам и просроченной задолженности перед кредиторами";
+}
+
+relation cofinancing_secured(g: Guarantee) kind empirical {
+    label ru-KZ official "обеспечены обязательства по софинансированию предлагаемого инвестиционного проекта";
+}
+
+relation own_capital(q: QuasiEntity, amount: Money) kind empirical {
+    key(q);
+    label ru-KZ official "собственный капитал лица составляет названную сумму";
+}
+
+relation project_cost(project: InvestmentProject, amount: Money) kind empirical {
+    key(project);
+    label ru-KZ official "стоимость предлагаемого инвестиционного проекта составляет названную сумму";
+}
+
+relation solvent_and_unencumbered(q: QuasiEntity) kind empirical {
+    label ru-KZ official "лицо платёжеспособно, ликвидации не подлежит, на его имущество не наложен арест и его финансово-хозяйственная деятельность не приостановлена";
+}
+
+relation capital_requirement_met(g: Guarantee) kind institutional {
+    label ru-KZ official "требование о собственном капитале не менее тридцати процентов стоимости проекта соблюдено";
+}
+
+relation capital_requirement_failed(g: Guarantee) kind institutional {
+    label ru-KZ official "требование о собственном капитале не менее тридцати процентов стоимости проекта не соблюдено";
+}
+
+relation guarantee_requirements_met(g: Guarantee) kind institutional {
+    label ru-KZ official "претендент отвечает требованиям пункта 3 статьи 141 настоящего Кодекса";
+}
+
+@source(BC_ART141) {
+    rule GuaranteeCapitalRequirementMet(
+        g: Guarantee,
+        q: QuasiEntity,
+        project: InvestmentProject,
+        capital: Money,
+        cost: Money,
+    ) strict {
+        when guarantee_applicant(g, q);
+        when project_in_guarantee_list(g, project);
+        when own_capital(q, capital);
+        when project_cost(project, cost);
+        when capital * 10 >= cost * 3;
+        then capital_requirement_met(g);
+        label ru-KZ official "Статья 141 пункт 3 подпункт 7). Претендент обязан иметь собственный капитал, составляющий не менее тридцати процентов по отношению к стоимости предлагаемого инвестиционного проекта";
+    }
+
+    rule GuaranteeCapitalRequirementFailed(
+        g: Guarantee,
+        q: QuasiEntity,
+        project: InvestmentProject,
+        capital: Money,
+        cost: Money,
+    ) strict {
+        when guarantee_applicant(g, q);
+        when project_in_guarantee_list(g, project);
+        when own_capital(q, capital);
+        when project_cost(project, cost);
+        when capital * 10 < cost * 3;
+        then capital_requirement_failed(g);
+        label ru-KZ official "Статья 141 пункт 3 подпункт 7). Собственный капитал менее тридцати процентов стоимости проекта требованию настоящего Кодекса не отвечает";
+    }
+
+    rule GuaranteeRequirementsMet(g: Guarantee, q: QuasiEntity, project: InvestmentProject) strict {
+        when guarantee_applicant(g, q);
+        when resident_entrepreneur(q);
+        when positive_conclusions_obtained(g);
+        when project_in_guarantee_list(g, project);
+        when bank_guarantee_or_insurance(g);
+        when no_arrears_on_guaranteed_loans(q);
+        when cofinancing_secured(g);
+        when capital_requirement_met(g);
+        when solvent_and_unencumbered(q);
+        then guarantee_requirements_met(g);
+        label ru-KZ official "Статья 141 пункт 3. К юридическим лицам, претендующим на получение государственной гарантии, предъявляются восемь требований подпунктов 1)–8) настоящего пункта";
+    }
+}
+
+// Сбор за предоставление гарантии — два процента суммы гарантии. Величина
+// выводится ПРАВИЛОМ из суммы гарантии, а не приходит фактом дела: иначе
+// дело сообщало бы вывод, ради которого норма существует.
+relation guarantee_amount(g: Guarantee, amount: Money) kind empirical {
+    key(g);
+    label ru-KZ official "сумма государственной гарантии составляет названную сумму";
+}
+
+relation guarantee_fee_due(g: Guarantee, amount: Money) kind institutional {
+    label ru-KZ official "предварительная единовременная плата (сбор) за предоставление государственной гарантии составляет названную сумму";
+}
+
+@source(BC_ART141)
+rule GuaranteeFeeTwoPercent(g: Guarantee, amount: Money) strict {
+    when guarantee_amount(g, amount);
+    then guarantee_fee_due(g, div_round(amount, 50.0, 2, "HALF_UP"));
+    label ru-KZ official "Статья 141 пункт 3 абзац последний. За предоставление государственной гарантии по негосударственному займу с заёмщика взимается предварительная единовременная плата (сбор) в размере двух процентов от суммы государственной гарантии";
+}
+
+// --- Ст. 141 п. 6: исключительное право предоставления гарантий -------------
+// Власть §127: правовой эффект — возникновение гарантированного государством
+// долга, — и он вынесен ОТДЕЛЬНЫМ предикатом, а не признаком гарантии.
+
+relation government_of_kazakhstan(b: Body) kind empirical {
+    label ru-KZ official "лицо является Правительством Республики Казахстан";
+}
+
+relation guarantee_granted(g: Guarantee) kind institutional {
+    label ru-KZ official "государственная гарантия предоставлена";
+}
+
+relation grant_guarantee(g: Guarantee) kind empirical {
+    label ru-KZ official "Правительство Республики Казахстан приняло решение о предоставлении государственной гарантии";
+}
+
+@source(BC_ART141)
+rule ExclusiveGuaranteePower(g: Guarantee, b: Body) strict {
+    when government_of_kazakhstan(b);
+    when guarantee_requirements_met(g);
+    then power GrantStateGuarantee {
+        holder b;
+        over g;
+        exercise grant_guarantee(g);
+        valid_when guarantee_requirements_met(g);
+        effect guarantee_granted(g);
+    };
+    label ru-KZ official "Статья 141 пункт 6. Исключительным правом предоставления государственных гарантий от имени Республики Казахстан по займам обладает Правительство Республики Казахстан";
+}
+
+relation guaranteed_loan_funds_misused(l: Loan, b: Body) kind empirical {
+    label ru-KZ official "средства гарантированного государством займа используются на цели, не предусмотренные условиями займа, либо на кредитование";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation use_guaranteed_loan(l: Loan) kind empirical {
+    label ru-KZ unofficial "действие нормы: use guaranteed loan";
+}
+
+@source(BC_ART141)
+rule NoMisuseOfGuaranteedLoan(l: Loan, b: Body) strict {
+    when guaranteed_loan_funds_misused(l, b);
+    then prohibition MisuseGuaranteedLoan {
+        bearer b;
+        action use_guaranteed_loan(l);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 141 пункт 9. Запрещается использование средств гарантированного государством займа на цели, не предусмотренные условиями займа, а также на кредитование";
+}
+
+// --- Ст. 142: восемнадцать месяцев на исполнение обязательств по гарантии ---
+
+relation guarantee_claim_presented(g: Guarantee, d: Date) kind empirical {
+    key(g);
+    label ru-KZ official "требование по исполнению обязательств по государственной гарантии предъявлено названной датой";
+}
+
+relation guarantee_performance_deadline(g: Guarantee, d: Date) kind institutional {
+    label ru-KZ official "обязательства по государственной гарантии подлежат исполнению не позднее названной даты";
+}
+
+@source(BC_ART142)
+rule GuaranteePerformanceDeadline(g: Guarantee, presented: Date) strict {
+    when guarantee_claim_presented(g, presented);
+    then guarantee_performance_deadline(g, add_calendar_period(presented, 18 calendar_month));
+    label ru-KZ official "Статья 142 пункт 1. Исполнение обязательств по государственной гарантии осуществляется в течение восемнадцати месяцев с даты предъявления требований";
+}
+
+// --- Ст. 154: бюджетное кредитование ----------------------------------------
+// Четыре принципа пункта 4 названы кодексом: возвратность, обеспеченность,
+// платность, срочность. Два из них проверяемы ПРЯМО — у кредита обязаны быть
+// срок и вознаграждение, — и именно на них стоит цель акта; возвратность и
+// обеспеченность выражены условиями пункта 5.
+
+relation credit_term_set(c: BudgetCredit, d: Date) kind empirical {
+    key(c);
+    label ru-KZ official "кредитным договором установлен срок предоставления бюджетного кредита";
+}
+
+relation credit_remuneration_set(c: BudgetCredit, rate: Decimal) kind empirical {
+    key(c);
+    label ru-KZ official "кредитным договором установлена ставка вознаграждения за предоставление бюджетного кредита";
+}
+
+relation credit_granted(c: BudgetCredit) kind empirical {
+    label ru-KZ official "бюджетный кредит предоставлен";
+}
+
+relation credit_has_term_and_remuneration(c: BudgetCredit) kind institutional {
+    label ru-KZ official "бюджетный кредит имеет установленные срок и ставку вознаграждения";
+}
+
+@source(BC_ART154)
+rule CreditHasTermAndRemuneration(c: BudgetCredit, d: Date, rate: Decimal) strict {
+    when credit_granted(c);
+    when credit_term_set(c, d);
+    when credit_remuneration_set(c, rate);
+    then credit_has_term_and_remuneration(c);
+    label ru-KZ official "Статья 154 пункт 4 подпункты 3) и 4). Бюджетный кредит предоставляется на условиях платности, предусматривающей оплату заёмщиком вознаграждения, и срочности, предусматривающей установление срока предоставления кредита";
+}
+
+relation no_tax_arrears(c: BudgetCredit) kind empirical {
+    label ru-KZ official "у заёмщика отсутствует налоговая задолженность";
+}
+
+relation obligations_secured(c: BudgetCredit) kind empirical {
+    label ru-KZ official "имеется обеспечение исполнения обязательств заёмщика по бюджетному кредиту";
+}
+
+relation no_overdue_credit_arrears(c: BudgetCredit) kind empirical {
+    label ru-KZ official "у заёмщика нет просроченной задолженности по ранее предоставленным бюджетным кредитам";
+}
+
+relation credit_conditions_met(c: BudgetCredit) kind institutional {
+    label ru-KZ official "условия предоставления бюджетного кредита, названные пунктом 5 статьи 154 настоящего Кодекса, соблюдены";
+}
+
+@source(BC_ART154)
+rule CreditConditionsMet(c: BudgetCredit) strict {
+    when no_tax_arrears(c);
+    when obligations_secured(c);
+    when no_overdue_credit_arrears(c);
+    then credit_conditions_met(c);
+    label ru-KZ official "Статья 154 пункт 5. Бюджетные кредиты предоставляются при отсутствии налоговой задолженности, наличии обеспечения исполнения обязательств и отсутствии просроченной задолженности по ранее предоставленным бюджетным кредитам";
+}
+
+relation credit_purpose_forbidden(c: BudgetCredit) kind empirical {
+    label ru-KZ official "бюджетный кредит направляется на участие в уставных капиталах юридических лиц, покрытие убытков хозяйственной деятельности заёмщиков либо оплату услуг поверенным (агентам)";
+}
+
+relation credit_lender(c: BudgetCredit, b: Body) kind empirical {
+    label ru-KZ official "кредитором по бюджетному кредиту выступает названное лицо";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation grant_budget_credit(c: BudgetCredit) kind empirical {
+    label ru-KZ unofficial "действие нормы: grant budget credit";
+}
+
+@source(BC_ART154)
+rule NoCreditForForbiddenPurpose(c: BudgetCredit, b: Body) strict {
+    when credit_purpose_forbidden(c);
+    when credit_lender(c, b);
+    then prohibition GrantCreditForForbiddenPurpose {
+        bearer b;
+        action grant_budget_credit(c);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 154 пункт 3. Бюджетные кредиты не предоставляются на цели участия в уставных капиталах юридических лиц, покрытие убытков хозяйственной деятельности заёмщиков, оплату услуг поверенным (агентам)";
+}
+
+relation returnable_funds_on_deposit(c: BudgetCredit, b: Body) kind empirical {
+    label ru-KZ official "участник размещает на депозитах и в других инструментах банков второго уровня бюджетные средства, выданные на возвратной основе";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation deposit_returnable_funds(c: BudgetCredit) kind empirical {
+    label ru-KZ unofficial "действие нормы: deposit returnable funds";
+}
+
+@source(BC_ART154)
+rule NoDepositOfReturnableFunds(c: BudgetCredit, b: Body) strict {
+    when returnable_funds_on_deposit(c, b);
+    then prohibition DepositReturnableBudgetFunds {
+        bearer b;
+        action deposit_returnable_funds(c);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 154 пункт 3 абзац третий. Запрещается размещать на депозитах и в других инструментах в банках второго уровня бюджетные средства, выданные на возвратной основе заёмщикам из республиканского и местного бюджетов";
+}
+
+// --- Ст. 166 п. 2: обязанности получателя связанного гранта -----------------
+// Пять подпунктов — пять обязанностей одного носителя; каждая со своим
+// условием исполнения, поэтому пять норм, а не одна с конъюнкцией целей.
+
+relation grant_recipient(g: Grant, b: Body) kind empirical {
+    label ru-KZ official "государственная организация является получателем связанного гранта";
+}
+
+relation grant_obligations_performed(g: Grant) kind empirical {
+    label ru-KZ official "обязательства, предусмотренные соглашением о связанном гранте, исполнены своевременно";
+}
+
+relation grant_used_for_purpose(g: Grant) kind empirical {
+    label ru-KZ official "связанный грант использован целевым и эффективным образом";
+}
+
+relation grant_assets_on_balance(g: Grant) kind empirical {
+    label ru-KZ official "оборудование и материалы, приобретённые за счёт связанного гранта, поставлены на баланс";
+}
+
+relation grant_customs_declared(g: Grant) kind empirical {
+    label ru-KZ official "таможенное декларирование при импорте товаров, закупаемых за счёт гранта, осуществлено своевременно";
+}
+
+relation grant_usage_reported(g: Grant) kind empirical {
+    label ru-KZ official "информация об использовании связанного гранта представлена в уполномоченный орган по исполнению бюджета ежемесячно";
+}
+
+@source(BC_ART166) {
+    rule GrantPerformObligationsDuty(g: Grant, b: Body) strict {
+        when grant_recipient(g, b);
+        then duty PerformGrantObligations {
+            bearer b;
+            beneficiary b;
+            achieve grant_obligations_performed(g) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 166 пункт 2 подпункт 1). Получатели связанных грантов обязаны своевременно исполнять принятые на себя обязательства, предусмотренные соглашением о связанном гранте";
+    }
+
+    rule GrantPurposeDuty(g: Grant, b: Body) strict {
+        when grant_recipient(g, b);
+        then duty UseGrantForPurpose {
+            bearer b;
+            beneficiary b;
+            achieve grant_used_for_purpose(g) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 166 пункт 2 подпункт 2). Получатели связанных грантов обязаны обеспечить целевое и эффективное использование полученных связанных грантов";
+    }
+
+    rule GrantAssetsOnBalanceDuty(g: Grant, b: Body) strict {
+        when grant_recipient(g, b);
+        then duty PutGrantAssetsOnBalance {
+            bearer b;
+            beneficiary b;
+            achieve grant_assets_on_balance(g) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 166 пункт 2 подпункт 3). Получатели связанных грантов обязаны обеспечить постановку на баланс оборудования и материалов, приобретённых за счёт связанных грантов";
+    }
+
+    rule GrantCustomsDuty(g: Grant, b: Body) strict {
+        when grant_recipient(g, b);
+        then duty DeclareGrantImports {
+            bearer b;
+            beneficiary b;
+            achieve grant_customs_declared(g) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 166 пункт 2 подпункт 4). Получатели связанных грантов обязаны своевременно осуществить таможенное декларирование при импорте товаров, закупаемых за счёт грантов";
+    }
+
+    rule GrantReportingDuty(g: Grant, b: Body) strict {
+        when grant_recipient(g, b);
+        then duty ReportGrantUsage {
+            bearer b;
+            beneficiary b;
+            achieve grant_usage_reported(g) during [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 166 пункт 2 подпункт 5). Получатели связанных грантов обязаны ежемесячно предоставлять в уполномоченный орган по исполнению бюджета информацию об использовании связанных грантов";
+    }
+}
+
+// --- Ст. 155: целесообразность бюджетного кредитования определяет орган -----
+// Третий канал суждения §47.3 пакета. «Целесообразность» — оценочный термин,
+// и кодекс называет того, кто её определяет, вместе с порядком.
+
+external judgment relation credit_expediency_determined(c: BudgetCredit) {
+    authority CentralBudgetPolicyBody;
+    label ru-KZ official "целесообразность бюджетного кредитования определена центральным уполномоченным органом по бюджетной политике либо местным уполномоченным органом по государственному планированию";
+}
+
+relation credit_proposed(c: BudgetCredit) kind empirical {
+    label ru-KZ official "бюджетная программа, предлагаемая к реализации посредством бюджетного кредитования, внесена на рассмотрение";
+}
+
+relation cash_deficit_credit(c: BudgetCredit) kind empirical {
+    label ru-KZ official "бюджетный кредит направляется на покрытие дефицита наличности нижестоящего бюджета";
+}
+
+relation credit_decision_may_proceed(c: BudgetCredit) kind institutional {
+    label ru-KZ official "принятие решения о предоставлении бюджетного кредита может быть продолжено";
+}
+
+@source(BC_ART155) {
+    rule CreditDecisionNeedsExpediency(c: BudgetCredit) strict {
+        when credit_proposed(c);
+        when credit_expediency_determined(c);
+        then credit_decision_may_proceed(c);
+        label ru-KZ official "Статья 155 подпункт 1). Принятие решения о предоставлении бюджетного кредита включает определение уполномоченным органом целесообразности бюджетного кредитования";
+    }
+
+    // Изъятие подпункта 1) названо самой статьёй: кредиты на покрытие дефицита
+    // наличности нижестоящих бюджетов целесообразности не требуют.
+    rule CashDeficitCreditNeedsNoExpediency(c: BudgetCredit) strict {
+        when credit_proposed(c);
+        when cash_deficit_credit(c);
+        then credit_decision_may_proceed(c);
+        label ru-KZ official "Статья 155 подпункт 1). Определение целесообразности не требуется для бюджетных кредитов, направляемых на покрытие дефицита наличности нижестоящих бюджетов";
+    }
+}
+
+// --- Предметы публикации, названные статьями раздела 7 (второй проход) -----
+
+relation ppp_obligations_report(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является отчётом о принятых государственных обязательствах по проектам государственно-частного партнёрства";
+}
+
+@source(BC_ART147)
+rule PppObligationsReportIsPublicationSubject(d: ProcessDocument) strict {
+    when ppp_obligations_report(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 147. Отчёты о принятых государственных обязательствах по проектам государственно-частного партнёрства подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation turnkey_obligations_report(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является отчётом о принятых государственных обязательствах по проектам строительства «под ключ»";
+}
+
+@source(BC_ART147_1)
+rule TurnkeyObligationsReportIsPublicationSubject(d: ProcessDocument) strict {
+    when turnkey_obligations_report(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 147-1. Отчёты о принятых государственных обязательствах по проектам строительства «под ключ» подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+relation related_grants_report(d: ProcessDocument) kind empirical {
+    label ru-KZ official "документ является сводным отчётом об использовании связанных грантов либо результатами оценки их использования";
+}
+
+@source(BC_ART167)
+rule RelatedGrantsReportIsPublicationSubject(d: ProcessDocument) strict {
+    when related_grants_report(d);
+    then publication_subject(d);
+    label ru-KZ official "Статья 167. Сводный отчёт об использовании связанных грантов и результаты оценки их использования подлежат публикации в соответствии со статьёй 40 настоящего Кодекса";
+}
+
+// === ВТОРОЙ ПРОХОД (02.09.2026): статьи 139, 140, 143–146, 148–150, ========
+// === 157, 159, 160, 162, 165 ==============================================
+
+// --- Ст. 139 и 140: лимиты долга -------------------------------------------
+// «Которую НЕ ДОЛЖЕН ПРЕВЫШАТЬ фактический долг» — предел, а не описание:
+// сравнение сумм на заданную дату. Обе стороны границы проверены парами.
+
+relation debt_limit(b: Body, amount: Money) kind empirical {
+    key(b);
+    label ru-KZ official "лимит долга на соответствующий финансовый год составляет названную сумму";
+}
+
+relation actual_debt(b: Body, amount: Money) kind empirical {
+    key(b);
+    label ru-KZ official "фактический долг на заданную дату составляет названную сумму";
+}
+
+relation debt_within_limit(b: Body) kind institutional {
+    label ru-KZ official "фактический долг не превышает лимита долга";
+}
+
+relation debt_over_limit(b: Body) kind institutional {
+    label ru-KZ official "фактический долг превышает лимит долга";
+}
+
+@source(BC_ART139) {
+    rule DebtWithinLimit(b: Body, limit: Money, actual: Money) strict {
+        when debt_limit(b, limit);
+        when actual_debt(b, actual);
+        when actual <= limit;
+        then debt_within_limit(b);
+        label ru-KZ official "Статья 139 пункт 4. Лимитом правительственного долга является фиксированная сумма, которую не должен превышать фактический долг Правительства Республики Казахстан на заданную дату";
+    }
+
+    rule DebtOverLimit(b: Body, limit: Money, actual: Money) strict {
+        when debt_limit(b, limit);
+        when actual_debt(b, actual);
+        when actual > limit;
+        then debt_over_limit(b);
+        label ru-KZ official "Статья 139 пункт 4. Фактический долг свыше лимита пределу настоящей статьи не отвечает";
+    }
+}
+
+// Ст. 140 п. 4 добавляет ВТОРОЙ предел, уже долевой: расходы на погашение и
+// обслуживание долга местного исполнительного органа — не более десяти
+// процентов доходов местного бюджета без учёта целевых трансфертов.
+// Доля выражена целочисленным масштабированием обеих сторон.
+
+relation debt_service_cost(b: Body, amount: Money) kind empirical {
+    key(b);
+    label ru-KZ official "объём расходов на погашение и обслуживание долга местного исполнительного органа составляет названную сумму";
+}
+
+relation local_revenue_without_transfers(b: Body, amount: Money) kind empirical {
+    key(b);
+    label ru-KZ official "доходы местного бюджета без учёта целевых трансфертов из вышестоящего бюджета составляют названную сумму";
+}
+
+relation debt_service_within_share(b: Body) kind institutional {
+    label ru-KZ official "расходы на погашение и обслуживание долга не превышают десяти процентов доходов местного бюджета";
+}
+
+relation debt_service_over_share(b: Body) kind institutional {
+    label ru-KZ official "расходы на погашение и обслуживание долга превышают десять процентов доходов местного бюджета";
+}
+
+@source(BC_ART140) {
+    rule DebtServiceWithinTenPercent(b: Body, cost: Money, revenue: Money) strict {
+        when debt_service_cost(b, cost);
+        when local_revenue_without_transfers(b, revenue);
+        when cost * 10 <= revenue;
+        then debt_service_within_share(b);
+        label ru-KZ official "Статья 140 пункт 4. Объём расходов на погашение и обслуживание долга местного исполнительного органа не должен превышать десяти процентов доходов местного бюджета без учёта целевых трансфертов";
+    }
+
+    rule DebtServiceOverTenPercent(b: Body, cost: Money, revenue: Money) strict {
+        when debt_service_cost(b, cost);
+        when local_revenue_without_transfers(b, revenue);
+        when cost * 10 > revenue;
+        then debt_service_over_share(b);
+        label ru-KZ official "Статья 140 пункт 4. Расходы на обслуживание долга свыше десяти процентов доходов местного бюджета пределу настоящей статьи не отвечают";
+    }
+}
+
+// --- Ст. 143 и 144-1: две гарантии с СОБСТВЕННЫМИ порогами -----------------
+// Сорок процентов собственного капитала у экспортной гарантии, пятнадцать —
+// у гарантии по поддержке частного предпринимательства; сбор у обеих —
+// 0,2 процента, вдесятеро меньше сбора статьи 141. Одно правило на все три
+// было бы удобнее и неверно.
+
+relation export_guarantee(g: Guarantee) kind empirical {
+    label ru-KZ official "гарантия является государственной гарантией по поддержке экспорта";
+}
+
+relation entrepreneurship_guarantee(g: Guarantee) kind empirical {
+    label ru-KZ official "гарантия является государственной гарантией по поддержке частного предпринимательства";
+}
+
+relation actual_payouts(g: Guarantee, amount: Money) kind empirical {
+    key(g);
+    label ru-KZ official "объём фактически осуществлённых страховых и гарантийных выплат составляет названную сумму";
+}
+
+relation applicant_own_capital(g: Guarantee, amount: Money) kind empirical {
+    key(g);
+    label ru-KZ official "объём собственного капитала претендента составляет названную сумму";
+}
+
+relation payout_share_met(g: Guarantee) kind institutional {
+    label ru-KZ official "требование к объёму фактически осуществлённых выплат соблюдено";
+}
+
+relation payout_share_failed(g: Guarantee) kind institutional {
+    label ru-KZ official "требование к объёму фактически осуществлённых выплат не соблюдено";
+}
+
+@source(BC_ART143) {
+    rule ExportPayoutShareMet(g: Guarantee, payouts: Money, capital: Money) strict {
+        when export_guarantee(g);
+        when actual_payouts(g, payouts);
+        when applicant_own_capital(g, capital);
+        when payouts * 5 <= capital * 2;
+        then payout_share_met(g);
+        label ru-KZ official "Статья 143 пункт 3 подпункт 4). Объём фактически осуществлённых страховых и гарантийных выплат не должен превышать сорок процентов объёма собственного капитала на период действия государственных гарантий по поддержке экспорта";
+    }
+
+    rule ExportPayoutShareFailed(g: Guarantee, payouts: Money, capital: Money) strict {
+        when export_guarantee(g);
+        when actual_payouts(g, payouts);
+        when applicant_own_capital(g, capital);
+        when payouts * 5 > capital * 2;
+        then payout_share_failed(g);
+        label ru-KZ official "Статья 143 пункт 3 подпункт 4). Выплаты свыше сорока процентов собственного капитала требованию настоящей статьи не отвечают";
+    }
+}
+
+@source(BC_ART144_1) {
+    rule EntrepreneurshipPayoutShareMet(g: Guarantee, payouts: Money, capital: Money) strict {
+        when entrepreneurship_guarantee(g);
+        when actual_payouts(g, payouts);
+        when applicant_own_capital(g, capital);
+        when payouts * 20 <= capital * 3;
+        then payout_share_met(g);
+        label ru-KZ official "Статья 144-1 пункт 3 подпункт 5). Объём фактически осуществлённых гарантийных выплат за последние пять лет не должен превышать пятнадцать процентов объёма собственного капитала";
+    }
+
+    rule EntrepreneurshipPayoutShareFailed(g: Guarantee, payouts: Money, capital: Money) strict {
+        when entrepreneurship_guarantee(g);
+        when actual_payouts(g, payouts);
+        when applicant_own_capital(g, capital);
+        when payouts * 20 > capital * 3;
+        then payout_share_failed(g);
+        label ru-KZ official "Статья 144-1 пункт 3 подпункт 5). Выплаты свыше пятнадцати процентов собственного капитала требованию настоящей статьи не отвечают";
+    }
+}
+
+relation special_guarantee_fee_due(g: Guarantee, amount: Money) kind institutional {
+    label ru-KZ official "предварительная единовременная плата (сбор) за предоставление государственной гарантии по поддержке экспорта либо частного предпринимательства составляет названную сумму";
+}
+
+@source(BC_ART143)
+rule ExportGuaranteeFeeTwoTenths(g: Guarantee, amount: Money) strict {
+    when export_guarantee(g);
+    when guarantee_amount(g, amount);
+    then special_guarantee_fee_due(g, div_round(amount, 500.0, 2, "HALF_UP"));
+    label ru-KZ official "Статья 143 пункт 3. За предоставление государственной гарантии по поддержке экспорта взимается предварительная единовременная плата (сбор) в размере 0,2 процента от суммы государственной гарантии";
+}
+
+@source(BC_ART144_1)
+rule EntrepreneurshipGuaranteeFeeTwoTenths(g: Guarantee, amount: Money) strict {
+    when entrepreneurship_guarantee(g);
+    when guarantee_amount(g, amount);
+    then special_guarantee_fee_due(g, div_round(amount, 500.0, 2, "HALF_UP"));
+    label ru-KZ official "Статья 144-1 пункт 3. За предоставление государственной гарантии по поддержке частного предпринимательства взимается предварительная единовременная плата (сбор) в размере 0,2 процента от суммы государственной гарантии";
+}
+
+// --- Ст. 144, 144-2, 145: исполнение гарантий и возврат средств -------------
+
+relation payouts_exceed_capital(g: Guarantee) kind empirical {
+    label ru-KZ official "единовременная реализация страховых и гарантийных случаев превысила собственный капитал Экспортно-кредитного агентства Казахстана";
+}
+
+relation special_fund_insufficient(g: Guarantee) kind empirical {
+    label ru-KZ official "средств специального фонда развития предпринимательства недостаточно для осуществления выплат по предоставленным гарантиям";
+}
+
+relation agent_conclusions_present(g: Guarantee) kind empirical {
+    label ru-KZ official "имеются заключения поверенного (агента), предусмотренные настоящей статьёй";
+}
+
+relation guarantee_must_be_performed(g: Guarantee) kind institutional {
+    label ru-KZ official "государственная гарантия подлежит исполнению";
+}
+
+@source(BC_ART144)
+rule ExportGuaranteeMustBePerformed(g: Guarantee) strict {
+    when export_guarantee(g);
+    when payouts_exceed_capital(g);
+    when agent_conclusions_present(g);
+    then guarantee_must_be_performed(g);
+    label ru-KZ official "Статья 144 пункт 1. Государственная гарантия по поддержке экспорта подлежит исполнению при превышении единовременной реализации страховых и гарантийных случаев над собственным капиталом при наличии заключений поверенного (агента)";
+}
+
+@source(BC_ART144_2)
+rule EntrepreneurshipGuaranteeMustBePerformed(g: Guarantee) strict {
+    when entrepreneurship_guarantee(g);
+    when special_fund_insufficient(g);
+    then guarantee_must_be_performed(g);
+    label ru-KZ official "Статья 144-2 пункт 1. Государственная гарантия по поддержке частного предпринимательства подлежит исполнению в случае недостаточности средств специального фонда развития предпринимательства";
+}
+
+relation funds_allocated_for_guarantee(g: Guarantee, b: Body) kind empirical {
+    label ru-KZ official "на исполнение обязательств по государственной гарантии выделены средства названному лицу";
+}
+
+relation funds_returned_to_budget(g: Guarantee) kind empirical {
+    label ru-KZ official "выделенные средства возвращены в республиканский бюджет";
+}
+
+@source(BC_ART144)
+rule ReturnGuaranteeFundsDuty(g: Guarantee, b: Body) strict {
+    when funds_allocated_for_guarantee(g, b);
+    then duty ReturnGuaranteeFunds {
+        bearer b;
+        beneficiary b;
+        achieve funds_returned_to_budget(g) during [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 144 пункт 4 и статья 144-2 пункт 4. Средства, выделенные на исполнение обязательств по государственной гарантии, подлежат возврату в республиканский бюджет";
+}
+
+relation guarantee_registered(g: Guarantee) kind empirical {
+    label ru-KZ official "государственная гарантия либо поручительство государства зарегистрированы и учтены в государственном казначействе";
+}
+
+relation state_surety(g: Guarantee) kind empirical {
+    label ru-KZ official "обязательство является поручительством государства";
+}
+
+@source(BC_ART145)
+rule RegisterSuretyDuty(g: Guarantee, b: Body) strict {
+    when state_surety(g);
+    when government_of_kazakhstan(b);
+    then duty RegisterSurety {
+        bearer b;
+        beneficiary b;
+        achieve guarantee_registered(g) during [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 145 пункт 4. Предоставляемые поручительства государства и займы под поручительство государства подлежат регистрации и учёту в государственном казначействе";
+}
+
+// --- Ст. 146: лимит и перечень внешних займов квазигоссектора ---------------
+
+relation external_borrowing(q: QuasiEntity, b: Body) kind empirical {
+    label ru-KZ official "субъект квазигосударственного сектора привлекает внешний заём";
+}
+
+relation in_external_borrowing_list(q: QuasiEntity) kind empirical {
+    label ru-KZ official "субъект включён в перечень, предусмотренный подпунктом 2) пункта настоящей статьи";
+}
+
+relation quasi_in_question(q: QuasiEntity) kind empirical {
+    label ru-KZ official "субъект квазигосударственного сектора поставлен вопросом по настоящему делу";
+}
+
+closure ExternalBorrowingListClosure {
+    label ru-KZ official "перечень субъектов квазигосударственного сектора, которым разрешено внешнее заимствование, по делу закрыт";
+    predicate in_external_borrowing_list;
+    domain quasi_in_question;
+    snapshot "urn:kz:corpus:clir:budget-code:snapshot:external-borrowing-list";
+    complete_as_of @2025-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation borrow_externally(q: QuasiEntity) kind empirical {
+    label ru-KZ unofficial "действие нормы: borrow externally";
+}
+
+@source(BC_ART146)
+rule NoExternalBorrowingOutsideList(q: QuasiEntity, b: Body) strict {
+    when external_borrowing(q, b);
+    when quasi_in_question(q);
+    when not in_external_borrowing_list(q);
+    then prohibition BorrowExternallyOutsideList {
+        bearer b;
+        action borrow_externally(q);
+        window [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 146. Привлечение внешних займов субъектами квазигосударственного сектора, не включёнными в перечень, предусмотренный подпунктом 2) настоящего пункта, не допускается";
+}
+
+// --- Ст. 148: критерии отнесения инвестиционного проекта -------------------
+// «Достаточно соответствие ОДНОМУ из указанных критериев» — статья сама
+// говорит, что критерии соединены дизъюнкцией, и §206 требует двух правил с
+// одной головой, а не «либо» в теле.
+
+relation republican_property_right(project: InvestmentProject) kind empirical {
+    label ru-KZ official "в результате реализации проекта возникает право республиканской собственности на имущество";
+}
+
+relation beneficiaries_in_several_regions(project: InvestmentProject) kind empirical {
+    label ru-KZ official "получателями экономических выгод являются субъекты двух и более областей, городов республиканского значения, столицы";
+}
+
+relation beneficiaries_in_one_region(project: InvestmentProject) kind empirical {
+    label ru-KZ official "получателями экономических выгод являются субъекты одной области, города республиканского значения, столицы";
+}
+
+relation republican_investment_project(project: InvestmentProject) kind institutional {
+    label ru-KZ official "государственный инвестиционный проект относится к республиканским";
+}
+
+relation local_investment_project(project: InvestmentProject) kind institutional {
+    label ru-KZ official "государственный инвестиционный проект относится к местным";
+}
+
+@source(BC_ART148) {
+    rule RepublicanByPropertyRight(project: InvestmentProject) strict {
+        when republican_property_right(project);
+        then republican_investment_project(project);
+        label ru-KZ official "Статья 148 пункт 4 подпункт 1). Критерий по виду собственности: проект относится к республиканским при возникновении права республиканской собственности; достаточно соответствия одному из критериев";
+    }
+
+    rule RepublicanByBeneficiaries(project: InvestmentProject) strict {
+        when beneficiaries_in_several_regions(project);
+        then republican_investment_project(project);
+        label ru-KZ official "Статья 148 пункт 4 подпункт 2). Критерий по получателям выгод: проект относится к республиканским, если получателями выгод являются субъекты двух и более регионов";
+    }
+
+    rule LocalByBeneficiaries(project: InvestmentProject) strict {
+        when beneficiaries_in_one_region(project);
+        then local_investment_project(project);
+        label ru-KZ official "Статья 148 пункт 4 подпункт 2). Проект относится к местным, если получателями экономических выгод являются субъекты одной области, города республиканского значения, столицы";
+    }
+}
+
+// --- Ст. 149 п. 6 и ст. 150: три запрета инвестиционного цикла -------------
+
+relation not_in_investment_plan(project: InvestmentProject) kind empirical {
+    label ru-KZ official "проект не включён в инвестиционный план";
+}
+
+relation not_in_budget(project: InvestmentProject) kind empirical {
+    label ru-KZ official "проект не включён в республиканский или местный бюджет";
+}
+
+relation design_documentation_developed_by(project: InvestmentProject, b: Body) kind empirical {
+    label ru-KZ official "названное лицо разрабатывает проектно-сметную документацию по проекту";
+}
+
+// Предикат действия нормы (§122): действие обязано быть отношением пакета
+// (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+relation develop_design_documentation(project: InvestmentProject) kind empirical {
+    label ru-KZ unofficial "действие нормы: develop design documentation";
+}
+
+@source(BC_ART149) {
+    rule NoDesignDocsOutsideInvestmentPlan(project: InvestmentProject, b: Body) strict {
+        when design_documentation_developed_by(project, b);
+        when not_in_investment_plan(project);
+        then prohibition DevelopDesignDocsOutsidePlan {
+            bearer b;
+            action develop_design_documentation(project);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 149 пункт 6. Не допускается разработка проектно-сметной документации по государственным инвестиционным проектам, не включённым в инвестиционный план";
+    }
+
+    rule NoDesignDocsOutsideBudget(project: InvestmentProject, b: Body) strict {
+        when design_documentation_developed_by(project, b);
+        when not_in_budget(project);
+        then prohibition DevelopDesignDocsOutsideBudget {
+            bearer b;
+            action develop_design_documentation(project);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 149 пункт 6. Не допускается разработка проектно-сметной документации по государственным инвестиционным проектам, не включённым в республиканский или местный бюджет";
+    }
+}
+
+relation advance_payment_amount(project: InvestmentProject, amount: Money) kind empirical {
+    key(project);
+    label ru-KZ official "сумма авансовой (предварительной) оплаты по проекту составляет названную сумму";
+}
+
+relation contract_amount(project: InvestmentProject, amount: Money) kind empirical {
+    key(project);
+    label ru-KZ official "сумма договора на текущий финансовый год составляет названную сумму";
+}
+
+relation advance_over_thirty_percent(project: InvestmentProject) kind institutional {
+    label ru-KZ official "авансовая (предварительная) оплата превышает тридцатипроцентное значение от суммы договора";
+}
+
+relation parameter_reduction_sought(project: InvestmentProject, b: Body) kind empirical {
+    label ru-KZ official "участник уменьшает суммы утверждённых (уточнённых) параметров местного государственного инвестиционного проекта";
+}
+
+relation fourth_quarter_correction(project: InvestmentProject, b: Body) kind empirical {
+    label ru-KZ official "участник корректирует проект в четвёртом квартале текущего финансового года со снижением показателей конечных результатов";
+}
+
+@source(BC_ART150) {
+    rule AdvanceOverThirtyPercent(
+        project: InvestmentProject,
+        advance: Money,
+        contract: Money,
+    ) strict {
+        when advance_payment_amount(project, advance);
+        when contract_amount(project, contract);
+        when advance * 10 > contract * 3;
+        then advance_over_thirty_percent(project);
+        label ru-KZ official "Статья 150. Превышение тридцатипроцентного значения авансовой (предварительной) оплаты от суммы договора на текущий финансовый год";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation reduce_parameters(project: InvestmentProject) kind empirical {
+        label ru-KZ unofficial "действие нормы: reduce parameters";
+    }
+
+    rule NoReductionRaisingAdvanceShare(project: InvestmentProject, b: Body) strict {
+        when parameter_reduction_sought(project, b);
+        when advance_over_thirty_percent(project);
+        then prohibition ReduceProjectParameters {
+            bearer b;
+            action reduce_parameters(project);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 150. Не допускается уменьшение сумм утверждённых (уточнённых) параметров местных государственных инвестиционных проектов, если такое уменьшение предполагает превышение тридцатипроцентного значения авансовой оплаты от суммы договора";
+    }
+
+    // Предикат действия нормы (§122): действие обязано быть отношением пакета
+    // (LDC-E2102); факт совершения действия подаёт дело. Метка — по метке нормы.
+    relation correct_project(project: InvestmentProject) kind empirical {
+        label ru-KZ unofficial "действие нормы: correct project";
+    }
+
+    rule NoFourthQuarterCorrection(project: InvestmentProject, b: Body) strict {
+        when fourth_quarter_correction(project, b);
+        then prohibition CorrectProjectInFourthQuarter {
+            bearer b;
+            action correct_project(project);
+            window [@2025-01-01, infinity);
+        };
+        label ru-KZ official "Статья 150. Не допускается корректировка в четвёртом квартале текущего финансового года государственных инвестиционных проектов, предусматривающих снижение показателей конечных результатов";
+    }
+}
+
+// --- Ст. 157, 159: ответственность заёмщика --------------------------------
+// Отсылочные по МЕРЕ (законы Республики Казахстан и кредитный договор), но
+// с собственным УСЛОВИЕМ, поэтому выводится наступление ответственности, а
+// не санкция.
+
+relation credit_misused(c: BudgetCredit, b: Body) kind empirical {
+    label ru-KZ official "бюджетный кредит использован заёмщиком по нецелевому назначению";
+}
+
+relation credit_not_repaid(c: BudgetCredit, b: Body) kind empirical {
+    label ru-KZ official "бюджетный кредит не погашен либо погашен несвоевременно";
+}
+
+relation borrower_liable(b: Body, c: BudgetCredit) kind institutional {
+    label ru-KZ official "заёмщик несёт ответственность в соответствии с законами Республики Казахстан и условиями кредитного договора";
+}
+
+@source(BC_ART157)
+rule LiabilityForCreditMisuse(c: BudgetCredit, b: Body) strict {
+    when credit_misused(c, b);
+    then borrower_liable(b, c);
+    label ru-KZ official "Статья 157. В случае использования бюджетного кредита по нецелевому назначению заёмщик и конечный заёмщик несут ответственность в соответствии с законами Республики Казахстан и условиями кредитного договора";
+}
+
+@source(BC_ART159)
+rule LiabilityForNonRepayment(c: BudgetCredit, b: Body) strict {
+    when credit_not_repaid(c, b);
+    then borrower_liable(b, c);
+    label ru-KZ official "Статья 159 пункт 2. В случае непогашения, несвоевременного погашения бюджетного кредита заёмщик и конечный заёмщик несут ответственность в соответствии с законами Республики Казахстан и условиями кредитного договора";
+}
+
+// --- Ст. 160: прекращение требования кредитора ------------------------------
+
+relation obligations_duly_performed(c: BudgetCredit) kind empirical {
+    label ru-KZ official "заёмщик надлежаще исполнил обязательства по кредитному договору";
+}
+
+relation borrower_and_lender_merged(c: BudgetCredit) kind empirical {
+    label ru-KZ official "заёмщик и кредитор совпали в одном лице";
+}
+
+relation borrower_liquidated(c: BudgetCredit) kind empirical {
+    label ru-KZ official "заёмщик ликвидирован в соответствии с законодательством Республики Казахстан либо на основании судебного акта";
+}
+
+relation claim_terminated(c: BudgetCredit) kind institutional {
+    label ru-KZ official "требование кредитора по погашению бюджетного кредита прекращается";
+}
+
+@source(BC_ART160) {
+    rule ClaimTerminatedByPerformance(c: BudgetCredit) strict {
+        when obligations_duly_performed(c);
+        then claim_terminated(c);
+        label ru-KZ official "Статья 160 пункт 1. Требование кредитора прекращается при надлежащем исполнении заёмщиком обязательств по кредитному договору";
+    }
+
+    rule ClaimTerminatedByMerger(c: BudgetCredit) strict {
+        when borrower_and_lender_merged(c);
+        then claim_terminated(c);
+        label ru-KZ official "Статья 160 пункт 1. Требование кредитора прекращается в случае совпадения заёмщика и кредитора в одном лице";
+    }
+
+    rule ClaimTerminatedByLiquidation(c: BudgetCredit) strict {
+        when borrower_liquidated(c);
+        then claim_terminated(c);
+        label ru-KZ official "Статья 160 пункт 1. Требование кредитора прекращается при ликвидации заёмщика в соответствии с законодательством Республики Казахстан или на основании судебного акта";
+    }
+}
+
+// --- Ст. 162: обязательная регистрация и мониторинг кредитов ----------------
+
+relation credit_registered(c: BudgetCredit) kind empirical {
+    label ru-KZ official "бюджетный кредит зарегистрирован, учтён и поставлен на мониторинг";
+}
+
+@source(BC_ART162)
+rule RegisterCreditDuty(c: BudgetCredit, b: Body) strict {
+    when credit_granted(c);
+    when credit_lender(c, b);
+    then duty RegisterBudgetCredit {
+        bearer b;
+        beneficiary b;
+        achieve credit_registered(c) during [@2025-01-01, infinity);
+    };
+    label ru-KZ official "Статья 162 пункт 1. Бюджетные кредиты подлежат обязательной регистрации, учёту и мониторингу в порядке, установленном центральным уполномоченным органом по исполнению бюджета";
+}
+
+// --- Ст. 165: четвёртый канал суждения §47.3 -------------------------------
+// «Целесообразность привлечения определяется соответствующими бюджетными
+// комиссиями» — кодекс называет решающего, критериев не даёт.
+
+external judgment relation grant_expediency_determined(g: Grant) {
+    authority BudgetCommission;
+    label ru-KZ official "целесообразность привлечения связанного гранта определена соответствующей бюджетной комиссией";
+}
+
+relation donor_approved_application(g: Grant) kind empirical {
+    label ru-KZ official "донором одобрена заявка на привлечение связанного гранта";
+}
+
+relation grant_may_be_attracted(g: Grant) kind institutional {
+    label ru-KZ official "привлечение связанного гранта может быть продолжено";
+}
+
+@source(BC_ART165)
+rule GrantAttractionNeedsExpediency(g: Grant) strict {
+    when donor_approved_application(g);
+    when grant_expediency_determined(g);
+    then grant_may_be_attracted(g);
+    label ru-KZ official "Статья 165 пункт 2. В случае одобрения донором заявки на привлечение связанного гранта целесообразность его привлечения определяется соответствующими бюджетными комиссиями";
+}

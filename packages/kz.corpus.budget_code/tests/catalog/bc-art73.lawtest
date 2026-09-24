@@ -1,0 +1,33 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 73 пункт 1. Проекты законов, предусматривающие сокращение государственных доходов или увеличение государственных расходов, могут быть внесены в Курултай 
+test "CATALOG-PART-NOSUBMISSIONWITHOUTGOVERNMENTCONCLUSION" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": draft_in_question(entity_ref("urn:kz:catalog:nosubmissionwithoutgovernmentconclusion:v0")) { origin case_input; }
+        assert "cat-1": reduces_revenue_or_raises_expenditure(entity_ref("urn:kz:catalog:nosubmissionwithoutgovernmentconclusion:v0")) { origin case_input; }
+        assert "cat-2": submitted_to_kurultai_by(entity_ref("urn:kz:catalog:nosubmissionwithoutgovernmentconclusion:v0"), entity_ref("urn:kz:catalog:nosubmissionwithoutgovernmentconclusion:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(SubmitDraftWithoutConclusion, ACTIVE);
+}
+
+// Статья 73 пункт 3. Проекты решений местных представительных органов, предусматривающие сокращение доходов местных бюджетов или увеличение расходов местных бюдже
+test "CATALOG-PART-NOLOCALSUBMISSIONWITHOUTAKIMCONCLUSION" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": draft_in_question(entity_ref("urn:kz:catalog:nolocalsubmissionwithoutakimconclusion:v0")) { origin case_input; }
+        assert "cat-1": reduces_revenue_or_raises_expenditure(entity_ref("urn:kz:catalog:nolocalsubmissionwithoutakimconclusion:v0")) { origin case_input; }
+        assert "cat-2": submitted_to_maslikhat_by(entity_ref("urn:kz:catalog:nolocalsubmissionwithoutakimconclusion:v0"), entity_ref("urn:kz:catalog:nolocalsubmissionwithoutakimconclusion:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(SubmitLocalDraftWithoutConclusion, ACTIVE);
+}

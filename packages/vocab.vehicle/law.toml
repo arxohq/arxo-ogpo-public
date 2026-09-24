@@ -1,0 +1,27 @@
+# Манифест §10 — маркер корня пакета (DECISION-0033). Заголовки §22 в самих
+# `.law` обязаны совпадать с этим именем (LDC-E1109, lawc check).
+#
+# СЛОВАРНЫЙ пакет (DECISION-0139 §5, семейство `vocab.*`): типы и константы
+# конечного домена с атрибутами для представления. Нормативного источника у
+# него нет, юрисдикции нет, правового статуса нет — каталожная секция
+# `[metadata]` DECISION-0051 описывает АКТ и здесь намеренно отсутствует.
+# Ворота `check_package_metadata.py` читают только `corpus/laws/`.
+[package]
+name = "vocab.vehicle"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:law:vocab:vehicle"
+
+[dependencies]
+"vocab.maintenance" = "0.1.0"
+
+[features]
+semanticLayer = "L1"
+
+# Сценарии пакета: коды категорий, вложенность подкатегорий и категория вида
+# читаются как факты словаря; исполняются общим раннером (DECISION-0127),
+# семейство регрессии `vocab_vehicle`.
+[[tests]]
+family = "vocab_vehicle"
+suites = ["tests/vehicles.lawtest"]
+world = ["vocab.vehicle"]

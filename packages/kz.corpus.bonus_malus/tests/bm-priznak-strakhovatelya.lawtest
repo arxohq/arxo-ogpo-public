@@ -1,0 +1,112 @@
+language "law.core" version "0.2";
+package kz.corpus.bonus_malus version "0.2.0";
+namespace "urn:kz:corpus:clir:bonus-malus";
+
+// ПУНКТЫ 4, 5, 6, 8 И 9 — КЛАСС ПО ПРИЗНАКУ СТРАХОВАТЕЛЯ И ПОРЯДОК ИХ
+// ИСКЛЮЧЕНИЙ.
+//
+// Ожидаемые величины прочитаны из текста и приложения: класс 3 даёт 1,00,
+// класс 13 — 0,50; повышающие коэффициенты пунктов 4 и 9 — двадцать и
+// восемьдесят процентов, то есть 1,00 × 1,20 = 1,20 и 1,00 × 1,80 = 1,80.
+
+// ПУНКТ 4 — первое заключение договора: 1,00 × 1,20.
+test "urn:query:bm-p4-vpervye" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "a0": nepreryvnogo_strakhovaniya_270_dney_v_baze_net(entity_ref("urn:kz:bm:n:1")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:n:1"), 1.20));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 5 — первое заключение с владельцем мототранспортного средства:
+// класс 3 БЕЗ повышающего коэффициента. Пара с предыдущей сценой стережёт
+// исключение пункта 4.
+test "urn:query:bm-p5-vpervye-moto" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "b0": nepreryvnogo_strakhovaniya_270_dney_v_baze_net(entity_ref("urn:kz:bm:n:2")) { origin case_input; }
+        assert "b1": vladelets_mototransportnogo_sredstva(entity_ref("urn:kz:bm:n:2")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:n:2"), 1.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 6 — временно въехавшее транспортное средство: класс 13, то есть 0,50.
+// Признак «впервые» здесь тоже налицо, и он вытеснен: пункт 6 назван
+// исключением в обоих пунктах 4 и 5.
+test "urn:query:bm-p6-vremennyy-vezd" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "c0": nepreryvnogo_strakhovaniya_270_dney_v_baze_net(entity_ref("urn:kz:bm:n:3")) { origin case_input; }
+        assert "c1": vremennyy_vezd_na_territoriyu_rk(entity_ref("urn:kz:bm:n:3")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:n:3"), 0.50));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 8 — юридическое лицо: класс 3 без повышения.
+test "urn:query:bm-p8-yurlitso" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "d0": strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(entity_ref("urn:kz:bm:n:4")) { origin case_input; }
+        assert "d1": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:n:4")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:n:4"), 1.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ПУНКТ 9 — юридическое лицо с таксомоторным ОКЭД: 1,00 × 1,80.
+test "urn:query:bm-p9-yurlitso-taksi" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "e0": strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(entity_ref("urn:kz:bm:n:5")) { origin case_input; }
+        assert "e1": oked_arendy_lizinga_avtobusov_ili_taksi(entity_ref("urn:kz:bm:n:5")) { origin case_input; }
+        assert "e2": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:n:5")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:n:5"), 1.80));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// РАЗВИЛКА, ЗАКРЕПЛЁННАЯ СЦЕНОЙ: ЮРИДИЧЕСКОЕ ЛИЦО ВПЕРВЫЕ.
+//
+// Пункт 4 называет своими исключениями только пункты 5 и 6, пункт 8 — только
+// 6 и 9. Буквально оба пункта подходят, и ответы у них разные: 1,20 против
+// 1,00. Принято прочтение «пункты 8 и 9 вытесняют пункт 4» (довод — в шапке
+// `03-nachalnyy-klass.law`), и эта сцена его стережёт: смена прочтения
+// обязана уронить набор, а не пройти незамеченной.
+test "urn:query:bm-p4-p8-yurlitso-vpervye" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "f0": nepreryvnogo_strakhovaniya_270_dney_v_baze_net(entity_ref("urn:kz:bm:n:6")) { origin case_input; }
+        assert "f1": strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(entity_ref("urn:kz:bm:n:6")) { origin case_input; }
+        assert "f2": dostup_k_svedeniyam_punkta_3(entity_ref("urn:kz:bm:n:6")) { origin case_input; }
+    }
+    evaluate truth(koeffitsient_bonus_malus(entity_ref("urn:kz:bm:n:6"), 1.00));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ДОСТУПА К СВЕДЕНИЯМ НЕТ (пункт 3, часть шестая): признак юридического лица
+// не применяется, и класс по нему не присваивается. Ответ — пустая выборка, а
+// не класс 3 по умолчанию.
+test "urn:query:bm-p3-net-dostupa-yurlitso" {
+    given {
+        context { decision_time @2026-09-15T12:00:00+05:00; knowledge_time @2026-09-15T12:00:00+05:00; legal_time @2026-09-15; timezone "Asia/Almaty"; }
+        assert "g0": strakhovatel_yurlitso_ip_ili_krestyanskoe_khozyaystvo(entity_ref("urn:kz:bm:n:7")) { origin case_input; }
+    }
+    evaluate collect k: Decimal where koeffitsient_bonus_malus(entity_ref("urn:kz:bm:n:7"), k);
+    expect result_kind == COLLECTION;
+    expect collected_count(0);
+}

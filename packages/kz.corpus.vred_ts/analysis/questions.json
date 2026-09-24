@@ -1,0 +1,530 @@
+{
+  "$comment": "Каталог вопросов пакета (DECISION-0190, law.package-questions/0.1). Карточка — параметризованный шаблон запроса §172, не ответ: наличие карточки не означает положительного ответа по делу. Проверяется verify/ci/gates/coverage/check_package_questions.py: предикат объявлен и выводим правилами, параметры совпадают с объявлением, каждый названный тест исполняет запрос именно этого шаблона, каждый выводимый предикат либо назван карточкой, либо стоит в `internal` с причиной; строка `limitation` границы — дословно из package-info.json. QUESTIONS.md порождается из этого файла (`--emit`).",
+  "format": "law.package-questions/0.1",
+  "package": "kz.corpus.vred_ts",
+  "tasks": [
+    {"id": "vyplata", "title": "Гибель транспортного средства и размер выплаты", "source_units": ["VRED_TS_PT_8", "VRED_TS_PT_9"]},
+    {"id": "detali", "title": "Оценка заменяемой детали", "source_units": ["VRED_TS_PT_10", "VRED_TS_PRIL_3"]},
+    {"id": "otchet", "title": "Отчёт о размере вреда: сроки, отметки, возражения, оформление", "source_units": ["VRED_TS_PT_3", "VRED_TS_PT_3_1", "VRED_TS_PRIL_3"]},
+    {"id": "osmotr", "title": "Осмотр и акт осмотра", "source_units": ["VRED_TS_PT_2", "VRED_TS_PT_7", "VRED_TS_PRIL_2"]},
+    {"id": "raschet", "title": "Кто ведёт расчёт и как он организован", "source_units": ["VRED_TS_PT_2", "VRED_TS_PT_4", "VRED_TS_PT_4_1", "VRED_TS_PT_6", "VRED_TS_PRIL_1"]},
+    {"id": "iznos", "title": "Доступность расчёта износа", "source_units": ["VRED_TS_PT_11"]}
+  ],
+  "questions": [
+    {
+      "id": "unichtozheno", "task": "vyplata",
+      "question": "Считается ли транспортное средство уничтоженным?",
+      "kind": "truth", "predicate": "ts_schitaetsya_unichtozhennym",
+      "parameters": [{"name": "v", "type": "TransportnoeSredstvo", "role": "bound"}],
+      "template": "evaluate truth(ts_schitaetsya_unichtozhennym(v: <v>));",
+      "branches": [
+        {"summary": "восстановление технически невозможно (факт дела)", "rule": "UnichtozhenoPoTekhnicheskoyNevozmozhnosti"},
+        {"summary": "восстановление экономически нецелесообразно: расходы строго выше 80 % рыночной стоимости на дату отчёта", "rule": "UnichtozhenoPoEkonomicheskoyNetselesoobraznosti"}
+      ],
+      "tests": ["urn:query:vred-t15-a", "urn:query:vred-t15-e", "urn:query:vred-parity:G01", "urn:query:vred-parity:G09", "KZ-VRED-03-UNICHTOZHENO-TEKHNICHESKI"],
+      "cases": ["Gibel", "PeredachaOstatkov", "Porog", "Molchanie", "MolchanieSnyato"],
+      "queries": ["unichtozheno"],
+      "source_units": ["VRED_TS_PT_9"]
+    },
+    {
+      "id": "pochemu-ne-unichtozheno", "task": "vyplata",
+      "question": "Почему транспортное средство не признано уничтоженным: какой посылки не хватает?",
+      "kind": "why_not", "predicate": "ts_schitaetsya_unichtozhennym",
+      "parameters": [{"name": "v", "type": "TransportnoeSredstvo", "role": "bound"}],
+      "template": "why_not(ts_schitaetsya_unichtozhennym(v: <v>)) — граф блокеров §185 со статусом каждой посылки; law ask --query-json queries/pochemu-ne-unichtozheno.json",
+      "tests": [],
+      "cases": ["Porog"],
+      "queries": ["pochemu-ne-unichtozheno"],
+      "source_units": ["VRED_TS_PT_9"]
+    },
+    {
+      "id": "netselesoobrazno", "task": "vyplata",
+      "question": "Превышают ли ожидаемые расходы на восстановление восемьдесят процентов рыночной стоимости (порог строгий)?",
+      "kind": "truth", "predicate": "vosstanovlenie_ekonomicheski_netselesoobrazno",
+      "parameters": [{"name": "v", "type": "TransportnoeSredstvo", "role": "bound"}],
+      "template": "evaluate truth(vosstanovlenie_ekonomicheski_netselesoobrazno(v: <v>));",
+      "branches": [{"summary": "Money > Money * 0.8 строго; ровно 80 % порога не образуют", "rule": "EkonomicheskayaNetselesoobraznost"}],
+      "tests": ["urn:query:vred-t01", "urn:query:vred-t02", "urn:query:vred-t15-j", "KZ-VRED-01-POROG-80-RAVNO", "KZ-VRED-02-POROG-80-PREVYSHEN", "urn:query:vred-parity:G02"],
+      "source_units": ["VRED_TS_PT_9"]
+    },
+    {
+      "id": "vyplata-pri-gibeli", "task": "vyplata",
+      "question": "Какова страховая выплата при гибели транспортного средства?",
+      "kind": "collect", "predicate": "strakhovaya_vyplata_pri_gibeli",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}, {"name": "amount", "type": "Money", "role": "collected"}],
+      "template": "evaluate collect amount: Money where kz.corpus.vred_ts::strakhovaya_vyplata_pri_gibeli(r: <r>, amount: amount);",
+      "branches": [
+        {"summary": "остатки переданы в собственность страховщика — рыночная стоимость на дату отчёта", "rule": "VyplataPriPeredacheOstatkov"},
+        {"summary": "установлено, что остатки НЕ переданы — рыночная стоимость за минусом годных остатков; молчание дела о передаче отрицанием не считается (§113)", "rule": "VyplataZaMinusomGodnykhOstatkov"}
+      ],
+      "tests": ["urn:query:vred-t15-c", "urn:query:vred-t15-d", "KZ-VRED-04-VYPLATA-S-PEREDACHEY-OSTATKOV", "KZ-VRED-05-VYPLATA-ZA-MINUSOM-OSTATKOV", "urn:query:vred-parity:G14"],
+      "cases": ["Gibel", "PeredachaOstatkov", "Molchanie", "MolchanieSnyato"],
+      "evidence": [{"file": "examples/gibel-i-detali/check.py", "contains": "collect amount: Money where {PKG}strakhovaya_vyplata_pri_gibeli(r: raschet, amount: amount)"}],
+      "source_units": ["VRED_TS_PT_9"],
+      "notes": "Q2 STATUS.md: альтернативу выплаты определяет установленный факт передачи остатков либо его установленное отрицание; при молчании выплата не определена. Q3: нижняя граница «за минусом» не названа — при остатках дороже рыночной стоимости сумма отрицательна (parity:G14), нуль не подразумевается."
+    },
+    {
+      "id": "pochemu-ne-vyplata", "task": "vyplata",
+      "question": "Почему размер выплаты при гибели не выведен?",
+      "kind": "why_not", "predicate": "strakhovaya_vyplata_pri_gibeli",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}, {"name": "amount", "type": "Money", "role": "bound"}],
+      "template": "why_not(strakhovaya_vyplata_pri_gibeli(r: <r>, amount: <amount>)); law ask --query-json queries/pochemu-ne-vyplata.json",
+      "tests": [],
+      "cases": ["Molchanie"],
+      "queries": ["pochemu-ne-vyplata"],
+      "source_units": ["VRED_TS_PT_9"],
+      "notes": "Голова правила вычисляемая: после E-0164 граф называет оба правила пункта 9, у «за минусом остатков» стоит пометка headArguments (UNEVALUATED). Блокер не доказывает, почему не получено именно заданное значение."
+    },
+    {
+      "id": "pozitsii-oplata-remonta", "task": "vyplata",
+      "question": "Вправе ли страховщик по согласованию с потерпевшим оплатить ремонт в счёт выплаты?",
+      "kind": "positions", "norms": ["OrganizovatOplatuRemonta"],
+      "template": "evaluate positions(); expect position(OrganizovatOplatuRemonta, <статус>);",
+      "tests": ["KZ-VRED-30-POZITSII-PUNKTOV-8-I-11"],
+      "source_units": ["VRED_TS_PT_8"]
+    },
+    {
+      "id": "detal-bez-iznosa", "task": "detali",
+      "question": "Оценивается ли заменяемая деталь по стоимости новой детали без учёта износа?",
+      "kind": "truth", "predicate": "detal_otsenivaetsya_bez_iznosa",
+      "parameters": [{"name": "d", "type": "Detal", "role": "bound"}],
+      "template": "evaluate truth(detal_otsenivaetsya_bez_iznosa(d: <d>));",
+      "branches": [
+        {"summary": "владелец — физическое лицо, ТС без обязательного техосмотра, среднегодовой пробег не более 15 000 км, деталь не повреждалась и не ремонтировалась", "rule": "NovayaDetalUFizicheskogoLitsa"},
+        {"summary": "владелец — юридическое лицо, ТС на гарантийном обслуживании, пробег не более 20 000 км, то же условие о детали", "rule": "NovayaDetalUYuridicheskogoLitsa"}
+      ],
+      "tests": ["urn:query:vred-t03", "urn:query:vred-t04", "urn:query:vred-t05", "urn:query:vred-t06", "urn:query:vred-t12-a", "urn:query:vred-t12-e", "urn:query:vred-t15-i", "KZ-VRED-06-PROBEG-FIZLITSO-15000", "KZ-VRED-09-PROBEG-YURLITSO-20001", "urn:query:vred-parity:D01"],
+      "cases": ["DetalFizlitso", "DetalYurlitso", "DetalRemont"],
+      "queries": ["detal-bez-iznosa"],
+      "source_units": ["VRED_TS_PT_10"]
+    },
+    {
+      "id": "pochemu-ne-bez-iznosa", "task": "detali",
+      "question": "Почему деталь не оценена без износа?",
+      "kind": "why_not", "predicate": "detal_otsenivaetsya_bez_iznosa",
+      "parameters": [{"name": "d", "type": "Detal", "role": "bound"}],
+      "template": "why_not(detal_otsenivaetsya_bez_iznosa(d: <d>)); law ask --query-json queries/pochemu-ne-bez-iznosa.json",
+      "tests": [],
+      "cases": ["DetalRemont"],
+      "queries": ["pochemu-ne-bez-iznosa"],
+      "source_units": ["VRED_TS_PT_10"]
+    },
+    {
+      "id": "stoimost-detali", "task": "detali",
+      "question": "Какая стоимость заменяемой детали идёт в калькуляцию: новой или с учётом износа?",
+      "kind": "collect", "predicate": "stoimost_zamenyaemoy_detali",
+      "parameters": [{"name": "d", "type": "Detal", "role": "bound"}, {"name": "amount", "type": "Money", "role": "collected"}],
+      "template": "evaluate collect amount: Money where kz.corpus.vred_ts::stoimost_zamenyaemoy_detali(d: <d>, amount: amount);",
+      "branches": [
+        {"summary": "деталь оценивается без износа — рыночная стоимость новой детали, стоимость с износом вытеснена", "rule": "StoimostDetaliBezIznosa"},
+        {"summary": "общее правило приложения 3 — стоимость с учётом износа (факт дела, износ извне)", "rule": "StoimostDetaliSUchetomIznosa"}
+      ],
+      "tests": ["KZ-VRED-28-STOIMOST-DETALI-BEZ-IZNOSA", "KZ-VRED-29-STOIMOST-DETALI-S-IZNOSOM", "urn:query:vred-parity:D01", "urn:query:vred-parity:D14"],
+      "cases": ["DetalFizlitso", "DetalYurlitso", "DetalRemont"],
+      "evidence": [{"file": "examples/gibel-i-detali/check.py", "contains": "collect amount: Money where {PKG}stoimost_zamenyaemoy_detali(d: detal, amount: amount)"}],
+      "source_units": ["VRED_TS_PT_10", "VRED_TS_PRIL_3"],
+      "related_boundaries": ["iznos"]
+    },
+    {
+      "id": "pozitsii-peredat-detal", "task": "detali",
+      "question": "Обязан ли потерпевший передать заменяемую деталь страховщику по его требованию, и исполнена ли обязанность?",
+      "kind": "positions", "norms": ["PeredatZamenyaemuyuDetal"],
+      "template": "evaluate positions(); expect position(PeredatZamenyaemuyuDetal, <статус>);",
+      "tests": ["KZ-VRED-10-PEREDACHA-DETALI-DUTY", "KZ-VRED-10-PEREDACHA-DETALI-DUTY/2"],
+      "cases": ["DetalFizlitso"],
+      "queries": ["positions"],
+      "source_units": ["VRED_TS_PT_10"],
+      "notes": "Окно обязанности открыто: нарушенной по сроку она не становится (t17)."
+    },
+    {
+      "id": "predel-otmetki", "task": "otchet",
+      "question": "Какой день — последний для отметки потерпевшего об ознакомлении с отчётом (три рабочих дня)?",
+      "kind": "truth", "predicate": "predel_otmetki_poterpevshego",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}, {"name": "day", "type": "Date", "role": "bound"}],
+      "template": "evaluate truth(predel_otmetki_poterpevshego(r: <r>, day: <day>)); — в мире нужен снимок kz.corpus.clir.official_calendar и deadline_policy дела",
+      "branches": [
+        {"summary": "три рабочих дня со дня получения отчёта по официальному календарю", "rule": "PredelOtmetkiPoterpevshego"},
+        {"summary": "при упрощённом оформлении происшествия срок снят (дефитер)", "rule": "PredelOtmetkiPoterpevshego/unless/UproshchennoeOformlenie"}
+      ],
+      "tests": ["urn:query:vred-t14-a", "urn:query:vred-t14-e", "urn:query:vred-t14-g", "urn:query:vred-t16-a", "KZ-VRED-13-OTMETKA-V-SROK", "urn:query:vred-parity:S01"],
+      "source_units": ["VRED_TS_PT_3", "VRED_TS_PT_3_1"],
+      "related_boundaries": ["politika-srokov", "srok-vne-kalendarya"]
+    },
+    {
+      "id": "predel-otveta", "task": "otchet",
+      "question": "Какой день — последний для ответа страховщика на отметку о несогласии?",
+      "kind": "truth", "predicate": "predel_otveta_strakhovshchika",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}, {"name": "day", "type": "Date", "role": "bound"}],
+      "template": "evaluate truth(predel_otveta_strakhovshchika(r: <r>, day: <day>)); — нужен снимок календаря §85",
+      "branches": [
+        {"summary": "три рабочих дня со дня получения отметки о несогласии", "rule": "PredelOtvetaStrakhovshchika"},
+        {"summary": "при упрощённом оформлении срок снят", "rule": "PredelOtvetaStrakhovshchika/unless/UproshchennoeOformlenie"}
+      ],
+      "tests": ["urn:query:vred-t14-c", "urn:query:vred-parity:S04", "urn:query:vred-parity:S15"],
+      "source_units": ["VRED_TS_PT_3", "VRED_TS_PT_3_1"],
+      "related_boundaries": ["politika-srokov"]
+    },
+    {
+      "id": "predel-otcheta", "task": "otchet",
+      "question": "Какой день — последний для представления отчёта потерпевшему (пять рабочих дней со дня осмотра)?",
+      "kind": "truth", "predicate": "predel_predostavleniya_otcheta",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}, {"name": "day", "type": "Date", "role": "bound"}],
+      "template": "evaluate truth(predel_predostavleniya_otcheta(r: <r>, day: <day>)); — нужен снимок календаря §85",
+      "branches": [
+        {"summary": "пять рабочих дней со дня осмотра", "rule": "PredelPredostavleniyaOtcheta"},
+        {"summary": "при упрощённом оформлении срок снят", "rule": "PredelPredostavleniyaOtcheta/unless/UproshchennoeOformlenie"}
+      ],
+      "tests": ["urn:query:vred-t14-b", "KZ-VRED-20-UPROSHCHENNOE-OFORMLENIE", "urn:query:vred-parity:S03"],
+      "source_units": ["VRED_TS_PT_3", "VRED_TS_PT_3_1"],
+      "related_boundaries": ["politika-srokov", "srok-osmotra"]
+    },
+    {
+      "id": "otchet-ne-v-srok", "task": "otchet",
+      "question": "Не предоставлен ли отчёт в установленный срок?",
+      "kind": "truth", "predicate": "otchet_ne_predostavlen_v_srok",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(otchet_ne_predostavlen_v_srok(r: <r>));",
+      "branches": [
+        {"summary": "отчёт получен после предела срока", "rule": "OtchetPoluchenPosleSroka"},
+        {"summary": "отчёт не предоставлен вовсе (установленное отрицание получения)", "rule": "OtchetNePredostavlenVovse"}
+      ],
+      "tests": ["KZ-VRED-17-OTCHET-POZDNO", "KZ-VRED-19-OTCHET-V-POSLEDNIY-DEN", "urn:query:vred-parity:S07"],
+      "source_units": ["VRED_TS_PT_3"]
+    },
+    {
+      "id": "pravo-na-vyplatu-3-1", "task": "otchet",
+      "question": "Есть ли у потерпевшего право на выплату по пункту 3-1 статьи 22 Закона при непредоставлении отчёта?",
+      "kind": "truth", "predicate": "pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona",
+      "parameters": [{"name": "p", "type": "Poterpevshiy", "role": "bound"}, {"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(pravo_na_vyplatu_po_punktu_3_1_stati_22_zakona(p: <p>, r: <r>));",
+      "branches": [{"summary": "право выводится из непредоставления отчёта в срок; РАЗМЕР выплаты здесь не считается", "rule": "PravoNaVyplatuPriNepredostavleniiOtcheta"}],
+      "tests": ["urn:query:vred-t14-d", "KZ-VRED-17-OTCHET-POZDNO", "KZ-VRED-18-OTCHET-NE-PREDOSTAVLEN-VOVSE", "KZ-VRED-20-UPROSHCHENNOE-OFORMLENIE", "urn:query:vred-parity:S10"],
+      "source_units": ["VRED_TS_PT_3", "VRED_TS_PT_3_1"],
+      "related_boundaries": ["razmer-vyplaty-3-1"]
+    },
+    {
+      "id": "otvet-na-nesoglasie", "task": "otchet",
+      "question": "Отреагировал ли страховщик на отметку о несогласии: корректировкой отчёта либо письменным ответом?",
+      "kind": "truth", "predicate": "strakhovshchik_otreagiroval_na_nesoglasie",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(strakhovshchik_otreagiroval_na_nesoglasie(r: <r>));",
+      "branches": [
+        {"summary": "корректировка расчёта", "rule": "ReaktsiyaKorrektirovkoy"},
+        {"summary": "письменный мотивированный ответ", "rule": "ReaktsiyaPismennymOtvetom"}
+      ],
+      "tests": ["KZ-VRED-16-OTVET-PISMENNYY"],
+      "source_units": ["VRED_TS_PT_3"]
+    },
+    {
+      "id": "pozitsii-otchet", "task": "otchet",
+      "question": "Исполнена, нарушена или ещё открыта обязанность страховщика представить отчёт (в срок либо без срока при упрощённом оформлении)?",
+      "kind": "positions", "norms": ["PredostavitOtchet", "PredostavitOtchetBezSroka"],
+      "template": "evaluate positions(); expect position(PredostavitOtchet, <статус>); expect position(PredostavitOtchetBezSroka, <статус>); — нужен снимок календаря §85",
+      "tests": ["urn:query:vred-t11-a", "urn:query:vred-t11-b", "urn:query:vred-t11-c", "urn:query:vred-t11-d"],
+      "source_units": ["VRED_TS_PT_3", "VRED_TS_PT_3_1"],
+      "related_boundaries": ["politika-srokov"]
+    },
+    {
+      "id": "pozitsii-otmetka-i-otvet", "task": "otchet",
+      "question": "Каков статус обязанностей проставить отметку (потерпевший) и ответить на несогласие (страховщик)?",
+      "kind": "positions", "norms": ["ProstavitOtmetku", "OtvetitNaNesoglasie"],
+      "template": "evaluate positions(); expect position(ProstavitOtmetku, <статус>); expect position(OtvetitNaNesoglasie, <статус>);",
+      "tests": ["KZ-VRED-13-OTMETKA-V-SROK/2", "KZ-VRED-14-OTMETKA-PROSROCHENA", "KZ-VRED-15-OTVET-KORREKTIROVKOY"],
+      "source_units": ["VRED_TS_PT_3"]
+    },
+    {
+      "id": "otchet-sostavlen", "task": "otchet",
+      "question": "Составлен ли отчёт по Правилам: оформлен по приложению 3, утверждён, представлен в допустимом виде?",
+      "kind": "truth", "predicate": "otchet_sostavlen_po_pravilam",
+      "parameters": [{"name": "o", "type": "Otchet", "role": "bound"}],
+      "template": "evaluate truth(otchet_sostavlen_po_pravilam(o: <o>));",
+      "tests": ["KZ-VRED-27-OTCHET-OFORMLEN"],
+      "source_units": ["VRED_TS_PT_3", "VRED_TS_PRIL_3"],
+      "related_boundaries": ["okruglenie"]
+    },
+    {
+      "id": "otchet-prilozhenie-3", "task": "otchet",
+      "question": "Оформлен ли отчёт согласно приложению 3 (титульный лист, сведения пункта 1, стоимости и объёмы, приложения, итоговая величина, заверение, отметки)?",
+      "kind": "truth", "predicate": "otchet_oformlen_po_prilozheniyu_3",
+      "parameters": [{"name": "o", "type": "Otchet", "role": "bound"}],
+      "template": "evaluate truth(otchet_oformlen_po_prilozheniyu_3(o: <o>));",
+      "tests": ["urn:query:vred-t20-a"],
+      "source_units": ["VRED_TS_PRIL_3"]
+    },
+    {
+      "id": "otchet-titulnyy-list", "task": "otchet",
+      "question": "Полон ли титульный лист отчёта (восемь элементов приложения 3 значениями полей)?",
+      "kind": "truth", "predicate": "otchet_soderzhit_titulnyy_list",
+      "parameters": [{"name": "o", "type": "Otchet", "role": "bound"}],
+      "template": "evaluate truth(otchet_soderzhit_titulnyy_list(o: <o>));",
+      "tests": ["urn:query:vred-t13-a", "urn:query:vred-t13-b", "urn:query:vred-t20-b", "urn:query:vred-t20-e"],
+      "source_units": ["VRED_TS_PRIL_3"]
+    },
+    {
+      "id": "otchet-zaveren", "task": "otchet",
+      "question": "Заверен ли отчёт: печатью и подписью либо одной подписью при установленном отсутствии печати?",
+      "kind": "truth", "predicate": "otchet_zaveren",
+      "parameters": [{"name": "o", "type": "Otchet", "role": "bound"}],
+      "template": "evaluate truth(otchet_zaveren(o: <o>));",
+      "branches": [
+        {"summary": "печать и подпись", "rule": "OtchetZaverenPechatyuIPodpisyu"},
+        {"summary": "подпись без печати при установленном её отсутствии", "rule": "OtchetZaverenPodpisyuBezPechati"}
+      ],
+      "tests": ["urn:query:vred-t13-c", "urn:query:vred-t20-d"],
+      "source_units": ["VRED_TS_PRIL_3"]
+    },
+    {
+      "id": "otchet-stoimosti-i-obemy", "task": "otchet",
+      "question": "Содержит ли отчёт расчётные указания: стоимости работ, материалов, деталей и объёмы?",
+      "kind": "truth", "predicate": "otchet_soderzhit_stoimosti_i_obemy",
+      "parameters": [{"name": "o", "type": "Otchet", "role": "bound"}],
+      "template": "evaluate truth(otchet_soderzhit_stoimosti_i_obemy(o: <o>));",
+      "tests": ["urn:query:vred-t13-d", "urn:query:vred-t13-e", "urn:query:vred-t20-c"],
+      "source_units": ["VRED_TS_PRIL_3"]
+    },
+    {
+      "id": "otchet-prilozheniya", "task": "otchet",
+      "question": "Содержит ли отчёт три приложения, названные приложением 3?",
+      "kind": "truth", "predicate": "otchet_soderzhit_prilozheniya",
+      "parameters": [{"name": "o", "type": "Otchet", "role": "bound"}],
+      "template": "evaluate truth(otchet_soderzhit_prilozheniya(o: <o>));",
+      "tests": ["urn:query:vred-t13-e", "urn:query:vred-t13-f"],
+      "source_units": ["VRED_TS_PRIL_3"]
+    },
+    {
+      "id": "otchet-itogovaya-velichina", "task": "otchet",
+      "question": "Указана ли итоговая величина вреда целым числом тенге?",
+      "kind": "truth", "predicate": "otchet_soderzhit_itogovuyu_velichinu",
+      "parameters": [{"name": "o", "type": "Otchet", "role": "bound"}],
+      "template": "evaluate truth(otchet_soderzhit_itogovuyu_velichinu(o: <o>));",
+      "branches": [{"summary": "round(amount, 0, \"HALF_UP\") == amount — проверка отсутствия дробной части, режим округления не выбирается (§50)", "rule": "OtchetSoderzhitItogovuyuVelichinu"}],
+      "tests": ["urn:query:vred-t13-g", "urn:query:vred-t13-h", "urn:query:vred-t13-i", "urn:query:vred-parity:I01"],
+      "source_units": ["VRED_TS_PRIL_3"],
+      "related_boundaries": ["okruglenie"]
+    },
+    {
+      "id": "osmotr-vozmozhen", "task": "osmotr",
+      "question": "Соблюдены ли все семь условий возможности осмотра (пункт 7)?",
+      "kind": "truth", "predicate": "osmotr_vozmozhen",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(osmotr_vozmozhen(r: <r>));",
+      "tests": ["urn:query:vred-t15-h", "urn:query:vred-parity:O01"],
+      "source_units": ["VRED_TS_PT_7"]
+    },
+    {
+      "id": "osmotr-dopustim", "task": "osmotr",
+      "question": "Допустим ли осмотр: при определении стоимости ремонта — только с документами о повреждениях в ДТП?",
+      "kind": "truth", "predicate": "osmotr_dopustim",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(osmotr_dopustim(r: <r>));",
+      "branches": [
+        {"summary": "стоимость ремонта определяется и документы представлены", "rule": "OsmotrDopustimPriOpredeleniiStoimostiRemonta"},
+        {"summary": "стоимость ремонта не определяется", "rule": "OsmotrDopustimVneOpredeleniyaStoimostiRemonta"},
+        {"summary": "установленное отсутствие документов — недопустимость (отрицательный вывод)", "rule": "OsmotrNedopustimBezDokumentovODtp"}
+      ],
+      "tests": ["urn:query:vred-t15-g", "urn:query:vred-t15-h", "KZ-VRED-23-OSMOTR-S-DOKUMENTAMI", "KZ-VRED-24-OSMOTR-BEZ-DOKUMENTOV", "urn:query:vred-parity:O03"],
+      "source_units": ["VRED_TS_PT_7"]
+    },
+    {
+      "id": "osmotr-oformlen", "task": "osmotr",
+      "question": "Оформлен ли осмотр актом надлежащим образом?",
+      "kind": "truth", "predicate": "osmotr_oformlen",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(osmotr_oformlen(r: <r>));",
+      "tests": ["urn:query:vred-t19-e"],
+      "source_units": ["VRED_TS_PT_2", "VRED_TS_PRIL_2"]
+    },
+    {
+      "id": "akt-prilozhenie-2", "task": "osmotr",
+      "question": "Содержит ли акт осмотра все сведения приложения 2 (значениями полей: VIN, госномер, пробег, даты, дефекты)?",
+      "kind": "truth", "predicate": "akt_soderzhit_svedeniya_prilozheniya_2",
+      "parameters": [{"name": "a", "type": "AktOsmotra", "role": "bound"}],
+      "template": "evaluate truth(akt_soderzhit_svedeniya_prilozheniya_2(a: <a>));",
+      "tests": ["urn:query:vred-t09-a", "urn:query:vred-t09-b", "urn:query:vred-t19-a", "urn:query:vred-t19-b", "urn:query:vred-t19-d"],
+      "source_units": ["VRED_TS_PRIL_2"]
+    },
+    {
+      "id": "akt-svedeniya-o-ts", "task": "osmotr",
+      "question": "Полны ли сведения акта о транспортном средстве (пункт 4 приложения 2, фото одометра при наличии)?",
+      "kind": "truth", "predicate": "akt_soderzhit_svedeniya_o_ts",
+      "parameters": [{"name": "a", "type": "AktOsmotra", "role": "bound"}],
+      "template": "evaluate truth(akt_soderzhit_svedeniya_o_ts(a: <a>));",
+      "tests": ["urn:query:vred-t09-c", "urn:query:vred-t09-d", "urn:query:vred-t19-c"],
+      "source_units": ["VRED_TS_PRIL_2"]
+    },
+    {
+      "id": "akt-predstavivshee-litso", "task": "osmotr",
+      "question": "Полны ли сведения акта о лице, представившем ТС для осмотра (пункт 3 приложения 2)?",
+      "kind": "truth", "predicate": "akt_soderzhit_svedeniya_o_predstavivshem_lice",
+      "parameters": [{"name": "a", "type": "AktOsmotra", "role": "bound"}],
+      "template": "evaluate truth(akt_soderzhit_svedeniya_o_predstavivshem_lice(a: <a>));",
+      "tests": ["urn:query:vred-t09-e"],
+      "source_units": ["VRED_TS_PRIL_2"]
+    },
+    {
+      "id": "akt-povrezhdennye-elementy", "task": "osmotr",
+      "question": "Полны ли сведения акта о повреждённых элементах (пункт 5 приложения 2)?",
+      "kind": "truth", "predicate": "akt_soderzhit_svedeniya_o_povrezhdennykh_elementakh",
+      "parameters": [{"name": "a", "type": "AktOsmotra", "role": "bound"}],
+      "template": "evaluate truth(akt_soderzhit_svedeniya_o_povrezhdennykh_elementakh(a: <a>));",
+      "tests": ["urn:query:vred-t09-f"],
+      "source_units": ["VRED_TS_PRIL_2"]
+    },
+    {
+      "id": "dopolnitelnyy-osmotr", "task": "osmotr",
+      "question": "Проведён ли дополнительный осмотр по правилам: по надлежащему заявлению, страховщиком, с актом?",
+      "kind": "truth", "predicate": "dopolnitelnyy_osmotr_proveden_po_pravilam",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(dopolnitelnyy_osmotr_proveden_po_pravilam(r: <r>));",
+      "tests": ["urn:query:vred-t10-d"],
+      "source_units": ["VRED_TS_PT_2"]
+    },
+    {
+      "id": "korrektirovka-skrytye-defekty", "task": "osmotr",
+      "question": "Оформляется ли корректировка расчёта при скрытых дефектах дополнением к отчёту?",
+      "kind": "truth", "predicate": "korrektirovka_pri_skrytykh_defektakh_oformlyaetsya_dopolneniem",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(korrektirovka_pri_skrytykh_defektakh_oformlyaetsya_dopolneniem(r: <r>));",
+      "tests": ["urn:query:vred-t10-a", "urn:query:vred-t10-b", "urn:query:vred-t10-c", "urn:query:vred-t10-d"],
+      "source_units": ["VRED_TS_PT_2"]
+    },
+    {
+      "id": "pozitsii-osmotr-na-sto", "task": "osmotr",
+      "question": "Обязан ли страховщик провести осмотр на станции техобслуживания по требованию потерпевшего, и исполнена ли обязанность?",
+      "kind": "positions", "norms": ["OsmotrNaStantsii"],
+      "template": "evaluate positions(); expect position(OsmotrNaStantsii, <статус>);",
+      "tests": ["urn:query:vred-t17-a", "urn:query:vred-t17-b"],
+      "source_units": ["VRED_TS_PT_2"],
+      "related_boundaries": ["srok-osmotra"]
+    },
+    {
+      "id": "raschet-po-pravilam", "task": "raschet",
+      "question": "Ведётся ли расчёт по Правилам и кем: страховщиком или привлечённым оценщиком?",
+      "kind": "truth", "predicate": "raschet_vedetsya_po_pravilam",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(raschet_vedetsya_po_pravilam(r: <r>));",
+      "branches": [
+        {"summary": "расчёт осуществляет страховщик", "rule": "RaschetStrakhovshchikom"},
+        {"summary": "расчёт осуществляет привлечённый по договору оценщик (пункт 4)", "rule": "RaschetOtsenshchikom"}
+      ],
+      "tests": ["KZ-VRED-21-RASCHET-STRAKHOVSHCHIKOM", "KZ-VRED-22-RASCHET-OTSENSHCHIKOM"],
+      "source_units": ["VRED_TS_PT_2", "VRED_TS_PT_4"]
+    },
+    {
+      "id": "organizatsiya-rascheta", "task": "raschet",
+      "question": "Выполнена ли организация расчёта: пройдены ли три этапа пункта 6?",
+      "kind": "truth", "predicate": "organizatsiya_rascheta_vypolnena",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(organizatsiya_rascheta_vypolnena(r: <r>));",
+      "tests": ["KZ-VRED-25-ORGANIZATSIYA-RASCHETA", "KZ-VRED-26-ORGANIZATSIYA-BEZ-SOGLASOVANIYA"],
+      "source_units": ["VRED_TS_PT_6"]
+    },
+    {
+      "id": "vybor-otsenshchikov", "task": "raschet",
+      "question": "Обеспечен ли потерпевшему выбор не менее чем из двух оценщиков?",
+      "kind": "truth", "predicate": "vybor_otsenshchikov_obespechen",
+      "parameters": [{"name": "r", "type": "RaschetVreda", "role": "bound"}],
+      "template": "evaluate truth(vybor_otsenshchikov_obespechen(r: <r>));",
+      "branches": [
+        {"summary": "предложено не менее двух (>= 2)", "rule": "VyborOtsenshchikovObespechen"},
+        {"summary": "предложено меньше двух — поражаемое отрицание", "rule": "VyborOtsenshchikovNeObespechen"}
+      ],
+      "tests": ["urn:query:vred-t07", "urn:query:vred-t08", "urn:query:vred-t15-f", "KZ-VRED-11-DVA-OTSENSHCHIKA", "KZ-VRED-12-ODIN-OTSENSHCHIK", "urn:query:vred-parity:V01"],
+      "source_units": ["VRED_TS_PT_4_1"]
+    },
+    {
+      "id": "pozitsii-dva-otsenshchika", "task": "raschet",
+      "question": "Исполнена ли обязанность страховщика предложить потерпевшему выбор из двух оценщиков?",
+      "kind": "positions", "norms": ["PredlozhitDvukhOtsenshchikov"],
+      "template": "evaluate positions(); expect position(PredlozhitDvukhOtsenshchikov, <статус>);",
+      "tests": ["urn:query:vred-t17-e", "urn:query:vred-t17-f"],
+      "source_units": ["VRED_TS_PT_4_1"]
+    },
+    {
+      "id": "pozitsii-poterpevshiy", "task": "raschet",
+      "question": "Каков статус обязанностей потерпевшего со дня заявления: сохранить имущество и предоставить возможность расчёта?",
+      "kind": "positions", "norms": ["SokhranitImushchestvo", "PredostavitVozmozhnostRascheta"],
+      "template": "evaluate positions(); expect position(SokhranitImushchestvo, <статус>); expect position(PredostavitVozmozhnostRascheta, <статус>);",
+      "tests": ["urn:query:vred-t17-c", "urn:query:vred-t17-d"],
+      "source_units": ["VRED_TS_PT_2"],
+      "notes": "Сохранение имущества — обязанность поддержания §124.2: изменение имущества после происшествия даёт VIOLATED."
+    },
+    {
+      "id": "pozitsii-raschet-iznosa", "task": "iznos",
+      "question": "Обеспечена ли возможность расчёта износа страховым омбудсманом и страховщиком (пункт 11)?",
+      "kind": "positions", "norms": ["ObespechitRaschetIznosaOmbudsmanom", "ObespechitRaschetIznosaStrakhovshchikom"],
+      "template": "evaluate positions(); expect position(ObespechitRaschetIznosaOmbudsmanom, <статус>); expect position(ObespechitRaschetIznosaStrakhovshchikom, <статус>);",
+      "tests": ["KZ-VRED-30-POZITSII-PUNKTOV-8-I-11", "KZ-VRED-30-POZITSII-PUNKTOV-8-I-11/2"],
+      "source_units": ["VRED_TS_PT_11"],
+      "related_boundaries": ["iznos"]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "iznos", "task": "detali",
+      "question": "Какова величина амортизационного износа детали?",
+      "reason_kind": "source_delegates",
+      "limitation": "Величина амортизационного износа не вычисляется: Правила формулы не содержат (пункт 2 отсылает к лицензионному СПО, пункт 11 — к интернет-ресурсу, приложение 3 называет расчёт износа разделом отчёта); стоимость детали с учётом износа входит фактом дела.",
+      "source_units": ["VRED_TS_PT_2", "VRED_TS_PT_11", "VRED_TS_PRIL_3"],
+      "input": "stoimost_detali_s_uchetom_iznosa",
+      "related_question": "stoimost-detali"
+    },
+    {
+      "id": "srok-osmotra", "task": "osmotr",
+      "question": "В какой срок страховщик обязан провести осмотр и составить акт?",
+      "reason_kind": "source_delegates",
+      "limitation": "Срок осмотра и составления акта осмотра не считается: часть первая пункта 3 отдаёт его пункту 3 статьи 22 Закона, закреплённых байтов Закона в пакете нет.",
+      "source_units": ["VRED_TS_PT_3"],
+      "related_question": "pozitsii-osmotr-na-sto",
+      "notes": "Обязанность осмотра на СТО выводится с открытым окном: нарушенной по сроку не становится."
+    },
+    {
+      "id": "razmer-vyplaty-3-1", "task": "otchet",
+      "question": "Каков размер выплаты при непредоставлении отчёта в срок?",
+      "reason_kind": "source_delegates",
+      "limitation": "Размер выплаты при непредоставлении отчёта не считается: пункт 3-1 статьи 22 Закона; вычисляется только право на такую выплату.",
+      "source_units": ["VRED_TS_PT_3"],
+      "related_question": "pravo-na-vyplatu-3-1"
+    },
+    {
+      "id": "okruglenie", "task": "otchet",
+      "question": "Как округлить итоговую величину до тенге?",
+      "reason_kind": "source_delegates",
+      "limitation": "Округление итоговой величины до тенге не выполняется: приложение 3 требует округления, но режима не называет (§50); проверяется лишь отсутствие дробной части.",
+      "source_units": ["VRED_TS_PRIL_3"],
+      "related_question": "otchet-itogovaya-velichina"
+    },
+    {
+      "id": "politika-srokov", "task": "otchet",
+      "question": "Как исчисляются рабочие дни сроков пункта 3: со следующего дня, с переносом на рабочий день?",
+      "reason_kind": "case_data",
+      "limitation": "Порядок исчисления сроков (§86) нормой не объявляется: Правила сроки называют, политика и снимок официального календаря §85 приходят входом дела; без снимка в мире ответ — MISSING_INPUT.",
+      "source_units": ["VRED_TS_PT_3"],
+      "related_question": "predel-otmetki",
+      "notes": "ГК РК ст. 173, 176; сценарий tests/otchet/16-srok-bez-kalendarya.lawtest проверяет ОТСУТСТВИЕ календаря в мире."
+    },
+    {
+      "id": "srok-vne-kalendarya", "task": "otchet",
+      "question": "Какой статус получает вопрос о сроке с датой за пределами снимка календаря?",
+      "reason_kind": "engine_limit",
+      "limitation": "Дата за пределами снимка календаря: обе реализации отвечают MISSING_INPUT с кодом CALENDAR_OUT_OF_RANGE, prose §175 перечнем E-0105 называет RUNTIME_ERROR — пробел SPEC (SPEC-1); сценарий закрепляет код и NEITHER, статус не закрепляет.",
+      "source_units": ["VRED_TS_PT_3"],
+      "related_question": "predel-otmetki"
+    }
+  ],
+  "internal": [
+    {"predicate": "detal_ne_povrezhdalas_i_ne_remontirovalas", "reason": "Условие пункта 10 двумя фактами; читается правилами detal_otsenivaetsya_bez_iznosa, спрашивается через карточку detal-bez-iznosa (t12)."},
+    {"predicate": "dopolnitelnyy_osmotr_oformlen", "reason": "Звено дополнительного осмотра; спрашивается через dopolnitelnyy_osmotr_proveden_po_pravilam (t10-d)."},
+    {"predicate": "otchet_predostavlen_v_dopustimom_vide", "reason": "Бумажный либо электронный вид (§206); звено otchet_sostavlen_po_pravilam (KZ-VRED-27)."},
+    {"predicate": "otchet_soderzhit_otmetki", "reason": "Обе отметки пункта 3; звено otchet_oformlen_po_prilozheniyu_3 (t20-a)."},
+    {"predicate": "otchet_soderzhit_svedeniya_punkta_1", "reason": "Сведения пункта 1 приложения 3; звено otchet_oformlen_po_prilozheniyu_3 (t20-a)."},
+    {"predicate": "otchet_utverzhden", "reason": "Утверждение руководителем либо уполномоченным лицом (§206); звено otchet_sostavlen_po_pravilam (KZ-VRED-27)."},
+    {"predicate": "otmetka_prostavlena", "reason": "Отметка о согласии либо о несогласии с причинами (§206); звено обязанности ProstavitOtmetku (KZ-VRED-13, KZ-VRED-14)."},
+    {"predicate": "raschet_osushchestvlyaet_otsenshchik", "reason": "Привлечённый оценщик пункта 4; звено raschet_vedetsya_po_pravilam (KZ-VRED-22)."},
+    {"predicate": "srok_otmetki_poterpevshego", "reason": "Нормативная константа срока (3 рабочих дня, assert-факт); читается правилом PredelOtmetkiPoterpevshego."},
+    {"predicate": "srok_otveta_strakhovshchika", "reason": "Нормативная константа срока (3 рабочих дня, assert-факт); читается правилом PredelOtvetaStrakhovshchika."},
+    {"predicate": "srok_predostavleniya_otcheta", "reason": "Нормативная константа срока (5 рабочих дней, assert-факт); читается правилом PredelPredostavleniyaOtcheta."},
+    {"predicate": "trebovanie_o_foto_odometra_soblyudeno", "reason": "Оговорка «фото одометра при наличии» двумя правилами; звено akt_soderzhit_svedeniya_o_ts (t09-c, t09-d)."},
+    {"predicate": "zayavlenie_soderzhit_svedeniya_prilozheniya_1", "reason": "Состав заявления по приложению 1; звено дополнительного осмотра и организации расчёта (t10-d, KZ-VRED-25)."}
+  ]
+}

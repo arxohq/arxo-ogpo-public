@@ -1,0 +1,20 @@
+language "law.core" version "0.2";
+package vocab.maintenance version "0.1.0";
+namespace "urn:law:vocab:maintenance";
+
+test "evidence is a case fact, not a readiness conclusion" {
+  given {
+    context { legal_time @2026-09-17; decision_time @2026-09-17T00:00:00Z; knowledge_time @2026-09-17T00:00:00Z; timezone "UTC"; }
+    const m: Measurement = entity_ref("urn:test:maintenance:measurement");
+    const e: Evidence = entity_ref("urn:test:maintenance:evidence");
+    assert "link": evidence_measurement(e, m) { origin case_input; }
+  }
+  evaluate truth(evidence_measurement(entity_ref("urn:test:maintenance:evidence"), entity_ref("urn:test:maintenance:measurement")));
+  expect truth_status == TRUE_ONLY;
+}
+
+test "vocabulary does not infer a condition" {
+  given { context { legal_time @2026-09-17; decision_time @2026-09-17T00:00:00Z; knowledge_time @2026-09-17T00:00:00Z; timezone "UTC"; } }
+  evaluate truth(condition_subject(entity_ref("urn:test:maintenance:condition"), "vehicle"));
+  expect truth_status == NEITHER;
+}

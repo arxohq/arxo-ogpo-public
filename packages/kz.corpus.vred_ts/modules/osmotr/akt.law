@@ -1,0 +1,137 @@
+// Inspection act for a damaged vehicle: annex 2 and the second part
+// of clause 2.
+//
+// PURPOSE. The model of the document itself — the composition of its data — and the
+// conclusion that the inspection is properly documented.
+//
+// SOURCE PROVISIONS: annex 2 (items 1—6 of the list); clause 2, second part.
+//
+// MODEL BOUNDARY. The type `AktOsmotra` lives here, next to the act's model: it is
+// not a shared package concept. Its second reader is the additional inspection
+// (`modules/osmotr/provedenie.law`), which has ITS OWN act: reading the primary
+// inspection's act there would amount to treating the additional inspection as documented by
+// someone else's document.
+//
+// DATA AS VALUES (10.09.2026, E-0165). Each form element is a single
+// empirical predicate with an argument and a parameter label (`akt_vin(a, vin:
+// Text)`) that the filled-in form supplies. The group rules read the
+// EXISTENCE of a value via the underscore of §98: `when akt_vin(a: a, vin: _);`
+// — "VIN is given", with no variable and no application to each value.
+// There are no separate presence predicates or bridge rules: E-0165 removed them (before it,
+// each element was recorded twice). The groups of clauses 3, 4, 5 and the requirement
+// of subclause 4.8 remain institutional heads, and it is permitted to assert them by
+// a case fact. The date and time of the inspection and of drawing up the act are two `Instant`
+// instants recorded as values: clause 1 of annex 2 requires both date AND time, and a moment
+// with an offset is the only v1 kind that carries the time of day (`LocalTime`
+// and `OffsetDateTime` are declared in §35 but are not in the slice). The offset is a record,
+// not an identity (§57, E-0048); an instant is not compared with `Date`, and the deadlines of
+// clause 3 are not counted from these fields (they run from the day the report is received).
+
+pub entity AktOsmotra { label ru official "Акт осмотра поврежденного транспортного средства"; }
+
+// --- Annex 2. Inspection act data: field values --------------------
+pub relation akt_osmotra_po_raschetu(a: AktOsmotra, r: RaschetVreda) kind empirical { label ru official "Акт осмотра составлен по этому расчёту размера вреда"; }
+pub relation akt_data_provedeniya_osmotra(a: AktOsmotra, moment: Instant { label ru official "Дата и время проведения осмотра"; }) kind empirical { label ru official "Приложение 2 пункт 1. Дата и время проведения осмотра, указанные в акте"; }
+pub relation akt_data_sostavleniya(a: AktOsmotra, moment: Instant { label ru official "Дата и время составления акта"; }) kind empirical { label ru official "Приложение 2 пункт 1. Дата и время составления акта осмотра"; }
+pub relation akt_sobstvennik(a: AktOsmotra, naimenovanie: Text { label ru official "ФИО физического лица или полное наименование юридического лица"; }) kind empirical { label ru official "Приложение 2 пункт 2. Собственник транспортного средства, указанный в акте"; }
+pub relation akt_fio_predstavivshego(a: AktOsmotra, fio: Text { label ru official "Фамилия, имя, отчество"; }) kind empirical { label ru official "Приложение 2 подпункт 3.1. ФИО лица, представившего транспортное средство для осмотра"; }
+pub relation akt_iin_predstavivshego(a: AktOsmotra, iin: Text { label ru official "ИИН"; }) kind empirical { label ru official "Приложение 2 подпункт 3.2. ИИН лица, представившего транспортное средство"; }
+pub relation akt_udostoverenie_predstavivshego(a: AktOsmotra, nomer: Text { label ru official "Номер удостоверения личности"; }) kind empirical { label ru official "Приложение 2 подпункт 3.2. Номер удостоверения личности лица, представившего транспортное средство"; }
+pub relation akt_dokument_o_prave_sobstvennosti(a: AktOsmotra, dokument: Text { label ru official "Документ о праве собственности (свидетельство о регистрации)"; }) kind empirical { label ru official "Приложение 2 подпункт 3.3. Документ, подтверждающий право собственности на транспортное средство"; }
+pub relation akt_vin(a: AktOsmotra, vin: Text { label ru official "VIN"; }) kind empirical { label ru official "Приложение 2 подпункт 4.1. VIN транспортного средства, указанный в акте"; }
+pub relation akt_marka(a: AktOsmotra, marka: Text { label ru official "Марка"; }) kind empirical { label ru official "Приложение 2 подпункт 4.2. Марка транспортного средства"; }
+pub relation akt_model(a: AktOsmotra, model: Text { label ru official "Модель"; }) kind empirical { label ru official "Приложение 2 подпункт 4.2. Модель транспортного средства"; }
+pub relation akt_gos_nomer(a: AktOsmotra, nomer: Text { label ru official "Государственный номер"; }) kind empirical { label ru official "Приложение 2 подпункт 4.3. Государственный номер транспортного средства"; }
+pub relation akt_god_vypuska(a: AktOsmotra, god: Integer { label ru official "Год выпуска"; }) kind empirical { label ru official "Приложение 2 подпункт 4.4. Год выпуска транспортного средства"; }
+pub relation akt_probeg(a: AktOsmotra, probeg: Quantity { label ru official "Пробег, км"; }) kind empirical { label ru official "Приложение 2 подпункт 4.5. Пробег транспортного средства по акту"; }
+pub relation akt_dopolnitelnoe_oborudovanie(a: AktOsmotra, opisanie: Text { label ru official "Дополнительное оборудование (описание либо «нет»)"; }) kind empirical { label ru official "Приложение 2 подпункт 4.6. Сведения о дополнительном оборудовании"; }
+pub relation akt_snimok_identifikatsionnogo_nomera(a: AktOsmotra, fayl: Text { label ru official "Снимок идентификационного номера (имя файла или ссылка)"; }) kind empirical { label ru official "Приложение 2 подпункт 4.7. Снимок идентификационного номера, приложенный к акту"; }
+pub relation akt_foto_odometra(a: AktOsmotra, fayl: Text { label ru official "Фото одометра (имя файла или ссылка)"; }) kind empirical { label ru official "Приложение 2 подпункт 4.8. Фото одометра, приложенное к акту"; }
+pub relation akt_povrezhdennye_detali(a: AktOsmotra, perechen: Text { label ru official "Наименования повреждённых деталей (узлов, агрегатов)"; }) kind empirical { label ru official "Приложение 2 подпункт 5.1. Перечень повреждённых деталей по акту"; }
+pub relation akt_fotografii_povrezhdeniy(a: AktOsmotra, fayly: Text { label ru official "Фотографии повреждений (имена файлов или ссылки)"; }) kind empirical { label ru official "Приложение 2 подпункт 5.2. Фотографии повреждений, приложенные к акту"; }
+pub relation akt_skrytye_povrezhdeniya(a: AktOsmotra, opisanie: Text { label ru official "Возможные скрытые повреждения: место и характер"; }) kind empirical { label ru official "Приложение 2 подпункт 5.3. Информация о возможных скрытых повреждениях по акту"; }
+pub relation akt_fio_osmotrevshego(a: AktOsmotra, fio: Text { label ru official "ФИО лица, осуществившего осмотр"; }) kind empirical { label ru official "Приложение 2 пункт 6. Лицо, осуществившее осмотр транспортного средства"; }
+pub relation akt_vozmozhnye_defekty(a: AktOsmotra, opisanie: Text { label ru official "Возможные дефекты по результатам осмотра"; }) kind empirical { label ru official "Пункт 2. Информация о возможных дефектах, определимых по результатам осмотра"; }
+
+// --- Annex 2. Data groups (derived from values) -------------------
+// Clauses 3, 4 and 5 of annex 2 are EXPANDED down to subclauses: each subclause has
+// its own fact-value, and the group is DERIVED as a conjunction of existences. Otherwise "data about the
+// vehicle" as a single fact would conceal eight form requirements, and
+// a case with an act missing the VIN would answer the same as a case with a complete act.
+pub relation akt_soderzhit_svedeniya_o_predstavivshem_lice(a: AktOsmotra) kind institutional { label ru official "Акт осмотра содержит сведения о лице, представившем транспортное средство для осмотра (пункт 3 приложения 2: подпункты 3.1—3.3)"; }
+pub relation odometr_otsutstvuet(a: AktOsmotra) kind empirical { label ru official "Приложение 2 подпункт 4.8. Одометра в транспортном средстве нет, и фото одометра невозможно (оговорка «при наличии»)"; }
+pub relation trebovanie_o_foto_odometra_soblyudeno(a: AktOsmotra) kind institutional { label ru official "Требование подпункта 4.8 приложения 2 о фото одометра соблюдено"; }
+pub relation akt_soderzhit_svedeniya_o_ts(a: AktOsmotra) kind institutional { label ru official "Акт осмотра содержит сведения о транспортном средстве (пункт 4 приложения 2: подпункты 4.1—4.8)"; }
+pub relation akt_soderzhit_svedeniya_o_povrezhdennykh_elementakh(a: AktOsmotra) kind institutional { label ru official "Акт осмотра содержит сведения о поврежденных элементах транспортного средства (пункт 5 приложения 2: подпункты 5.1—5.3)"; }
+pub relation akt_soderzhit_svedeniya_prilozheniya_2(a: AktOsmotra) kind institutional { label ru official "Акт осмотра содержит все сведения, предусмотренные приложением 2 к Правилам"; }
+pub relation osmotr_oformlen(r: RaschetVreda) kind institutional { label ru official "Осмотр поврежденного транспортного средства оформлен актом осмотра надлежащим образом"; }
+
+@source(VRED_TS_PRIL_2) {
+    rule AktSoderzhitSvedeniyaOPredstavivshemLitse(a: AktOsmotra) strict {
+        label ru official "Приложение 2 пункт 3. Сведения о представившем лице полны, если есть ФИО, номер ИИН с удостоверением личности и документ о праве собственности";
+        when akt_fio_predstavivshego(a: a, fio: _);
+        when akt_iin_predstavivshego(a: a, iin: _);
+        when akt_udostoverenie_predstavivshego(a: a, nomer: _);
+        when akt_dokument_o_prave_sobstvennosti(a: a, dokument: _);
+        then akt_soderzhit_svedeniya_o_predstavivshem_lice(a);
+    }
+
+    // Subclause 4.8 — "photo of the odometer (if present)": the requirement is satisfied either
+    // by a photo, or by an established absence of the odometer. Two grounds —
+    // two rules (§206).
+    rule FotoOdometraPrilozheno(a: AktOsmotra) strict {
+        label ru official "Приложение 2 подпункт 4.8. Требование о фото одометра соблюдено, если фото одометра приложено";
+        when akt_foto_odometra(a: a, fayl: _);
+        then trebovanie_o_foto_odometra_soblyudeno(a);
+    }
+
+    rule FotoOdometraNeTrebuetsyaBezOdometra(a: AktOsmotra) strict {
+        label ru official "Приложение 2 подпункт 4.8. Требование о фото одометра соблюдено, если одометр отсутствует («при наличии»)";
+        when odometr_otsutstvuet(a);
+        then trebovanie_o_foto_odometra_soblyudeno(a);
+    }
+
+    rule AktSoderzhitSvedeniyaOTs(a: AktOsmotra) strict {
+        label ru official "Приложение 2 пункт 4. Сведения о транспортном средстве полны при наличии всех восьми подпунктов: VIN, марка и модель, госномер, год выпуска, пробег, дополнительное оборудование, снимок идентификационного номера и фото одометра (при наличии)";
+        when akt_vin(a: a, vin: _);
+        when akt_marka(a: a, marka: _);
+        when akt_model(a: a, model: _);
+        when akt_gos_nomer(a: a, nomer: _);
+        when akt_god_vypuska(a: a, god: _);
+        when akt_probeg(a: a, probeg: _);
+        when akt_dopolnitelnoe_oborudovanie(a: a, opisanie: _);
+        when akt_snimok_identifikatsionnogo_nomera(a: a, fayl: _);
+        when trebovanie_o_foto_odometra_soblyudeno(a);
+        then akt_soderzhit_svedeniya_o_ts(a);
+    }
+
+    rule AktSoderzhitSvedeniyaOPovrezhdennykhElementakh(a: AktOsmotra) strict {
+        label ru official "Приложение 2 пункт 5. Сведения о поврежденных элементах полны, если есть наименования деталей, фотографии повреждений и информация о возможных скрытых повреждениях";
+        when akt_povrezhdennye_detali(a: a, perechen: _);
+        when akt_fotografii_povrezhdeniy(a: a, fayly: _);
+        when akt_skrytye_povrezhdeniya(a: a, opisanie: _);
+        then akt_soderzhit_svedeniya_o_povrezhdennykh_elementakh(a);
+    }
+}
+
+@source(VRED_TS_PRIL_2)
+rule AktOsmotraSoderzhitTrebuemyeSvedeniya(a: AktOsmotra) strict {
+    label ru official "Приложение 2. Акт осмотра содержит требуемые сведения, если в нём есть все шесть групп сведений перечня";
+    when akt_data_provedeniya_osmotra(a: a, moment: _);
+    when akt_data_sostavleniya(a: a, moment: _);
+    when akt_sobstvennik(a: a, naimenovanie: _);
+    when akt_soderzhit_svedeniya_o_predstavivshem_lice(a);
+    when akt_soderzhit_svedeniya_o_ts(a);
+    when akt_soderzhit_svedeniya_o_povrezhdennykh_elementakh(a);
+    when akt_fio_osmotrevshego(a: a, fio: _);
+    then akt_soderzhit_svedeniya_prilozheniya_2(a);
+}
+
+@source(VRED_TS_PT_2, quote = "Осмотр поврежденного транспортного средства оформляется путем составления акта осмотра, содержащего сведения, предусмотренные приложением 2 к Правилам, включающего информацию о возможных дефектах, которые можно определить по результатам осмотра.")
+rule OsmotrOformlenAktom(r: RaschetVreda, a: AktOsmotra) strict {
+    label ru official "Пункт 2. Осмотр оформлен надлежащим образом, если акт осмотра содержит сведения приложения 2 и информацию о возможных дефектах";
+    when akt_osmotra_po_raschetu(a: a, r: r);
+    when akt_soderzhit_svedeniya_prilozheniya_2(a);
+    when akt_vozmozhnye_defekty(a: a, opisanie: _);
+    then osmotr_oformlen(r);
+}

@@ -1,0 +1,315 @@
+// СТАТЬИ 20-1 И 21. ДОПОЛНИТЕЛЬНЫЕ УСЛУГИ И ПОРЯДОК УПЛАТЫ СТРАХОВЫХ ПРЕМИЙ.
+//
+// Здесь закрывается первый пункт очереди пакета: у него была ИСЧИСЛЕНА
+// подлежащая уплате премия (`premium_payable`, `20-reduction.law`) и не было
+// ни одной деонтической головы о её УПЛАТЕ. Обязанность уплатить стоит на
+// подпункте 2) пункта 2 статьи 16, а порядок и сроки — на статье 21, и потому
+// правило несёт ДВА якоря: `source_anchor LAW_446_ART16, LAW_446_ART21;`.
+// Форма списка якорей — та же, что у `PredelOtmetkiPoterpevshego` в
+// `kz.corpus.vred_ts`, где норма держится на двух пунктах Правил.
+//
+// ЧТО РЕШАЕТ ДОГОВОР, А ЧТО ЗАКОН. Подпункт 2) пункта 2 статьи 16 отдаёт
+// договору ТРИ величины сразу — «в размере, порядке и сроки, которые
+// установлены договором». Из них закон отбирает обратно РАЗМЕР (статьи 19 и
+// 20 считают его сами) и ПОРЯДОК по умолчанию (пункт 1 статьи 21: разовым
+// платежом, если договором не предусмотрено иное). Срок остаётся за
+// договором целиком, и потому день уплаты — факт дела, а не вывод: закон дня
+// не называет ни разу.
+//
+// РАЗОВЫЙ ПЛАТЁЖ — ПОРАЖАЕМОЕ ПРАВИЛО, А НЕ ЗАМЫКАНИЕ §70. «Если договором не
+// предусмотрено иное» есть исключение из умолчания, а не утверждение о
+// полноте наблюдения: договор о рассрочке либо предъявлен делом, либо нет, и
+// молчание дела здесь читается умолчанием закона — ровно то, что говорит
+// пункт 1. `key(contract)` у вывода держит единственность способа уплаты:
+// сломайся поражение — придёт KEY_CONFLICT с именем договора, а не два
+// молчаливо верных ответа.
+//
+// ПУНКТ 2 ПРЕДЛОЖЕНИЕ ТРЕТЬЕ — ИММУНИТЕТ §128, А НЕ ЗАПРЕТ. «Неуплата
+// страхователем очередного страхового взноса НЕ МОЖЕТ ЯВЛЯТЬСЯ для
+// страховщика ОСНОВАНИЕМ для досрочного прекращения договора» говорит не о
+// поведении страховщика, а о юридическом ЭФФЕКТЕ: досрочное прекращение по
+// этому основанию не наступает. Запретом («страховщику запрещается…») это
+// записать нельзя — в ядре 0.1 запрет не становится нарушенным вовсе (§124.3),
+// и норма превратилась бы в неисполнимую декларацию. Иммунитет запирает
+// именно эффект, а держатель у него — страхователь.
+//
+// ЧЬЁ ПОЛНОМОЧИЕ ЗАПЕРТО. Само полномочие страховщика досрочно прекратить
+// договор живёт в статье 15, которой в срезе пакета нет; поэтому иммунитет
+// стоит один, без парного `power`. Это не мёртвая позиция: она публикуется
+// запросом `positions` и предъявляет защищаемый эффект по имени. Долг —
+// формализация статьи 15 — записан в отчёте наряда.
+//
+// СТАТЬЯ 20-1: ЧТО В НЕЙ ЕСТЬ И ЧЕГО В НЕЙ НЕТ. Статья даёт страховщику ОДНО
+// правомочие — оказывать дополнительные ПЛАТНЫЕ услуги при наличии согласия
+// страхователя. Запрета навязывания в ней НЕТ, и вывести его из «вправе при
+// наличии согласия» нельзя: отсутствие согласия отнимает свободу (сильного
+// разрешения §125 не возникает), но запретом поведения это не становится, а
+// сочинить запрет значило бы дописать закон. Перечень услуг статья вводит
+// словом «ВКЛЮЧАЯ», то есть открыто; закрытым перечислением он не
+// выражается, и три названные услуги остаются в метке нормы.
+
+
+// ============================================================================
+// Статья 20-1. Дополнительные платные услуги
+// ============================================================================
+
+relation additional_services_consented(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователь дал согласие на оказание страховщиком дополнительных платных услуг";
+}
+
+relation additional_paid_service_provided(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страховщик оказал дополнительную платную услугу, связанную с оказанием помощи в случае транспортного происшествия";
+}
+
+@source(LAW_446_ART20_1, quote = "Страховщик вправе при наличии согласия страхователя оказывать дополнительные платные услуги, связанные с оказанием помощи в случае транспортного происшествия")
+rule InsurerMayProvideAdditionalPaidServices(
+    contract: InsuranceContract,
+    policyholder: VehicleOwner,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 20-1. Страховщик вправе при наличии согласия страхователя оказывать дополнительные платные услуги, связанные с оказанием помощи в случае транспортного происшествия, включая предоставление транспортного средства страхователю (застрахованному) на время ремонта повреждённого транспортного средства, предоставление услуг по сбору документов, необходимых для осуществления страховой выплаты, выезд на место транспортного происшествия представителя страховщика (аварийного комиссара) для оказания помощи страхователю";
+    when policyholder_of(contract, policyholder, insurer);
+    when additional_services_consented(contract);
+    then liberty OkazyvatDopolnitelnyePlatnyeUslugi {
+        holder insurer;
+        against policyholder;
+        action additional_paid_service_provided(contract);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// ============================================================================
+// Статья 21 пункты 1 и 2. Способ уплаты страховой премии
+// ============================================================================
+
+enum PremiumPaymentMode {
+    label ru-KZ official "способ уплаты страховой премии по договору обязательного страхования (статья 21 пункты 1 и 2)";
+    SinglePayment;
+    Instalments;
+}
+
+relation instalment_payment_stipulated(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "договором обязательного страхования ответственности владельцев транспортных средств предусмотрена уплата страховой премии в рассрочку";
+}
+
+relation applicable_premium_payment_mode(contract: InsuranceContract,
+                                         mode: PremiumPaymentMode) kind institutional {
+    key(contract);
+    label ru-KZ official "способ уплаты страховой премии, применяемый по данному договору";
+}
+
+@source(LAW_446_ART21) {
+    rule PremiumPaidInSinglePaymentByDefault(contract: InsuranceContract) defeasible {
+        label ru-KZ official "Статья 21 пункт 1. Если договором обязательного страхования ответственности владельцев транспортных средств не предусмотрено иное, страховая премия уплачивается страхователем разовым платежом";
+        when contract_concluded(contract);
+        then applicable_premium_payment_mode(contract, SinglePayment);
+    }
+
+    rule InstalmentsDefeatSinglePayment(contract: InsuranceContract) defeater {
+        label ru-KZ official "Статья 21 пункт 2. Предусмотренная договором уплата страховой премии в рассрочку отводит умолчание пункта 1 о разовом платеже";
+        when contract_concluded(contract);
+        when instalment_payment_stipulated(contract);
+        defeat applicable_premium_payment_mode(contract, SinglePayment);
+    }
+
+    rule PremiumPaidInInstalments(contract: InsuranceContract) strict {
+        label ru-KZ official "Статья 21 пункт 2. Страховщик вправе предусмотреть в договоре обязательного страхования ответственности владельцев транспортных средств уплату страховой премии в рассрочку";
+        when contract_concluded(contract);
+        when instalment_payment_stipulated(contract);
+        then applicable_premium_payment_mode(contract, Instalments);
+    }
+}
+
+// Пункт 2 предложение первое: право страховщика предусмотреть рассрочку.
+relation instalments_stipulated_by_insurer(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страховщик предусмотрел в договоре уплату страховой премии в рассрочку";
+}
+
+@source(LAW_446_ART21, quote = "Страховщик вправе предусмотреть в договоре обязательного страхования ответственности владельцев транспортных средств уплату страховой премии в рассрочку.")
+rule InsurerMayStipulateInstalments(
+    contract: InsuranceContract,
+    policyholder: VehicleOwner,
+    insurer: Insurer,
+) strict {
+    label ru-KZ official "Статья 21 пункт 2. Страховщик вправе предусмотреть в договоре обязательного страхования ответственности владельцев транспортных средств уплату страховой премии в рассрочку";
+    when policyholder_of(contract, policyholder, insurer);
+    when contract_conclusion_applied_for(contract);
+    then liberty PredusmotretUplatuVRassrochku {
+        holder insurer;
+        against policyholder;
+        action instalments_stipulated_by_insurer(contract);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// Пункт 2 предложение второе: ответственность страховщика на весь срок
+// действия договора. Решения ничьего здесь нет, и потому институциональный
+// факт, а не позиция.
+relation insurer_liable_for_whole_contract_term(contract: InsuranceContract)
+    kind institutional {
+    label ru-KZ official "страховщик несёт ответственность перед страхователем в течение всего срока действия договора обязательного страхования ответственности владельцев транспортных средств";
+}
+
+@source(LAW_446_ART21, quote = "При этом страховщик несет ответственность перед страхователем в течение всего срока действия договора обязательного страхования ответственности владельцев транспортных средств.")
+rule InsurerLiableForWholeTermUnderInstalments(contract: InsuranceContract) strict {
+    label ru-KZ official "Статья 21 пункт 2. При уплате страховой премии в рассрочку страховщик несёт ответственность перед страхователем в течение всего срока действия договора обязательного страхования ответственности владельцев транспортных средств";
+    when instalment_payment_stipulated(contract);
+    then insurer_liable_for_whole_contract_term(contract);
+}
+
+// Пункт 2 предложение третье: иммунитет страхователя от досрочного
+// прекращения договора по основанию неуплаты очередного взноса.
+relation contract_terminated_early_by_insurer(contract: InsuranceContract)
+    kind institutional {
+    label ru-KZ official "договор обязательного страхования ответственности владельцев транспортных средств досрочно прекращён страховщиком";
+}
+
+relation instalment_overdue(contract: InsuranceContract, number: Integer) kind empirical {
+    label ru-KZ official "очередной страховой взнос не уплачен страхователем в установленный договором срок";
+}
+
+@source(LAW_446_ART21, quote = "Неуплата страхователем очередного страхового взноса не может являться для страховщика основанием для досрочного прекращения договора обязательного страхования ответственности владельцев транспортных средств.")
+rule OverdueInstalmentDoesNotTerminateContract(
+    contract: InsuranceContract,
+    policyholder: VehicleOwner,
+    insurer: Insurer,
+    number: Integer,
+) strict {
+    label ru-KZ official "Статья 21 пункт 2. Неуплата страхователем очередного страхового взноса не может являться для страховщика основанием для досрочного прекращения договора обязательного страхования ответственности владельцев транспортных средств";
+    when policyholder_of(contract, policyholder, insurer);
+    when instalment_payment_stipulated(contract);
+    when instalment_overdue(contract, number);
+    then immunity NeuplataVznosaNeVlechetPrekrashcheniya {
+        holder policyholder;
+        against insurer;
+        protected_effect contract_terminated_early_by_insurer(contract);
+        window [@2026-07-23, infinity);
+    };
+}
+
+// ============================================================================
+// Статья 21 пункт 2-1. Безналичная оплата через интернет-ресурс
+// ============================================================================
+
+relation cashless_online_premium_payment_available(insurer: Insurer) kind empirical {
+    label ru-KZ official "страховщик предоставляет возможность оплаты страховой премии безналичным способом через свой интернет-ресурс";
+}
+
+// Обязанность ПОДДЕРЖАНИЯ §124.2: возможность предоставляется всё время, а не
+// достигается однажды. Носитель — страховщик как таковой, а не сторона
+// конкретного договора: пункт 2-1 обращён к страховщику вообще.
+@source(LAW_446_ART21, quote = "Страховщик предоставляет возможность оплаты страховой премии безналичным способом через интернет-ресурс страховщика.")
+rule InsurerMustOfferCashlessOnlinePayment(insurer: Insurer) strict {
+    label ru-KZ official "Статья 21 пункт 2-1. Страховщик предоставляет возможность оплаты страховой премии безналичным способом через интернет-ресурс страховщика";
+    when insurer_of_compulsory_insurance(insurer);
+    then duty PredostavitVozmozhnostBeznalichnoyOplaty {
+        bearer insurer;
+        maintain cashless_online_premium_payment_available(insurer)
+            during [@2026-07-23, infinity);
+    };
+}
+
+// ============================================================================
+// Статья 16 пункт 2 подпункт 2) и статья 21 пункты 1—3. Уплата премии
+// ============================================================================
+
+
+relation contract_premium_due_day(contract: InsuranceContract, day: Date) kind empirical {
+    key(contract);
+    label ru-KZ official "срок уплаты страховой премии, установленный договором обязательного страхования ответственности владельцев транспортных средств";
+}
+
+relation premium_paid(contract: InsuranceContract, amount: Money) kind empirical {
+    label ru-KZ official "страхователь уплатил страховщику страховую премию в названном размере";
+}
+
+relation instalment_schedule(contract: InsuranceContract, number: Integer,
+                             amount: Money, day: Date) kind empirical {
+    key(contract, number);
+    label ru-KZ official "размер и срок очередного страхового взноса, установленные договором при уплате страховой премии в рассрочку";
+}
+
+relation instalment_paid(contract: InsuranceContract, number: Integer) kind empirical {
+    label ru-KZ official "страхователь уплатил очередной страховой взнос";
+}
+
+relation late_instalment_penalty_paid(contract: InsuranceContract) kind empirical {
+    label ru-KZ official "страхователь уплатил страховщику неустойку за несвоевременную уплату очередного страхового взноса";
+}
+
+// BEGIN GENERATED PolicyholderMustPayPremiumInSinglePayment (deontic-window)
+// Правило поражаемое: способ уплаты выводится поражаемым правилом пункта 1, и
+// цепочка от него до обязанности обязана дойти целиком — строгое правило над
+// головой поражаемого отвергается §111 (LDC-E4103).
+@source(LAW_446_ART16, quote = "уплачивать страховые премии в размере, порядке и сроки, которые установлены договором обязательного страхования ответственности владельцев транспортных средств;")
+@source(LAW_446_ART21, quote = "Если договором обязательного страхования ответственности владельцев транспортных средств не предусмотрено иное, страховая премия уплачивается страхователем разовым платежом.")
+rule PolicyholderMustPayPremiumInSinglePayment(
+    contract: InsuranceContract,
+    policyholder: VehicleOwner,
+    insurer: Insurer,
+    amount: Money,
+    concluded, due: Date,
+) defeasible {
+    label ru-KZ official "Статья 16 пункт 2 подпункт 2) и статья 21 пункт 1. Страхователь обязан уплачивать страховые премии в размере, порядке и сроки, которые установлены договором обязательного страхования ответственности владельцев транспортных средств; если договором не предусмотрено иное, страховая премия уплачивается разовым платежом";
+    when policyholder_of(contract, policyholder, insurer);
+    when applicable_premium_payment_mode(contract, SinglePayment);
+    when premium_payable(contract, amount);
+    when contract_concluded_on(contract, concluded);
+    when contract_premium_due_day(contract, due);
+    then duty UplatitStrakhovuyuPremiyu {
+        bearer policyholder;
+        beneficiary insurer;
+        achieve premium_paid(contract, amount) during [concluded, due];
+    };
+}
+// END GENERATED PolicyholderMustPayPremiumInSinglePayment
+
+// BEGIN GENERATED PolicyholderMustPayInstalment (deontic-window)
+// При рассрочке обязанность возникает на КАЖДЫЙ взнос: у каждого свой размер
+// и свой срок, и одна позиция на договор скрыла бы, какой именно взнос
+// просрочен.
+@source(LAW_446_ART16, quote = "уплачивать страховые премии в размере, порядке и сроки, которые установлены договором обязательного страхования ответственности владельцев транспортных средств;")
+@source(LAW_446_ART21, quote = "Страховщик вправе предусмотреть в договоре обязательного страхования ответственности владельцев транспортных средств уплату страховой премии в рассрочку.")
+rule PolicyholderMustPayInstalment(
+    contract: InsuranceContract,
+    policyholder: VehicleOwner,
+    insurer: Insurer,
+    number: Integer,
+    amount: Money,
+    concluded, due: Date,
+) strict {
+    label ru-KZ official "Статья 16 пункт 2 подпункт 2) и статья 21 пункт 2. При уплате страховой премии в рассрочку страхователь обязан уплатить очередной страховой взнос в размере и срок, которые установлены договором обязательного страхования ответственности владельцев транспортных средств";
+    when policyholder_of(contract, policyholder, insurer);
+    when instalment_payment_stipulated(contract);
+    when instalment_schedule(contract, number, amount, due);
+    when contract_concluded_on(contract, concluded);
+    then duty UplatitOcherednoyStrakhovoyVznos {
+        bearer policyholder;
+        beneficiary insurer;
+        achieve instalment_paid(contract, number) during [concluded, due];
+    };
+}
+// END GENERATED PolicyholderMustPayInstalment
+
+// Пункт 3: неустойка. Обязанность выводится, РАЗМЕР — норма чужого акта
+// («в порядке и размере, установленных статьёй 353 Гражданского кодекса
+// Республики Казахстан»), и здесь она не пересказывается. Та же граница и по
+// тому же доводу, что у `InsurerMustPayPenaltyForLatePayment` пункта 4 статьи
+// 26 в `26-poryadok-vyplaty.law`: ставка рефинансирования есть право
+// Гражданского кодекса, а не этого Закона.
+@source(LAW_446_ART21, quote = "При несвоевременной уплате очередного страхового взноса страхователь обязан уплатить страховщику неустойку в порядке и размере, установленных статьей 353 Гражданского кодекса Республики Казахстан.")
+rule PolicyholderMustPayLateInstalmentPenalty(
+    contract: InsuranceContract,
+    policyholder: VehicleOwner,
+    insurer: Insurer,
+    number: Integer,
+) strict {
+    label ru-KZ official "Статья 21 пункт 3. При несвоевременной уплате очередного страхового взноса страхователь обязан уплатить страховщику неустойку в порядке и размере, установленных статьёй 353 Гражданского кодекса Республики Казахстан";
+    when policyholder_of(contract, policyholder, insurer);
+    when instalment_overdue(contract, number);
+    then duty UplatitNeustoykuZaProsrochkuVznosa {
+        bearer policyholder;
+        beneficiary insurer;
+        achieve late_instalment_penalty_paid(contract) during [@2026-07-23, infinity);
+    };
+}

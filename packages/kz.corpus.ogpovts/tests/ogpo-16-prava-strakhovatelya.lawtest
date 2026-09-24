@@ -1,0 +1,76 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 16 п. 1: каталог прав страхователя (застрахованного) и выгодоприобретателя.
+//
+// Пара сцен закрепляет ГРАНИЦУ РЕДАКЦИИ: подпункты 5) и 6) предъявлены в
+// закреплённых байтах пометой ИЗПИ «вводится в действие с 01.01.2027», и
+// потому их свободы 15 сентября 2026 года не возникают ВОВСЕ (правило вне
+// своего `effective` позиции не создаёт — §87), а 15 февраля 2027 года
+// действуют. Права подпунктов 1)—4) действуют в обе даты.
+
+// 15 сентября 2026: права действующей редакции есть, права будущей — нет.
+test "urn:query:ogpo-p16-1-2026" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p16-1a-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "p16-1a-a1": contract_insured_person(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o2")) { origin case_input; }
+        assert "p16-1a-a2": beneficiary_of_contract(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:beneficiary:b1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TrebovatRazyasneniyaUsloviy, ACTIVE);
+    expect position(ZaprositSvedeniyaODogovoreIzBazyDannykh, ACTIVE);
+    expect position(ZaprositSvedeniyaOSluchaeIzBazyDannykh, ACTIVE);
+    expect position(VygodopriobretatelZaprositSvedeniyaOSluchae, ACTIVE);
+    expect position(OznakomitsyaSRezultatamiOpredeleniyaVreda, ACTIVE);
+    expect position(DosrochnoPrekratitDogovor, ACTIVE);
+    expect not position(ObratitsyaKStrakhovshchikuZaUregulirovaniem, ACTIVE);
+    expect not position(ObratitsyaKOmbudsmanuZaUregulirovaniem, ACTIVE);
+    expect not position(ObratitsyaVSudZaUregulirovaniem, ACTIVE);
+    expect not position(NapravitZayavlenieOmbudsmanuNapryamuyu, ACTIVE);
+    expect not position(NapravitZayavlenieOmbudsmanuCherezStrakhovshchika, ACTIVE);
+}
+
+// 15 февраля 2027: редакция подпунктов 5) и 6) введена в действие.
+test "urn:query:ogpo-p16-1-2027" {
+    given {
+        context {
+            decision_time @2027-02-15T12:00:00+05:00;
+            knowledge_time @2027-02-15T12:00:00+05:00;
+            legal_time @2027-02-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p16-1b-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ObratitsyaKStrakhovshchikuZaUregulirovaniem, ACTIVE);
+    expect position(ObratitsyaKOmbudsmanuZaUregulirovaniem, ACTIVE);
+    expect position(ObratitsyaVSudZaUregulirovaniem, ACTIVE);
+    expect position(NapravitZayavlenieOmbudsmanuNapryamuyu, ACTIVE);
+    expect position(NapravitZayavlenieOmbudsmanuCherezStrakhovshchika, ACTIVE);
+    expect position(TrebovatRazyasneniyaUsloviy, ACTIVE);
+}
+
+// Право досрочно прекратить договор — ТОЛЬКО у страхователя: у дела, где
+// назван один застрахованный и нет страхователя, свободы не возникает.
+test "urn:query:ogpo-p16-1-4-only-policyholder" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "p16-1c-a0": contract_insured_person(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o2")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ZaprositSvedeniyaODogovoreIzBazyDannykh, ACTIVE);
+    expect not position(DosrochnoPrekratitDogovor, ACTIVE);
+    expect not position(TrebovatRazyasneniyaUsloviy, ACTIVE);
+}

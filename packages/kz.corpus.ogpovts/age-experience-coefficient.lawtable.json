@@ -1,0 +1,280 @@
+{
+ "schemaVersion": "law.decision/0.1",
+ "kind": "decision-table",
+ "id": "urn:kz:corpus:clir:ogpo-vts:table:age-experience-coefficient",
+ "mode": "rules",
+ "hitPolicy": "unique",
+ "total": false,
+ "inputs": [
+  {
+   "id": "vozrast",
+   "name": "Возраст страхователя (застрахованного), полных лет",
+   "type": {
+    "name": "urn:law:std#Integer"
+   }
+  },
+  {
+   "id": "stazh",
+   "name": "Стаж вождения страхователя (застрахованного), полных лет",
+   "type": {
+    "name": "urn:law:std#Integer"
+   }
+  }
+ ],
+ "outputs": [
+  {
+   "id": "koefficient",
+   "name": "Размер коэффициента в зависимости от возраста и стажа вождения",
+   "type": {
+    "name": "urn:law:std#Decimal"
+   }
+  }
+ ],
+ "emit": {
+  "predicate": "urn:kz:corpus:clir:ogpo-vts#age_experience_scale",
+  "polarity": "positive",
+  "args": [
+   {
+    "id": "vozrast",
+    "kind": "input"
+   },
+   {
+    "id": "stazh",
+    "kind": "input"
+   },
+   {
+    "id": "koefficient",
+    "kind": "output"
+   }
+  ]
+ },
+ "labels": [
+  {
+   "language": "ru",
+   "status": "official",
+   "text": "Статья 19 пункт 7: коэффициенты в зависимости от возраста и стажа вождения для физических лиц. Стаж ровно двух лет ни одной строкой не покрыт — закон говорит «менее 2 лет» и «более 2 лет», и середины между ними не называет; total false выражает именно это, а не недосмотр"
+  }
+ ],
+ "rows": [
+  {
+   "id": "mladshe-25-stazh-menee-2",
+   "when": [
+    {
+     "input": "vozrast",
+     "condition": {
+      "kind": "comparison",
+      "op": "lt",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 25
+      }
+     }
+    },
+    {
+     "input": "stazh",
+     "condition": {
+      "kind": "comparison",
+      "op": "lt",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 2
+      }
+     }
+    }
+   ],
+   "then": [
+    {
+     "output": "koefficient",
+     "value": {
+      "kind": "value",
+      "type": {
+       "name": "urn:law:std#Decimal"
+      },
+      "value": "1.10"
+     }
+    }
+   ],
+   "anchors": [
+    "urn:kz:corpus:clir:ogpo-vts#LAW_446_ART19"
+   ],
+   "labels": [
+    {
+     "language": "ru",
+     "status": "official",
+     "text": "Статья 19 пункт 7 строка 1. Менее 25 лет/стаж вождения менее 2 лет — 1,10"
+    }
+   ]
+  },
+  {
+   "id": "mladshe-25-stazh-bolee-2",
+   "when": [
+    {
+     "input": "vozrast",
+     "condition": {
+      "kind": "comparison",
+      "op": "lt",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 25
+      }
+     }
+    },
+    {
+     "input": "stazh",
+     "condition": {
+      "kind": "comparison",
+      "op": "gt",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 2
+      }
+     }
+    }
+   ],
+   "then": [
+    {
+     "output": "koefficient",
+     "value": {
+      "kind": "value",
+      "type": {
+       "name": "urn:law:std#Decimal"
+      },
+      "value": "1.05"
+     }
+    }
+   ],
+   "anchors": [
+    "urn:kz:corpus:clir:ogpo-vts#LAW_446_ART19"
+   ],
+   "labels": [
+    {
+     "language": "ru",
+     "status": "official",
+     "text": "Статья 19 пункт 7 строка 2. Менее 25 лет/стаж вождения более 2 лет — 1,05"
+    }
+   ]
+  },
+  {
+   "id": "starshe-25-stazh-menee-2",
+   "when": [
+    {
+     "input": "vozrast",
+     "condition": {
+      "kind": "comparison",
+      "op": "gte",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 25
+      }
+     }
+    },
+    {
+     "input": "stazh",
+     "condition": {
+      "kind": "comparison",
+      "op": "lt",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 2
+      }
+     }
+    }
+   ],
+   "then": [
+    {
+     "output": "koefficient",
+     "value": {
+      "kind": "value",
+      "type": {
+       "name": "urn:law:std#Decimal"
+      },
+      "value": "1.05"
+     }
+    }
+   ],
+   "anchors": [
+    "urn:kz:corpus:clir:ogpo-vts#LAW_446_ART19"
+   ],
+   "labels": [
+    {
+     "language": "ru",
+     "status": "official",
+     "text": "Статья 19 пункт 7 строка 3. 25 лет и старше/стаж вождения менее 2 лет — 1,05"
+    }
+   ]
+  },
+  {
+   "id": "starshe-25-stazh-bolee-2",
+   "when": [
+    {
+     "input": "vozrast",
+     "condition": {
+      "kind": "comparison",
+      "op": "gte",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 25
+      }
+     }
+    },
+    {
+     "input": "stazh",
+     "condition": {
+      "kind": "comparison",
+      "op": "gt",
+      "value": {
+       "kind": "value",
+       "type": {
+        "name": "urn:law:std#Integer"
+       },
+       "value": 2
+      }
+     }
+    }
+   ],
+   "then": [
+    {
+     "output": "koefficient",
+     "value": {
+      "kind": "value",
+      "type": {
+       "name": "urn:law:std#Decimal"
+      },
+      "value": "1.00"
+     }
+    }
+   ],
+   "anchors": [
+    "urn:kz:corpus:clir:ogpo-vts#LAW_446_ART19"
+   ],
+   "labels": [
+    {
+     "language": "ru",
+     "status": "official",
+     "text": "Статья 19 пункт 7 строка 4. 25 лет и старше/стаж вождения более 2 лет — 1,00"
+    }
+   ]
+  }
+ ]
+}

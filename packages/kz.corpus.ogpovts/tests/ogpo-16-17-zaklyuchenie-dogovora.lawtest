@@ -1,0 +1,104 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Заключение договора: ст. 16 п. 2 пп. 1) (сведения страхователя),
+// ст. 17 п. 1 пп. 1) (право страховщика их требовать), ст. 17 п. 2 пп. 1)
+// (ознакомить с условиями), пп. 2) (оформить полис), пп. 4) (предоставить
+// льготу), ст. 21 п. 2 (право предусмотреть рассрочку).
+
+test "urn:query:ogpo-zakl-obrashchenie" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "zakl-a-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "zakl-a-a1": contract_conclusion_applied_for(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredstavitSvedeniyaPriZaklyuchenii, ACTIVE);
+    expect position(OznakomitSUsloviyamiStrakhovaniya, ACTIVE);
+    expect position(TrebovatPredstavleniyaSvedeniy, ACTIVE);
+    expect position(PredusmotretUplatuVRassrochku, ACTIVE);
+    expect not position(OformitStrakhovoyPolis, ACTIVE);
+}
+
+// Договор заключён и полис оформлен, сведения представлены, условия
+// разъяснены — три обязанности исполнены.
+test "urn:query:ogpo-zakl-ispolneno" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "zakl-b-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "zakl-b-a1": contract_conclusion_applied_for(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "zakl-b-a2": contract_concluded(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "zakl-b-a3": application_information_submitted(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "zakl-b-a4": terms_explained_to_insured(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "zakl-b-a5": insurance_policy_issued(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredstavitSvedeniyaPriZaklyuchenii, SATISFIED);
+    expect position(OznakomitSUsloviyamiStrakhovaniya, SATISFIED);
+    expect position(OformitStrakhovoyPolis, SATISFIED);
+}
+
+// Ст. 17 п. 2 пп. 4): обязанность предоставить льготу возникает у ТОГО ЖЕ
+// состава, который статья 20 признаёт льготным (пенсионер + стандартный
+// договор), и мост к статье 20 идёт через её собственный вывод
+// `premium_reduction_applies`, а не через повторный перечень оснований.
+test "urn:query:ogpo-17-2-4-lgota-active" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "zakl-c-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "zakl-c-a1": standard_contract(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "zakl-c-a2": owner_is_pensioner(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredostavitLgotuPoUplatePremii, ACTIVE);
+    expect not position(PredostavitLgotuPoUplatePremii, SATISFIED);
+}
+
+test "urn:query:ogpo-17-2-4-lgota-satisfied" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "zakl-d-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "zakl-d-a1": standard_contract(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "zakl-d-a2": owner_is_pensioner(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+        assert "zakl-d-a3": premium_reduction_granted(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredostavitLgotuPoUplatePremii, SATISFIED);
+}
+
+// Нельготный владелец: обязанности предоставить льготу не возникает вовсе.
+test "urn:query:ogpo-17-2-4-net-lgoty" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+        assert "zakl-e-a0": policyholder_of(entity_ref("urn:kz:ogpo:contract:c1"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "zakl-e-a1": standard_contract(entity_ref("urn:kz:ogpo:contract:c1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(PredostavitLgotuPoUplatePremii, ACTIVE);
+}

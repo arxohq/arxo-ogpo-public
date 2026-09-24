@@ -1,0 +1,62 @@
+// vocab.geo — географический словарь представления (DECISION-0139 §5).
+//
+// ЧТО ЭТО. Типы «регион», «станция наблюдений», «точка» и конечный домен
+// областей с атрибутами: кодом ISO 3166-2 и опорной точкой для размещения
+// подписи на карте. Ни одного правила, ни одной нормы: словарь ничего не
+// выводит, он даёт предметным пакетам общий тип вместо строки — чтобы
+// `region: Text` стал `region: vocab.geo::Region`, и представление Lens
+// узнало область по namespace словаря, а не по акту.
+//
+// ЧЕГО ЗДЕСЬ НЕТ И НЕ БУДЕТ. Юрисдикции, источника права, редакций,
+// `@source`-якорей: словарь не представляется нормативным актом (тот же
+// довод, что у `calc.*`, DECISION-0123 §2). Опорная точка области —
+// картографическая, не правовой факт; административное деление на дату и
+// правовые последствия принадлежности к области выводят предметные акты.
+//
+// КООРДИНАТЫ. WGS84, градусы, порядок `lat, lon`, `Decimal` с двумя знаками,
+// одна опора на сущность в ОДНОМ отношении (совместность широты и долготы).
+// `Point` объявлен как запись будущего API: литерал записи не исполняется
+// ни одной реализацией, поэтому в обещание видов он не входит.
+
+language "law.core" version "0.2";
+package vocab.geo version "0.1.0";
+namespace "urn:law:vocab:geo";
+
+pub entity Region {
+    label ru official "административно-территориальная единица первого уровня (область, город республиканского значения)";
+    label en official "first-level administrative region";
+    label kk official "облыс немесе республикалық маңызы бар қала";
+}
+
+pub entity Station {
+    label ru official "станция наблюдений с географическим положением";
+    label en official "observation station with a geographic location";
+    label kk official "географиялық орны бар бақылау станциясы";
+}
+
+pub record Point {
+    lat: Decimal;
+    lon: Decimal;
+    label ru unofficial "точка WGS84: широта и долгота в градусах";
+}
+
+pub relation region_code(region: Region, code: Text) kind institutional {
+    key(region);
+    label ru official "код региона по ISO 3166-2";
+    label en official "ISO 3166-2 region code";
+    label kk official "ISO 3166-2 бойынша өңір коды";
+}
+
+pub relation region_anchor(region: Region, lat: Decimal, lon: Decimal) kind institutional {
+    key(region);
+    label ru official "опорная точка региона для подписи на карте (WGS84, широта и долгота в градусах)";
+    label en official "region anchor point for the map label (WGS84, latitude and longitude in degrees)";
+    label kk official "картадағы жазба үшін өңірдің тірек нүктесі (WGS84, ендік және бойлық, градус)";
+}
+
+pub relation station_location(station: Station, lat: Decimal, lon: Decimal) kind institutional {
+    key(station);
+    label ru official "положение станции (WGS84, широта и долгота в градусах)";
+    label en official "station location (WGS84, latitude and longitude in degrees)";
+    label kk official "станцияның орналасуы (WGS84, ендік және бойлық, градус)";
+}

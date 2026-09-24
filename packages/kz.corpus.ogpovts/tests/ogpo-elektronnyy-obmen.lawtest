@@ -1,0 +1,230 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 12-1 — обмен цифровыми ресурсами: обязанности страховщика, момент
+// заключения договора, согласие на договор присоединения, запрет агентской
+// деятельности.
+//
+// ПАРА ПУНКТА 4 — ГЛАВНАЯ. Общее правило («с даты уплаты страховой премии») и
+// его оговорка («если иное не предусмотрено договором») проверяются на двух
+// делах, различающихся ровно одним фактом. Вторая половина пары сторожит
+// РАЗВЯЗКУ ПЕРЕМЕННЫХ в дефитере: свяжи договорный день и день платежа одной
+// переменной — и дефитер замолчит на всяком деле, где они не совпали, то есть
+// на всяком деле, где оговорка вообще нужна.
+
+test "urn:query:ogpo-concluded-on-premium-payment-day" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-e1-a0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:e1"), DigitalResourceExchange) {
+            origin case_input;
+        }
+
+        assert "ogpo-e1-a1": premium_paid_on(entity_ref("urn:kz:ogpo:contract:e1"), @2026-09-01) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_concluded_on(entity_ref("urn:kz:ogpo:contract:e1"), @2026-09-01));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-stipulated-day-wins" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-e1-b0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:e2"), DigitalResourceExchange) {
+            origin case_input;
+        }
+
+        assert "ogpo-e1-b1": premium_paid_on(entity_ref("urn:kz:ogpo:contract:e2"), @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-e1-b2": contract_stipulates_conclusion_day(entity_ref("urn:kz:ogpo:contract:e2"), @2026-09-05) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_concluded_on(entity_ref("urn:kz:ogpo:contract:e2"), @2026-09-05));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Оборотная сторона той же пары: день платежа ОТВЕДЁН, а не сосуществует с
+// договорным. Без этой половины два дня заключения по одному договору жили бы
+// рядом, и `key(contract)` пришлось бы ловить их KEY_CONFLICT-ом.
+test "urn:query:ogpo-payment-day-defeated" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-e1-c0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:e3"), DigitalResourceExchange) {
+            origin case_input;
+        }
+
+        assert "ogpo-e1-c1": premium_paid_on(entity_ref("urn:kz:ogpo:contract:e3"), @2026-09-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-e1-c2": contract_stipulates_conclusion_day(entity_ref("urn:kz:ogpo:contract:e3"), @2026-09-05) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_concluded_on(entity_ref("urn:kz:ogpo:contract:e3"), @2026-09-01));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пункт 4, второе основание: юридическое лицо платит премию в рассрочку, и
+// договор заключён с даты первого взноса.
+test "urn:query:ogpo-concluded-on-first-instalment" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-e1-d0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:e4"), DigitalResourceExchange) {
+            origin case_input;
+        }
+
+        assert "ogpo-e1-d1": insured_kind_of(entity_ref("urn:kz:ogpo:contract:e4"), LegalEntity) {
+            origin case_input;
+        }
+
+        assert "ogpo-e1-d2": first_premium_instalment_paid_on(entity_ref("urn:kz:ogpo:contract:e4"), @2026-09-02) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(contract_concluded_on(entity_ref("urn:kz:ogpo:contract:e4"), @2026-09-02));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:ogpo-adhesion-consent" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-e1-e0": conclusion_channel_used(entity_ref("urn:kz:ogpo:contract:e5"), DigitalResourceExchange) {
+            origin case_input;
+        }
+
+        assert "ogpo-e1-e1": insurance_terms_reviewed_before_payment(entity_ref("urn:kz:ogpo:contract:e5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-e1-e2": premium_paid_on(entity_ref("urn:kz:ogpo:contract:e5"), @2026-09-03) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(adhesion_consent_expressed(entity_ref("urn:kz:ogpo:contract:e5")));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Пункт 3: шесть обязанностей страховщика и обязанность организации по
+// формированию и ведению базы данных на одном деле.
+test "urn:query:ogpo-insurer-electronic-duties" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-e3-a0": insurance_contract_of(entity_ref("urn:kz:ogpo:contract:e6"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-e3-a1": insurance_application_submitted(entity_ref("urn:kz:ogpo:contract:e6"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-e3-a2": insurer_internet_resource_used(entity_ref("urn:kz:ogpo:contract:e6"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-e3-a3": database_organization_maintains_base(entity_ref("urn:kz:ogpo:org:b1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(OtpravitUvedomlenieOZaklyuchenii, ACTIVE);
+    expect position(UvedomlyatObEtapakhUregulirovaniya, ACTIVE);
+    expect position(ObespechitProverkuInformaciiPoDogovoru, ACTIVE);
+    expect position(ObespechitProverkuInformaciiPoSluchayu, ACTIVE);
+    expect position(KhranitDogovorSKruglosutochnymDostupom, ACTIVE);
+    expect position(ObespechitOtpravkuSvedeniyVElektronnoyForme, ACTIVE);
+    expect position(ObespechitKruglosutochnyyDostup, ACTIVE);
+    expect position(TrebovatSpecializirovannoePO, ACTIVE);
+    expect position(RazmestitSsylkuNaResursStrakhovshchika, ACTIVE);
+    expect position(NapravitUvedomlenieOtOrganizaciiBazyDannykh, ACTIVE);
+}
+
+// Пункт 7: запрет деятельности страховых агентов по заключению договоров.
+test "urn:query:ogpo-agent-prohibited" {
+    given {
+        context {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-e7-a0": insurance_agent_of(entity_ref("urn:kz:ogpo:agent:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-e7-a1": insurance_application_submitted(entity_ref("urn:kz:ogpo:contract:e7"), entity_ref("urn:kz:ogpo:owner:o1"), entity_ref("urn:kz:ogpo:insurer:i1")) {
+            origin case_input;
+        }
+    }
+
+    evaluate positions();
+
+    expect result_kind == NORM_POSITION;
+    expect evaluation_status == COMPUTED;
+    expect position(ZaklyuchatDogovoryCherezStrakhovogoAgenta, ACTIVE);
+}

@@ -1,0 +1,204 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 17 п. 2 подпункты 5-1), 6-1) и 7-2): три срока в РАБОЧИХ днях.
+//
+// Расчёт вручную от 1 сентября 2026 года (вторник) по общему порядку ГК РК
+// (ст. 173, 176): счёт со следующего дня, последний день включается, перенос
+// на ближайший рабочий.
+//   один рабочий день  (пп. 5-1))  → 2 сентября (среда);
+//   три рабочих дня    (пп. 6-1))  → 2, 3, 4 сентября → 4 сентября (пятница);
+//   пять рабочих дней  (пп. 7-2))  → 2, 3, 4, 7, 8 сентября → 8 сентября.
+
+context profile KZ_OGPO_DEADLINES {
+    deadline_policy KZ_OGPO_BUSINESS_DAY_DEADLINES;
+}
+
+// Подпункт 5-1): последний день срока — 2 сентября 2026 года.
+test "urn:query:ogpo-17-5-1-due-day" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-02T12:00:00+05:00;
+            knowledge_time @2026-09-02T12:00:00+05:00;
+            legal_time @2026-09-02;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17a-a0": victim_contract_inquiry_received_on(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), @2026-09-01) { origin case_input; }
+    }
+    evaluate truth(contract_details_due_day(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), @2026-09-02));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Подпункт 5-1): сведения представлены в срок.
+test "urn:query:ogpo-17-5-1-satisfied" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17b-a0": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "s17b-a1": victim_contract_inquiry_received_on(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), @2026-09-01) { origin case_input; }
+        assert "s17b-a2": insured_event_document_presented(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "s17b-a3": contract_details_provided_to_victim(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredstavitSvedeniyaODogovorePoterpevshemu, SATISFIED);
+    expect not position(PredstavitSvedeniyaODogovorePoterpevshemu, VIOLATED);
+}
+
+// Подпункт 5-1): срок истёк 2 сентября, неисполнение установлено — нарушение.
+test "urn:query:ogpo-17-5-1-violated" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17c-a0": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "s17c-a1": victim_contract_inquiry_received_on(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), @2026-09-01) { origin case_input; }
+        assert "s17c-a2": insured_event_document_presented(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+        assert "s17c-a3": not contract_details_provided_to_victim(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PredstavitSvedeniyaODogovorePoterpevshemu, VIOLATED);
+}
+
+// Подпункт 5-1): БЕЗ документа, подтверждающего страховой случай, обязанности
+// не возникает вовсе — условие подпункта стоит в теле правила.
+test "urn:query:ogpo-17-5-1-bez-dokumenta" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17d-a0": accident_insurer(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "s17d-a1": victim_contract_inquiry_received_on(entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:victim:v1"), @2026-09-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(PredstavitSvedeniyaODogovorePoterpevshemu, ACTIVE);
+    expect not position(PredstavitSvedeniyaODogovorePoterpevshemu, VIOLATED);
+}
+
+// Подпункт 6-1): три рабочих дня со дня получения документов — 4 сентября.
+test "urn:query:ogpo-17-6-1-violated" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17e-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "s17e-a1": documents_received_on(entity_ref("urn:kz:ogpo:claim:d1"), @2026-09-01) { origin case_input; }
+        assert "s17e-a2": documents_insufficient(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+        assert "s17e-a3": not missing_documents_notified(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position("InsurerMustNotifyMissingDocuments/duty/norm", VIOLATED);
+}
+
+test "urn:query:ogpo-17-6-1-due-day" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-02T12:00:00+05:00;
+            knowledge_time @2026-09-02T12:00:00+05:00;
+            legal_time @2026-09-02;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17f-a0": documents_received_on(entity_ref("urn:kz:ogpo:claim:d1"), @2026-09-01) { origin case_input; }
+    }
+    evaluate truth(missing_documents_due_day(entity_ref("urn:kz:ogpo:claim:d1"), @2026-09-04));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Подпункт 7-2): пять рабочих дней, ответ дан — обязанность исполнена.
+// Подпункт 7-3) в этой же сцене не действует: его редакция вводится
+// в действие с 1 января 2027 года.
+test "urn:query:ogpo-17-7-2-satisfied" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17g-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "s17g-a1": dispute_application_received_on(entity_ref("urn:kz:ogpo:claim:d1"), @2026-09-01) { origin case_input; }
+        assert "s17g-a2": dispute_answered_in_writing(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+        assert "s17g-a3": ombudsman_application_received_on(entity_ref("urn:kz:ogpo:claim:d1"), @2026-09-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position("InsurerMustAnswerDisputeApplication/duty/norm", SATISFIED);
+    expect not position("InsurerMustForwardApplicationToOmbudsman/duty/norm", ACTIVE);
+}
+
+test "urn:query:ogpo-17-7-2-violated" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17h-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "s17h-a1": dispute_application_received_on(entity_ref("urn:kz:ogpo:claim:d1"), @2026-09-01) { origin case_input; }
+        assert "s17h-a2": not dispute_answered_in_writing(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position("InsurerMustAnswerDisputeApplication/duty/norm", VIOLATED);
+}
+
+// Подпункт 6): расчёт вреда и отчёт — обязанность без срока Закона (окно
+// открытое): исполняется, но нарушенной по сроку не становится.
+test "urn:query:ogpo-17-6-otchet" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17i-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "s17i-a1": harm_assessment_applied_for(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+        assert "s17i-a2": harm_amount_calculated(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ProvestiRaschetVredaIPredstavitOtchet, ACTIVE);
+    expect not position(ProvestiRaschetVredaIPredstavitOtchet, SATISFIED);
+    expect not position(ProvestiRaschetVredaIPredstavitOtchet, VIOLATED);
+}
+
+test "urn:query:ogpo-17-6-otchet-satisfied" {
+    given {
+        context extends KZ_OGPO_DEADLINES {
+            decision_time @2026-09-30T12:00:00+05:00;
+            knowledge_time @2026-09-30T12:00:00+05:00;
+            legal_time @2026-09-30;
+            timezone "Asia/Almaty";
+            calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+        }
+        assert "s17j-a0": payment_claim_of(entity_ref("urn:kz:ogpo:claim:d1"), entity_ref("urn:kz:ogpo:accident:a1"), entity_ref("urn:kz:ogpo:beneficiary:b1"), entity_ref("urn:kz:ogpo:insurer:i1")) { origin case_input; }
+        assert "s17j-a1": harm_assessment_applied_for(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+        assert "s17j-a2": harm_amount_calculated(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+        assert "s17j-a3": harm_report_presented(entity_ref("urn:kz:ogpo:claim:d1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ProvestiRaschetVredaIPredstavitOtchet, SATISFIED);
+}

@@ -1,0 +1,1110 @@
+language "law.core" version "0.2";
+package kz.corpus.ogpovts version "0.1.0";
+namespace "urn:kz:corpus:clir:ogpo-vts";
+
+// Ст. 15 п. 4 — ШКАЛА УДЕРЖАНИЯ: тринадцать строк, двенадцать стыков, и
+// КАЖДЫЙ СТЫК ВЗЯТ С ОБЕИХ СТОРОН. Двадцать четыре сценария — это двенадцать
+// пар: последний день нижней строки и первый день верхней.
+//
+// ПОЧЕМУ ГРАНИЦА ДОСТИЖИМА ТОЧНО. Договор действует с 1 января по 11 апреля
+// 2026 года: N = 100 дней, и один день срока есть ровно один процент. На
+// годовом договоре (N = 365) «четыре процента» пришлись бы на 14,6 суток, и
+// проверить границу было бы нечем — не потому, что закон её не проводит, а
+// потому, что дело до неё не дотягивается. Ста днями стык проверяется прямо.
+//
+// ЧТО ОТВЕЧАЕТ ЗАКОН НА САМОЙ ГРАНИЦЕ: строки шкалы написаны как «от X до Y
+// (НЕ ВКЛЮЧАЯ Y)», и значение ровно Y принадлежит ВЕРХНЕЙ строке. Это сказано
+// в тексте, а не выбрано формализатором: дыры между строками нет, наложения
+// тоже — тринадцать полуинтервалов покрывают [0, +бесконечность).
+//
+// РАСЧЁТ РУКАМИ. n = days_between(1 января, день обращения) + 1, «включая день
+// обращения»; процент прошедшего срока = n * 100 / N = n. Удержано =
+// 100 000 тенге * доля строки. Так, обращение 4 января: n = 4, процент = 4,
+// строка 2, доля 20 процентов, удержано 20 000 тенге.
+
+context profile KZ_OGPO_DAY_DEADLINES {
+    deadline_policy KZ_OGPO_CALENDAR_DAY_DEADLINES;
+}
+
+// n = 3: прошло 3 процентов срока — строка со ставкой 15 процентов,
+// удержано 15000 тенге.
+test "urn:query:ogpo-scale-n3" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-1-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w1")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-1-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w1"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-1-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w1"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-1-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w1"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-1-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w1"), @2026-01-03) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-1-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w1"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w1"), 15000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 4: прошло 4 процентов срока — строка со ставкой 20 процентов,
+// удержано 20000 тенге.
+test "urn:query:ogpo-scale-n4" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-2-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w2")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-2-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w2"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-2-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w2"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-2-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w2"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-2-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w2"), @2026-01-04) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-2-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w2"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w2"), 20000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 7: прошло 7 процентов срока — строка со ставкой 20 процентов,
+// удержано 20000 тенге.
+test "urn:query:ogpo-scale-n7" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-3-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w3")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-3-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w3"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-3-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w3"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-3-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w3"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-3-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w3"), @2026-01-07) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-3-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w3"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w3"), 20000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 8: прошло 8 процентов срока — строка со ставкой 30 процентов,
+// удержано 30000 тенге.
+test "urn:query:ogpo-scale-n8" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-4-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w4")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-4-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w4"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-4-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w4"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-4-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w4"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-4-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w4"), @2026-01-08) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-4-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w4"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w4"), 30000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 16: прошло 16 процентов срока — строка со ставкой 30 процентов,
+// удержано 30000 тенге.
+test "urn:query:ogpo-scale-n16" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-5-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w5")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-5-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w5"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-5-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w5"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-5-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w5"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-5-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w5"), @2026-01-16) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-5-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w5"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w5"), 30000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 17: прошло 17 процентов срока — строка со ставкой 40 процентов,
+// удержано 40000 тенге.
+test "urn:query:ogpo-scale-n17" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-6-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w6")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-6-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w6"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-6-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w6"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-6-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w6"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-6-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w6"), @2026-01-17) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-6-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w6"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w6"), 40000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 24: прошло 24 процентов срока — строка со ставкой 40 процентов,
+// удержано 40000 тенге.
+test "urn:query:ogpo-scale-n24" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-7-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w7")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-7-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w7"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-7-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w7"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-7-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w7"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-7-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w7"), @2026-01-24) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-7-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w7"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w7"), 40000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 25: прошло 25 процентов срока — строка со ставкой 50 процентов,
+// удержано 50000 тенге.
+test "urn:query:ogpo-scale-n25" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-8-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w8")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-8-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w8"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-8-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w8"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-8-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w8"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-8-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w8"), @2026-01-25) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-8-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w8"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w8"), 50000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 32: прошло 32 процентов срока — строка со ставкой 50 процентов,
+// удержано 50000 тенге.
+test "urn:query:ogpo-scale-n32" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-9-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w9")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-9-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w9"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-9-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w9"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-9-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w9"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-9-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w9"), @2026-02-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-9-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w9"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w9"), 50000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 33: прошло 33 процентов срока — строка со ставкой 60 процентов,
+// удержано 60000 тенге.
+test "urn:query:ogpo-scale-n33" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-10-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w10")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-10-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w10"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-10-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w10"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-10-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w10"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-10-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w10"), @2026-02-02) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-10-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w10"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w10"), 60000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 41: прошло 41 процентов срока — строка со ставкой 60 процентов,
+// удержано 60000 тенге.
+test "urn:query:ogpo-scale-n41" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-11-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w11")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-11-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w11"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-11-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w11"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-11-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w11"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-11-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w11"), @2026-02-10) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-11-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w11"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w11"), 60000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 42: прошло 42 процентов срока — строка со ставкой 70 процентов,
+// удержано 70000 тенге.
+test "urn:query:ogpo-scale-n42" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-12-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w12")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-12-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w12"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-12-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w12"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-12-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w12"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-12-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w12"), @2026-02-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-12-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w12"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w12"), 70000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 49: прошло 49 процентов срока — строка со ставкой 70 процентов,
+// удержано 70000 тенге.
+test "urn:query:ogpo-scale-n49" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-13-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w13")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-13-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w13"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-13-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w13"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-13-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w13"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-13-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w13"), @2026-02-18) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-13-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w13"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w13"), 70000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 50: прошло 50 процентов срока — строка со ставкой 75 процентов,
+// удержано 75000 тенге.
+test "urn:query:ogpo-scale-n50" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-14-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w14")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-14-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w14"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-14-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w14"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-14-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w14"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-14-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w14"), @2026-02-19) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-14-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w14"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w14"), 75000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 57: прошло 57 процентов срока — строка со ставкой 75 процентов,
+// удержано 75000 тенге.
+test "urn:query:ogpo-scale-n57" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-15-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w15")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-15-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w15"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-15-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w15"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-15-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w15"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-15-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w15"), @2026-02-26) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-15-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w15"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w15"), 75000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 58: прошло 58 процентов срока — строка со ставкой 80 процентов,
+// удержано 80000 тенге.
+test "urn:query:ogpo-scale-n58" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-16-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w16")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-16-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w16"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-16-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w16"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-16-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w16"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-16-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w16"), @2026-02-27) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-16-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w16"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w16"), 80000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 66: прошло 66 процентов срока — строка со ставкой 80 процентов,
+// удержано 80000 тенге.
+test "urn:query:ogpo-scale-n66" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-17-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w17")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-17-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w17"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-17-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w17"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-17-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w17"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-17-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w17"), @2026-03-07) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-17-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w17"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w17"), 80000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 67: прошло 67 процентов срока — строка со ставкой 85 процентов,
+// удержано 85000 тенге.
+test "urn:query:ogpo-scale-n67" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-18-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w18")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-18-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w18"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-18-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w18"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-18-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w18"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-18-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w18"), @2026-03-08) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-18-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w18"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w18"), 85000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 74: прошло 74 процентов срока — строка со ставкой 85 процентов,
+// удержано 85000 тенге.
+test "urn:query:ogpo-scale-n74" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-19-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w19")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-19-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w19"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-19-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w19"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-19-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w19"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-19-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w19"), @2026-03-15) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-19-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w19"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w19"), 85000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 75: прошло 75 процентов срока — строка со ставкой 90 процентов,
+// удержано 90000 тенге.
+test "urn:query:ogpo-scale-n75" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-20-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w20")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-20-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w20"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-20-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w20"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-20-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w20"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-20-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w20"), @2026-03-16) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-20-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w20"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w20"), 90000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 82: прошло 82 процентов срока — строка со ставкой 90 процентов,
+// удержано 90000 тенге.
+test "urn:query:ogpo-scale-n82" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-21-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w21")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-21-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w21"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-21-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w21"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-21-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w21"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-21-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w21"), @2026-03-23) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-21-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w21"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w21"), 90000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 83: прошло 83 процентов срока — строка со ставкой 95 процентов,
+// удержано 95000 тенге.
+test "urn:query:ogpo-scale-n83" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-22-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w22")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-22-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w22"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-22-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w22"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-22-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w22"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-22-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w22"), @2026-03-24) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-22-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w22"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w22"), 95000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 91: прошло 91 процентов срока — строка со ставкой 95 процентов,
+// удержано 95000 тенге.
+test "urn:query:ogpo-scale-n91" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-23-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w23")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-23-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w23"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-23-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w23"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-23-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w23"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-23-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w23"), @2026-04-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-23-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w23"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w23"), 95000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// n = 92: прошло 92 процентов срока — строка со ставкой 100 процентов,
+// удержано 100000 тенге.
+test "urn:query:ogpo-scale-n92" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-24-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w24")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-24-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w24"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-24-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w24"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-24-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w24"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-24-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w24"), @2026-04-02) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-24-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w24"), 100000 KZT) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_retained(entity_ref("urn:kz:ogpo:contract:w24"), 100000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Возврат по шкале: n = 4, удержано 20 000, возвращается 100 000 − 20 000 =
+// 80 000 тенге.
+test "urn:query:ogpo-scale-refund" {
+    given {
+        context extends KZ_OGPO_DAY_DEADLINES {
+            decision_time @2026-09-15T12:00:00+05:00;
+            knowledge_time @2026-09-15T12:00:00+05:00;
+            legal_time @2026-09-15;
+            timezone "Asia/Almaty";
+        }
+
+        assert "ogpo-sc-25-0": contract_in_question(entity_ref("urn:kz:ogpo:contract:w25")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-25-1": contract_stipulated_start_day(entity_ref("urn:kz:ogpo:contract:w25"), @2026-01-01) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-25-2": other_term_ground(entity_ref("urn:kz:ogpo:contract:w25"), TemporaryEntryToKz) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-25-3": contract_stipulated_end_day(entity_ref("urn:kz:ogpo:contract:w25"), @2026-04-11) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-25-4": early_termination_day(entity_ref("urn:kz:ogpo:contract:w25"), @2026-01-04) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-25-5": premium_paid_amount(entity_ref("urn:kz:ogpo:contract:w25"), 100000 KZT) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-25-6": civil_code_early_termination_ground(entity_ref("urn:kz:ogpo:contract:w25")) {
+            origin case_input;
+        }
+
+        assert "ogpo-sc-25-7": early_termination_application_by_policyholder(entity_ref("urn:kz:ogpo:contract:w25")) {
+            origin case_input;
+        }
+    }
+
+    evaluate truth(premium_refunded(entity_ref("urn:kz:ogpo:contract:w25"), 80000 KZT));
+
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

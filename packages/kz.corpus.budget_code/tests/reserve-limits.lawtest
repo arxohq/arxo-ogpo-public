@@ -1,0 +1,28 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// §267: ОДИН тест на файл — два теста в одном .lawtest не лоуверятся.
+// Нижняя граница ст. 19 п. 1 со стороны нарушения: полтора процента
+// планируемых доходов республиканского бюджета без учёта трансфертов — это
+// 15 000 000 ₸ при доходах 1 000 000 000 ₸, и одна тиынь ниже границы уже
+// выводит нарушение. Парный случай (ровно на границе — соблюдение) стоит в
+// сценарии KZ-BC-01 регрессии семейства: порог, проверенный с одной
+// стороны, не проверен.
+test "резерв на инициативы Президента ниже полутора процентов нарушает границы" {
+    given {
+        context {
+            legal_time @2026-06-01;
+            decision_time @2026-06-01T12:00:00+05:00;
+            knowledge_time @2026-06-01T12:00:00+05:00;
+            timezone "Asia/Almaty";
+        }
+        assert "t0": budget_level(entity_ref("urn:kz:bc:budget-republican"), Republican) { origin case_input; }
+        assert "t1": reserve_of(entity_ref("urn:kz:bc:reserve-1"), entity_ref("urn:kz:bc:budget-republican")) { origin case_input; }
+        assert "t2": reserve_kind(entity_ref("urn:kz:bc:reserve-1"), PresidentInitiatives) { origin case_input; }
+        assert "t3": reserve_amount(entity_ref("urn:kz:bc:reserve-1"), 14999999.99 KZT) { origin case_input; }
+        assert "t4": planned_revenue_without_transfers(entity_ref("urn:kz:bc:budget-republican"), 1000000000.00 KZT) { origin case_input; }
+    }
+    evaluate truth(reserve_size_violates_limits(entity_ref("urn:kz:bc:reserve-1")));
+    expect truth_status == TRUE_ONLY;
+}

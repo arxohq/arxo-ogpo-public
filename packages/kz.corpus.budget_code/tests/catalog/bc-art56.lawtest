@@ -1,0 +1,27 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 56 пункт 5. Поступления от приватизации республиканской собственности и от передачи в конкурентную среду активов национальных холдингов зачисляются в Нац
+test "CATALOG-REPUBLICANPRIVATISATIONTONATIONALFUND" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": republican_property_privatisation(entity_ref("urn:kz:catalog:republicanprivatisationtonationalfund:v0")) { origin case_input; }
+    }
+    evaluate truth(credited_to_national_fund_in_full(entity_ref("urn:kz:catalog:republicanprivatisationtonationalfund:v0")));
+    expect truth_status == TRUE_ONLY;
+}
+
+// Статья 56 пункт 6. Поступления от приватизации коммунальной собственности зачисляются в местный бюджет в полном объёме в номинальном выражении
+test "CATALOG-COMMUNALPRIVATISATIONTOLOCALBUDGET" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": communal_property_privatisation(entity_ref("urn:kz:catalog:communalprivatisationtolocalbudget:v0")) { origin case_input; }
+    }
+    evaluate truth(credited_to_local_budget_in_full(entity_ref("urn:kz:catalog:communalprivatisationtolocalbudget:v0")));
+    expect truth_status == TRUE_ONLY;
+}

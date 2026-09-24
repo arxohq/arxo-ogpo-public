@@ -1,0 +1,22 @@
+{
+  "dependencyEdges": [],
+  "languageSemantics": "law.core/0.2.0",
+  "lockVersion": "0.2",
+  "packages": [],
+  "resolutionHash": "sha256:287197c410f9635e613b10b399b8d01de45c3e7fdd8f48bc3f6053037f585dc1",
+  "resources": [
+    {
+      "capability": "law.calendar/0.1",
+      "contentHash": "sha256:d04f48761d98cdcf2a094cc728fd160fbc3b73e2eb5ebbed6743d17e976fe9c6",
+      "id": "urn:kz:corpus:clir:budget-code#calendar-snapshot",
+      "kind": "calendar-dataset",
+      "path": "resources/d04f48761d98cdcf-kz-official-2026.calendar.json"
+    }
+  ],
+  "root": {
+    "contentHash": "sha256:0c8e9c2faa09f56341a067eb48b5502469d148b9aea1d8844440f6d16b15e25c",
+    "name": "kz.corpus.budget_code",
+    "namespace": "urn:kz:corpus:clir:budget-code",
+    "version": "0.1.0"
+  }
+}

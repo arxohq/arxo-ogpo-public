@@ -1,0 +1,29 @@
+language "law.core" version "0.1";
+package kz.corpus.budget_code version "0.1.0";
+namespace "urn:kz:corpus:clir:budget-code";
+
+// Порождённые сценарии-свидетельства каталога вопросов (DECISION-0190):
+// мир выполняет посылки правила, запрос спрашивает его вывод.
+// Собраны из CLIR пакета; правка руками — только вместе с каталогом.
+
+// Статья 106. Открытие государственными учреждениями счетов в банках второго уровня, не предусмотренных частью первой пункта, в том числе на имя третьих лиц, не д
+test "CATALOG-NOACCOUNTOUTSIDELIST" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": account_opened_outside_list(entity_ref("urn:kz:catalog:noaccountoutsidelist:v0")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(OpenAccountOutsideList, ACTIVE);
+}
+
+// Статья 106. Перечисление денег с кода одного государственного учреждения на код другого государственного учреждения не допускается
+test "CATALOG-NOTRANSFERBETWEENINSTITUTIONCODES" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": transfer_between_institution_codes(entity_ref("urn:kz:catalog:notransferbetweeninstitutioncodes:v0"), entity_ref("urn:kz:catalog:notransferbetweeninstitutioncodes:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(TransferBetweenCodes, ACTIVE);
+}
