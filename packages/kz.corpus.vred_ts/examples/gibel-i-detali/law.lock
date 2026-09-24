@@ -28,7 +28,7 @@
       "version": "0.1.0"
     },
     {
-      "contentHash": "sha256:1b021c6a928c6248e90214c6ecc0c192df99576b179e5d2452f3bb1c77035fa2",
+      "contentHash": "sha256:36a9e328e84836c0a4521a9cdca94655d579a48f0fe78166174ec2f49f51cb42",
       "features": [
         "core-executable"
       ],
@@ -37,14 +37,14 @@
       "version": "0.1.0"
     }
   ],
-  "resolutionHash": "sha256:7b03721e8974dcb809e941834f3b78dddb1872ba7e114ab72046a1203e132fb5",
+  "resolutionHash": "sha256:4d0b65eccb8084088d9f6c237a6e839a0f1ab8829cac8510c91fadc9ca2d3f5c",
   "resources": [
     {
       "capability": "law.calendar/0.1",
-      "contentHash": "sha256:a17b851ac08e622c05c116637ecf8d818bc7b480568f5560407d69461c4b8c21",
+      "contentHash": "sha256:d04f48761d98cdcf2a094cc728fd160fbc3b73e2eb5ebbed6743d17e976fe9c6",
       "id": "urn:kz:corpus:clir:official-calendar#snapshot-2026",
       "kind": "calendar-dataset",
-      "path": "../../../../../../clir/kz-official-2026.calendar.json"
+      "path": "resources/d04f48761d98cdcf-kz-official-2026.calendar.json"
     }
   ],
   "root": {
