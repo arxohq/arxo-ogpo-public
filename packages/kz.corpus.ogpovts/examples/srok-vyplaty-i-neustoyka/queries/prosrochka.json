@@ -1,0 +1,15 @@
+{
+  "queryId": "prosrochka",
+  "kind": "truth",
+  "literal": {
+    "kind": "literal",
+    "polarity": "positive",
+    "predicate": "urn:kz:corpus:clir:ogpo-vts#payment_made_late",
+    "args": [
+      {
+        "kind": "entity_ref",
+        "id": "urn:example:ogpo:trebovanie"
+      }
+    ]
+  }
+}

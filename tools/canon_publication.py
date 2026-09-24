@@ -168,11 +168,47 @@ def _manifest(config: dict[str, Any], source: Path) -> dict[str, Any]:
     }
 
 
+def _check_lock_resources(root: Path, paths: list[str]) -> None:
+    """Every resource pinned by a published ``law.lock`` ships in the release.
+
+    A row that leaves its package (``../`` into the development monorepo) or
+    names a file outside the allowlist resolves in the private checkout and is
+    dead in the public one. A calendar dataset is pinned by its raw bytes, so a
+    stale ``contentHash`` is refused here too; decision tables are hashed in
+    canonical form and are checked by the toolchain, not by this program.
+    """
+    listed = set(paths)
+    for rel in sorted(listed):
+        if PurePosixPath(rel).name != "law.lock":
+            continue
+        try:
+            lock = json.loads(_source_file(root, rel).read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise PublicationError(f"{rel}: unreadable lock: {error}") from error
+        rows = lock.get("resources", []) if isinstance(lock, dict) else None
+        if not isinstance(rows, list):
+            raise PublicationError(f"{rel}: resources must be an array")
+        for row in rows:
+            value = row.get("path") if isinstance(row, dict) else None
+            path = PurePosixPath(value) if isinstance(value, str) and value and "\\" not in value else None
+            if path is None or path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
+                raise PublicationError(f"{rel}: resource path leaves the package: {value!r}")
+            target = (PurePosixPath(rel).parent / path).as_posix()
+            if target not in listed:
+                raise PublicationError(f"{rel}: resource {value} is not allowlisted")
+            if (row.get("kind") == "calendar-dataset"
+                    and _sha256(_source_file(root, target).read_bytes()) != row.get("contentHash")):
+                raise PublicationError(f"{rel}: resource {value} differs from its contentHash")
+
+
 def validate(source: Path, config_path: Path) -> dict[str, Any]:
     """Validate a private checkout's declaration without creating an artifact."""
     source = source.resolve()
     _no_symlink_ancestor(source, "source")
-    return _manifest(read_config(config_path), source)
+    config = read_config(config_path)
+    manifest = _manifest(config, source)
+    _check_lock_resources(source, config["files"])
+    return manifest
 
 
 def export(source: Path, config_path: Path, out: Path) -> dict[str, Any]:
@@ -267,6 +303,7 @@ def verify(artifact: Path) -> dict[str, Any]:
             inventory.add(rel)
     if inventory != allowed:
         raise PublicationError("artifact inventory differs from manifest")
+    _check_lock_resources(artifact, sorted(listed))
     return manifest
 
 

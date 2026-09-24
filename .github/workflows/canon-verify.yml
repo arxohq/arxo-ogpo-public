@@ -47,3 +47,10 @@ jobs:
           python3 tools/canon_release.py build --artifact "$snapshot" --tools "$tools" --out "$RUNNER_TEMP/canon-public-package-releases-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
       - name: Run the README usage examples and check their answers
         run: python3 tools/usage_examples.py --law-cli "$RUNNER_TEMP/law-tools-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/law-cli"
+      - name: Check every case package against the expectations in its check.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          for check in packages/*/examples/*/check.py; do
+            python3 "$check" --law "$RUNNER_TEMP/law-tools-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/law-cli"
+          done

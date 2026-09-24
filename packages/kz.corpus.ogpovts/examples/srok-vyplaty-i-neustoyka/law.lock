@@ -1,0 +1,316 @@
+{
+  "dependencyEdges": [
+    {
+      "features": [],
+      "from": "calc.accruals",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "calc.obligations"
+    },
+    {
+      "features": [],
+      "from": "examples.ogpovts.srok_vyplaty_i_neustoyka",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.clir.official_calendar"
+    },
+    {
+      "features": [],
+      "from": "examples.ogpovts.srok_vyplaty_i_neustoyka",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.ogpovts"
+    },
+    {
+      "features": [],
+      "from": "examples.ogpovts.srok_vyplaty_i_neustoyka",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.strakhovaya_neustoyka"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.bonus_malus",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.budget"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.budget",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.budget_code"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.civilcode",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "calc.obligations"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.civilcode",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "doctrine.acts_for"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.civilcode",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "doctrine.ius_privatum"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.2.0",
+      "resolved": "0.2.0",
+      "to": "kz.corpus.bonus_malus"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.budget"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.vred_ts"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "vocab.geo"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.ogpovts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "vocab.vehicle"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.strakhovaya_neustoyka",
+      "requested": "0.2.0",
+      "resolved": "0.2.0",
+      "to": "calc.accruals"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.strakhovaya_neustoyka",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "calc.obligations"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.strakhovaya_neustoyka",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.civilcode"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.strakhovaya_neustoyka",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.ogpovts"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.strakhovaya_neustoyka",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.national_bank.rates"
+    },
+    {
+      "features": [],
+      "from": "kz.corpus.vred_ts",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "kz.corpus.clir.official_calendar"
+    },
+    {
+      "features": [],
+      "from": "vocab.vehicle",
+      "requested": "0.1.0",
+      "resolved": "0.1.0",
+      "to": "vocab.maintenance"
+    }
+  ],
+  "languageSemantics": "law.core/0.2.0",
+  "lockVersion": "0.2",
+  "packages": [
+    {
+      "contentHash": "sha256:c010a7a2410b41f27df6b59f8c344fcf5d37d2c810dfa14e3a29cd86546b4031",
+      "features": [
+        "core-executable"
+      ],
+      "name": "calc.accruals",
+      "namespace": "urn:law:calc:accruals",
+      "version": "0.2.0"
+    },
+    {
+      "contentHash": "sha256:a13558cf3c2919dc518d58510ee00938599f4d30dc16a2c4310a0098606904fa",
+      "features": [
+        "core-executable"
+      ],
+      "name": "calc.obligations",
+      "namespace": "urn:law:calc:obligations",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:8e1e2bb8c5516544ee382c5a6fce1f8b1cef11b55ad0a82647e8fd2ce0316894",
+      "features": [
+        "core-executable"
+      ],
+      "name": "doctrine.acts_for",
+      "namespace": "urn:doctrine:clir:acts-for",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:daf0c951c5226f36788e0f42fa8c9ad091452505a9d6c1660eb9325cae31ecea",
+      "features": [
+        "core-executable"
+      ],
+      "name": "doctrine.ius_privatum",
+      "namespace": "urn:doctrine:clir:ius-privatum",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:b37b244c04ea48cf8186216f23cfbd35d133f6f154627aa4dbaf25176ddf929a",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.bonus_malus",
+      "namespace": "urn:kz:corpus:clir:bonus-malus",
+      "version": "0.2.0"
+    },
+    {
+      "contentHash": "sha256:1e0ebb1d019617e0785b7b2121cda3aeabd269d388e8f802afe719933bcd3f18",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.budget",
+      "namespace": "urn:kz:corpus:clir:budget",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:e54ba547c66ee357e9a3fb12b4a2175b3544c8a560ae266d06a7b54a01836c53",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.budget_code",
+      "namespace": "urn:kz:corpus:clir:budget-code",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:2a52d653c9280ede83e7b7f5cf049d4442e1078e3ab06e0094a8ca8b4124db0a",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.civilcode",
+      "namespace": "urn:kz:corpus:clir:civil-code",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:d5dd393f6b712104611798a39bb03c43da014f16c150c1b95c5a8f3587fc44d5",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.clir.official_calendar",
+      "namespace": "urn:kz:corpus:clir:official-calendar",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:2e94e893b3edecaaba124d4a99766ed69963deffa5628d286700029c73e3a5fb",
+      "features": [
+        "core-executable",
+        "law.decision/0.1"
+      ],
+      "name": "kz.corpus.ogpovts",
+      "namespace": "urn:kz:corpus:clir:ogpo-vts",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:072d24aeb1dea1c1f51640f80c5c227b094f90448e66232d526f786c89d5dc33",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.strakhovaya_neustoyka",
+      "namespace": "urn:kz:corpus:clir:strakhovaya-neustoyka",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:1b021c6a928c6248e90214c6ecc0c192df99576b179e5d2452f3bb1c77035fa2",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.corpus.vred_ts",
+      "namespace": "urn:kz:corpus:clir:vred-ts",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:56ccf2bb59b5a092481bff7fd0e72d21a5c25b5bf851cf3d0d32f6954225dee6",
+      "features": [
+        "core-executable"
+      ],
+      "name": "kz.national_bank.rates",
+      "namespace": "urn:kz:national-bank:clir:rates",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:90e40c94390540a21ba156bf585ff6899929b9facfead6337de828a7f4561674",
+      "features": [
+        "core-executable"
+      ],
+      "name": "vocab.geo",
+      "namespace": "urn:law:vocab:geo",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:c85fa41eef6ccb2af463d912eee0ea33d087c1ecbed8b78c47d6d79d61cfab73",
+      "features": [
+        "core-executable"
+      ],
+      "name": "vocab.maintenance",
+      "namespace": "urn:law:vocab:maintenance",
+      "version": "0.1.0"
+    },
+    {
+      "contentHash": "sha256:33e92c9dd392d374c956a4ce6d43baf3e04d7121613e7127668a784f7a65e779",
+      "features": [
+        "core-executable"
+      ],
+      "name": "vocab.vehicle",
+      "namespace": "urn:law:vocab:vehicle",
+      "version": "0.1.0"
+    }
+  ],
+  "resolutionHash": "sha256:9086e20fea2ebf4e82f8987b24bb6d8754b32e2f862958d20858d465a5e58b11",
+  "resources": [
+    {
+      "capability": "law.calendar/0.1",
+      "contentHash": "sha256:d04f48761d98cdcf2a094cc728fd160fbc3b73e2eb5ebbed6743d17e976fe9c6",
+      "id": "urn:kz:corpus:clir:official-calendar#snapshot-2026",
+      "kind": "calendar-dataset",
+      "path": "resources/d04f48761d98cdcf-kz-official-2026.calendar.json"
+    }
+  ],
+  "root": {
+    "contentHash": "sha256:863002e13425912945edf0561be00439c8a1828db383bf9c54210cf5c20c1a89",
+    "name": "examples.ogpovts.srok_vyplaty_i_neustoyka",
+    "namespace": "urn:law:examples:ogpo-vts:srok-vyplaty-i-neustoyka",
+    "version": "0.1.0"
+  }
+}

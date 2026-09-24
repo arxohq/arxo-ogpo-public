@@ -40,7 +40,9 @@ act.
 Questions are asked against a **case package**: a small package that imports
 the canon, declares the facts of one or more cases, and pins every dependency
 in `law.lock`. `packages/kz.corpus.vred_ts/examples/gibel-i-detali` is one;
-its README describes each case.
+its README describes each case. `packages/kz.corpus.ogpovts/examples/srok-vyplaty-i-neustoyka`
+asks when the insurance payment falls due and what penalty a late payment
+owes (Article 26 of the Law, Article 353 of the Civil Code).
 
 The pinned evaluator is `law-cli` from `toolchain.lock.json`
 (`x86_64-unknown-linux-musl`). Downloading it needs the GitHub CLI:
@@ -89,7 +91,14 @@ package and register it under `[[cases]]` in that package's `law.toml`. The
 query template for each question is on its catalog card.
 
 Public CI runs all three commands above and checks their answers
-(`tools/usage_examples.py`).
+(`tools/usage_examples.py`). It also runs the `check.py` of every case package
+under `packages/*/examples/`, which asks all of its saved questions and
+compares each answer, its applied rule and its replay with the expectations
+written in that file:
+
+```sh
+python3 packages/kz.corpus.ogpovts/examples/srok-vyplaty-i-neustoyka/check.py --law "$tools/law-cli"
+```
 
 ## Verifying a release
 

@@ -1,0 +1,38 @@
+language "law.core" version "0.2";
+package examples.ogpovts.srok_vyplaty_i_neustoyka version "0.1.0";
+namespace "urn:law:examples:ogpo-vts:srok-vyplaty-i-neustoyka";
+
+// Статья 26 пункты 1 и 4, статья 353 ГК: выплата ПОСЛЕ срока.
+// Те же документы 22 июля → срок 12 августа 2026; выплата в понедельник
+// 24 августа. Независимый расчёт по тексту статьи 353 ГК и закреплённому
+// снимку ставок Национального Банка:
+//   дней просрочки      13…24 августа включительно = 12
+//                       (движку окно предъявляется полуинтервалом
+//                       [12.08, 24.08) — дней в нём столько же);
+//   базовая ставка      16,75 % годовых на 24.08.2026 (решение от 24.07.2026);
+//   дневная ставка      16,75 / 100 / 365 = 67/146000;
+//   неустойка           730 000 × 12 × 67/146000 = 5 × 12 × 67 = 4 020 ₸.
+// База 730 000 = 2 × 365 000 выбрана так, чтобы частное было точным:
+// способа округления статья 353 не называет, и пакет не округляет за неё.
+case Prosrochka {
+    context {
+        legal_time @2026-09-15;
+        knowledge_time @2026-09-15T12:00:00+05:00;
+        decision_time @2026-09-15T12:00:00+05:00;
+        timezone "Asia/Almaty";
+        deadline_policy OGPO_RABOCHIE_DNI;
+        calendar "urn:kz:corpus:clir:official-calendar#snapshot-2026";
+    }
+
+    const trebovanie: kz.corpus.ogpovts::PaymentClaim = entity_ref("urn:example:ogpo:trebovanie");
+    const proisshestvie: kz.corpus.ogpovts::TrafficAccident = entity_ref("urn:example:ogpo:proisshestvie");
+
+    assert "trebovanie": kz.corpus.ogpovts::payment_claim_of(trebovanie, proisshestvie, entity_ref("urn:example:ogpo:vygodopriobretatel"), entity_ref("urn:example:ogpo:strakhovshchik")) { origin case_input; }
+    assert "vygodopriobretatel": kz.corpus.ogpovts::beneficiary_of_victim(proisshestvie, entity_ref("urn:example:ogpo:poterpevshiy"), entity_ref("urn:example:ogpo:vygodopriobretatel")) { origin case_input; }
+    assert "razmer-vyplaty": kz.corpus.ogpovts::insurance_payment_amount(proisshestvie, entity_ref("urn:example:ogpo:poterpevshiy"), 730000 KZT) { origin case_input; }
+    assert "dokumenty-polucheny": kz.corpus.ogpovts::documents_received_on(trebovanie, @2026-07-22) { origin case_input; }
+    assert "vyplata": kz.corpus.ogpovts::strakhovaya_vyplata_osushchestvlena(trebovanie, @2026-08-24) { origin case_input; }
+    assert "nachislenie": kz.corpus.strakhovaya_neustoyka::nachislenie_po_trebovaniyu(trebovanie, entity_ref("urn:example:ogpo:nachislenie")) { origin case_input; }
+    assert "den-ispolneniya": kz.corpus.strakhovaya_neustoyka::den_ispolneniya_denezhnogo_obyazatelstva(trebovanie, @2026-08-24) { origin case_input; }
+    assert "delitel-goda": kz.corpus.strakhovaya_neustoyka::prinyatyy_delitel_goda(trebovanie, 365.0) { origin case_input; }
+}

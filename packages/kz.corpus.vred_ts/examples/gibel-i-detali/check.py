@@ -15,14 +15,29 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import tomllib
+from types import SimpleNamespace
 
 PACKAGE = Path(__file__).resolve().parent
-ROOT = PACKAGE.parents[5]
-sys.path.insert(0, str(ROOT / "engines" / "lawref"))
+# Оракул lawref есть только в checkout монорепозитория. В вынесенном каноне
+# (packages/<канон>/examples/<подборка>) его нет: тогда проверяются ответы,
+# основания и replay закреплённого law-cli, а сверка Rust/Python пропускается.
+ROOT = next((parent for parent in PACKAGE.parents if (parent / "engines" / "lawref").is_dir()), None)
+if ROOT is not None:
+    sys.path.insert(0, str(ROOT / "engines" / "lawref"))
+    from lawref.canon import canonical_bytes  # noqa: E402
+    from lawref.cases import check_registration  # noqa: E402
+    from lawref.evaluator import EvaluationRequest, evaluate  # noqa: E402
+else:
+    evaluate = None
 
-from lawref.canon import canonical_bytes  # noqa: E402
-from lawref.cases import check_registration  # noqa: E402
-from lawref.evaluator import EvaluationRequest, evaluate  # noqa: E402
+    def canonical_bytes(document: dict) -> bytes:
+        """Только сравнение ask/replay/сохранённого результата, не канон §208."""
+        return json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+
+    def check_registration(package: Path) -> list[SimpleNamespace]:
+        manifest = tomllib.loads((package / "law.toml").read_text(encoding="utf-8"))
+        return [SimpleNamespace(name=entry["name"]) for entry in manifest.get("cases", [])]
 
 NS = "urn:kz:corpus:clir:vred-ts#"
 PKG = "kz.corpus.vred_ts::"
@@ -127,22 +142,23 @@ def check(law: str, output: Path) -> None:
                 raise RuntimeError(f"{case}/{qid}: у правила {want['rule']} нет якоря на пункт Правил")
         if want.get("absent") in applied:
             raise RuntimeError(f"{case}/{qid}: правило {want['absent']} не должно применяться; применены {sorted(applied)}")
-        oracle = evaluate(EvaluationRequest.from_dict(request))
         replay = run_json([law, "eval", str(saved)])
         expected_bytes = canonical_bytes(result)
-        if canonical_bytes(oracle) != expected_bytes:
+        if evaluate is not None and canonical_bytes(evaluate(EvaluationRequest.from_dict(request))) != expected_bytes:
             raise RuntimeError(f"{case}/{qid}: Rust != Python")
         if canonical_bytes(replay) != expected_bytes:
             raise RuntimeError(f"{case}/{qid}: ask != replay")
         if canonical_bytes(json.loads((saved / "result.json").read_bytes())) != expected_bytes:
             raise RuntimeError(f"{case}/{qid}: stdout != сохранённый результат")
+        compared = "Rust/Python и replay" if evaluate is not None else "replay (без lawref: Rust/Python не сверялся)"
         print(f"{case}/{qid}: {want.get('truth') or want.get('value') or want.get('position')}; "
-              f"основание, Rust/Python и replay — OK", flush=True)
+              f"основание, {compared} — OK", flush=True)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--law", default=str(ROOT / "law"), help="пользовательский бинарь law или launcher checkout")
+    parser.add_argument("--law", default=str(ROOT / "law") if ROOT is not None else None,
+                        required=ROOT is None, help="бинарь law/law-cli или launcher checkout")
     parser.add_argument("--out", type=Path, help="сохранить request/result/ask; по умолчанию временный каталог")
     args = parser.parse_args()
     try:
